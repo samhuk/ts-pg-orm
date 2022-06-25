@@ -1,0 +1,7 @@
+/node_modules
+/build
+/dist
+/build-test
+.DS_Store
+/debug.log
+/package-lock.json

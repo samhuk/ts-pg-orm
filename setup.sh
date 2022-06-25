@@ -1,0 +1,17 @@
+COMPONENT_NAME_PASCAL_CASE_SEARCH=MyComponent
+COMPONENT_NAME_DASH_CASE_SEARCH=my-component
+
+# Edit these with your desired name
+COMPONENT_NAME_PASCAL_CASE=EntityFramework
+COMPONENT_NAME_DASH_CASE=entity-framework
+NPM_PACKAGE_NAME=entity-framework
+
+echo Renaming all occurances of $COMPONENT_NAME_PASCAL_CASE_SEARCH with $COMPONENT_NAME_PASCAL_CASE
+
+sed -i "s/$COMPONENT_NAME_PASCAL_CASE_SEARCH/$COMPONENT_NAME_PASCAL_CASE/g" src/index.ts
+
+sed -i "s/$COMPONENT_NAME_PASCAL_CASE_SEARCH/$COMPONENT_NAME_PASCAL_CASE/g" src/types.ts
+
+sed -i "s/$COMPONENT_NAME_DASH_CASE_SEARCH/$NPM_PACKAGE_NAME/g" package.json
+
+echo Done!

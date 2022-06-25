@@ -1,0 +1,15 @@
+{
+  "configurations": [
+    {
+      "name": "Run Unit Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}\\node_modules\\jest\\bin\\jest.js",
+      "args": [
+          "--runInBand",
+          "--no-cache"
+      ],
+      "preLaunchTask": "unitTestsDebugPreLaunchTask"
+    },
+  ]
+}
