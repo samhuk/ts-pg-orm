@@ -1,4 +1,4 @@
-import { DataTableQuery } from '@samhuk/data-table/dist/dataTableQuery/types'
+import { DataQuery } from '@samhuk/data-query/dist/types'
 import { COMMON_FIELDS } from '../../../dataFormat/common'
 import { createValueList } from '../../../dataFormat/sql'
 import {
@@ -8,7 +8,6 @@ import {
   DataFormatDeclarationToRecord,
   ManualCreateRecordOptions,
 } from '../../../dataFormat/types'
-import { convertDataTableQueryToPostgreSqlQuery } from '../../../../genericUiComponents/dataTable/dataTableQuery'
 import { createInsertReturningSql } from '../../../helpers/sql'
 import { objectPropsToCamelCase } from '../../../helpers/string'
 import { StoreBase } from '../types'
@@ -47,13 +46,12 @@ async function addManual<T extends DataFormatDeclaration>(
   return objectPropsToCamelCase(row)
 }
 
-async function getByDataTableQuery<T extends DataFormatDeclaration>(
+async function getByDataQuery<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
-  dataTableQuery: DataTableQuery,
+  query: DataQuery,
 ): Promise<DataFormatDeclarationToRecord<T>[]> {
-  const querySql = convertDataTableQueryToPostgreSqlQuery(dataTableQuery)
-  const sql = `${df.sql.selectSqlBase} ${querySql}`
+  const sql = `${df.sql.selectSqlBase} ${query.pSqlSql.orderByLimitOffset}`
   const row = await db.queryGetFirstRow(sql)
   return objectPropsToCamelCase(row)
 }
@@ -112,7 +110,7 @@ export const createDbStoreBase = <
   const store: StoreBase<T> = {
     add: _options => add(options.db, df, _options),
     addManual: _options => addManual(options.db, df, _options),
-    getByDataTableQuery: dataTableQuery => getByDataTableQuery(options.db, df, dataTableQuery),
+    getByDataQuery: query => getByDataQuery(options.db, df, query),
     getById: id => getById(options.db, df, id),
     getByUuid: uuid => getByUuid(options.db, df, uuid),
     deleteByUuid: uuid => deleteByUuid(options.db, df, uuid),

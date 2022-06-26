@@ -103,7 +103,9 @@ export type OneToOneFromOneFunctionDict<
       RelationsDict<T, K>, ExtractRelevantRelationNamesWithOneToOneFromOne<L, K>
       // @ts-ignore
     > as OneToOneFromOneFunctionName<RelationsDict<T, K>[K1]>
+    // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+    // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
   )
 }
@@ -118,7 +120,9 @@ export type OneToOneToOneFunctionDict<
       ExtractRelevantRelationNamesWithOneToOneToOne<L, K>
       // @ts-ignore
     > as OneToOneToOneFunctionName<RelationsDict<T, K>[K1]>
+    // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+    // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
   )
 }
@@ -133,7 +137,9 @@ export type OneToManyFromOneFunctionDict<
       ExtractRelevantRelationNamesWithOneToManyFromOne<L, K>
       // @ts-ignore
     > as OneToManyFromOneFunctionName<RelationsDict<T, K>[K1]>
+    // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+    // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
 }
@@ -148,7 +154,9 @@ export type OneToManyToManyFunctionDict<
      ExtractRelevantRelationNamesWithOneToManyToMany<L, K>
      // @ts-ignore
     > as OneToManyToManyFunctionName<RelationsDict<T, K>[K1]>
+    // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+    // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
   )
 }
@@ -163,7 +171,9 @@ export type ManyToManyFieldRef1FunctionDict<
       ExtractRelevantRelationNamesWithManyToManyFieldRef1<L, K>
       // @ts-ignore
     > as ManyToManyFieldRef1FunctionName<RelationsDict<T, K>[K1]>
+    // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+    // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
 }
@@ -178,7 +188,9 @@ export type ManyToManyFieldRef2FunctionDict<
       ExtractRelevantRelationNamesWithManyToManyFieldRef2<L, K>
       // @ts-ignore
     > as ManyToManyFieldRef2FunctionName<RelationsDict<T, K>[K1]>
+    // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+    // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
 }

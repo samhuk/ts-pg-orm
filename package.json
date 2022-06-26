@@ -1,7 +1,7 @@
 {
-  "name": "my-component",
+  "name": "ts-entity-framework",
   "version": "1.0.0",
-  "description": "my-component description",
+  "description": "Typescript entity framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -16,8 +16,8 @@
 
     "lint": "eslint -c .eslintrc.json ./src --ext .ts,.tsx",
     "lint-errors-only": "eslint -c .eslintrc.json ./src --ext .ts,.tsx --quiet",
-   
-    "build-ts": "tsc --project ./src/tsconfig.json",
+
+    "build-ts": "tsc --project ./src/tsconfig.dist.json",
 
     "check": "npm rum lint-errors-only && npm run build-ts && npm run unit-tests",
 
@@ -25,11 +25,12 @@
   },
   "author": "",
   "license": "MIT",
-  "dependencies": { },
+  "dependencies": {
+    "@samhuk/data-query": "^1.0.0"
+  },
   "devDependencies": {
-    "rimraf": "^3.0.2",
-    "@types/node": "^17.0.19",
     "@types/jest": "^28.1.1",
+    "@types/node": "^17.0.19",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
     "babel-jest": "^28.1.1",
@@ -40,6 +41,7 @@
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "jest": "^28.1.1",
+    "rimraf": "^3.0.2",
     "ts-jest": "^28.0.4",
     "typescript": "^4.5.5"
   }

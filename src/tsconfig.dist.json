@@ -5,6 +5,7 @@
     "./"
   ],
   "compilerOptions": {
+    "module": "CommonJS",
     "declaration": true,
     "sourceMap": false,
     "noEmit": false,

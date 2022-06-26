@@ -10,13 +10,9 @@
     "node_modules/**/*",
     "build/**/*",
     "build-test/**/*",
-    "import/**/*",
-    "content/**/*",
-    "pgdata/**/*",
+    "dist**/*",
     "package.lock.json",
-    "nginx.conf",
     "LICENSE",
-    "Dockerfile",
     "*.yaml",
     "*.go",
     "*.sh",
@@ -44,7 +40,7 @@
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [".ts", ".tsx", ".js", ".jsx", ".scss"]
+        "extensions": [".ts", ".tsx", ".js"]
       }
     }
   },

@@ -1,4 +1,4 @@
-import { DataTableQuery } from '@samhuk/data-table/dist/dataTableQuery/types'
+import { DataQuery } from '@samhuk/data-query/dist/types'
 import {
   DataFormatDeclaration,
   CreateRecordOptions,
@@ -19,6 +19,6 @@ export type StoreBase<
   deleteByUuid: (uuid: string) => Promise<boolean>
   getById: (id: number) => Promise<DataFormatDeclarationToRecord<T>>
   getByUuid: (uuid: string) => Promise<DataFormatDeclarationToRecord<T>>
-  getByDataTableQuery: (dataTableQuery: DataTableQuery) => Promise<DataFormatDeclarationToRecord<T>[]>
+  getByDataQuery: (query: DataQuery) => Promise<DataFormatDeclarationToRecord<T>[]>
   addRandomRecords: (count: number) => Promise<DataFormatDeclarationToRecord<T>[]>
 }
