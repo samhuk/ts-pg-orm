@@ -1,6 +1,6 @@
 {
   "name": "ts-entity-framework",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Typescript entity framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,6 +23,7 @@
 
     "start": "tsc --project ./src/tsconfig.json --watch"
   },
+  "repository": "https://github.com/samhuk/ts-entity-framework",
   "author": "",
   "license": "MIT",
   "publishConfig": {
