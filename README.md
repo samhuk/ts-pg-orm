@@ -8,6 +8,7 @@ Create data formats:
 
 ```typescript
 import { createDataFormatDeclaration } from 'ts-entity-framework/dist/dataFormat'
+import { DataType, NumberDataSubType, StringDataSubType } from 'ts-entity-framework/dist/dataFormat/types'
 
 export const USER_DFD = createDataFormatDeclaration({
   name: 'user',

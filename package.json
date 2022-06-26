@@ -1,6 +1,6 @@
 {
   "name": "ts-entity-framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typescript entity framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,6 +25,9 @@
   },
   "author": "",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@samhuk/data-query": "^1.0.0"
   },
