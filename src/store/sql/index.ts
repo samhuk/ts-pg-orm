@@ -1,5 +1,5 @@
 import { toDict } from '../../helpers/dict'
-import { capitalize, objectPropsToCamelCase } from '../../helpers/string'
+import { objectPropsToCamelCase } from '../../helpers/string'
 import { DataFormat, DataFormatDeclarations } from '../../dataFormat/types'
 import { RelationDeclarations, Relation, RelationType, RelationsDict, ExtractRelevantRelations } from '../../relations/types'
 import { createDbStoreBase } from '../base/db'
@@ -107,33 +107,71 @@ export const createEntityDbStore = <
 
   const functionNamesForOneToOneFromOne = relationsForOneToOneFromOne.map(r => (
     r.getRelatedToOneFieldRecordsStoreName
-    ?? `getRelated${capitalize(r.toOneField.formatName)}RecordOn${capitalize(r.toOneField.fieldName)}`
-  )) as OneToOneFromOneFunctionName<typeof relationsForOneToOneFromOne[number]>[]
+    // @ts-ignore
+    ?? `get${options.dataFormats[r.toOneField.formatName].capitalizedName}Of${options.dataFormats[r.fromOneField.formatName].capitalizedName}`
+  )) as OneToOneFromOneFunctionName<T, typeof relationsForOneToOneFromOne[number]>[]
 
   const functionNamesForOneToOneToOne = relationsForOneToOneToOne.map(r => (
     r.getRelatedFromOneFieldRecordsStoreName
-    ?? `getRelated${capitalize(r.fromOneField.formatName)}RecordOn${capitalize(r.fromOneField.fieldName)}`
-  )) as OneToOneToOneFunctionName<typeof relationsForOneToOneToOne[number]>[]
+    // @ts-ignore
+    ?? `get${options.dataFormats[r.fromOneField.formatName].capitalizedName}Of${options.dataFormats[r.toOneField.formatName].capitalizedName}`
+  )) as OneToOneToOneFunctionName<T, typeof relationsForOneToOneToOne[number]>[]
 
   const functionNamesForOneToManyFromOne = relationsForOneToManyFromOne.map(r => (
     r.getRelatedToManyFieldRecordsStoreName
-    ?? `getRelated${capitalize(r.toManyField.formatName)}RecordsOn${capitalize(r.toManyField.fieldName)}`
-  )) as OneToManyFromOneFunctionName<typeof relationsForOneToManyFromOne[number]>[]
+    // @ts-ignore
+    ?? `get${options.dataFormats[r.toManyField.formatName].capitalizedPluralizedName}Of${options.dataFormats[r.fromOneField.formatName].capitalizedName}`
+  )) as OneToManyFromOneFunctionName<T, typeof relationsForOneToManyFromOne[number]>[]
 
   const functionNamesForOneToManyToMany = relationsForOneToManyToMany.map(r => (
     r.getRelatedFromOneFieldRecordsStoreName
-    ?? `getRelated${capitalize(r.fromOneField.formatName)}RecordOn${capitalize(r.fromOneField.fieldName)}`
-  )) as OneToManyToManyFunctionName<typeof relationsForOneToManyToMany[number]>[]
+    // @ts-ignore
+    ?? `get${options.dataFormats[r.fromOneField.formatName].capitalizedName}Of${options.dataFormats[r.toManyField.formatName].capitalizedName}`
+  )) as OneToManyToManyFunctionName<T, typeof relationsForOneToManyToMany[number]>[]
 
   const functionNamesForManyToManyFieldRef1 = relationsForManyToManyFieldRef1.map(r => (
     r.getRelatedFieldRef2RecordsStoreName
-    ?? `getRelated${capitalize(r.fieldRef2.formatName)}RecordsOn${capitalize(r.fieldRef2.fieldName)}`
-  )) as ManyToManyFieldRef1FunctionName<typeof relationsForManyToManyFieldRef1[number]>[]
+    // @ts-ignore
+    ?? `get${options.dataFormats[r.fieldRef2.formatName].capitalizedPluralizedName}Of${options.dataFormats[r.fieldRef1.formatName].capitalizedName}`
+  )) as ManyToManyFieldRef1FunctionName<T, typeof relationsForManyToManyFieldRef1[number]>[]
 
   const functionNamesForManyToManyFieldRef2 = relationsForManyToManyFieldRef2.map(r => (
     r.getRelatedFieldRef1RecordsStoreName
-    ?? `getRelated${capitalize(r.fieldRef1.formatName)}RecordsOn${capitalize(r.fieldRef1.fieldName)}`
-  )) as ManyToManyFieldRef2FunctionName<typeof relationsForManyToManyFieldRef2[number]>[]
+    // @ts-ignore
+    ?? `get${options.dataFormats[r.fieldRef1.formatName].capitalizedPluralizedName}Of${options.dataFormats[r.fieldRef2.formatName].capitalizedName}`
+  )) as ManyToManyFieldRef2FunctionName<T, typeof relationsForManyToManyFieldRef2[number]>[]
+
+  // -- Property names for each relation in "getWithAllRelations"
+
+  const namesForOneToOneFromOne = relationsForOneToOneFromOne.map(r => (
+    // @ts-ignore
+    `${options.dataFormats[r.toOneField.formatName].name}`
+  )) as OneToOneFromOneFunctionName<T, typeof relationsForOneToOneFromOne[number]>[]
+
+  const namesForOneToOneToOne = relationsForOneToOneToOne.map(r => (
+    // @ts-ignore
+    `${options.dataFormats[r.fromOneField.formatName].name}`
+  )) as OneToOneToOneFunctionName<T, typeof relationsForOneToOneToOne[number]>[]
+
+  const namesForOneToManyFromOne = relationsForOneToManyFromOne.map(r => (
+    // @ts-ignore
+    `${options.dataFormats[r.toManyField.formatName].pluralizedName}`
+  )) as OneToManyFromOneFunctionName<T, typeof relationsForOneToManyFromOne[number]>[]
+
+  const namesForOneToManyToMany = relationsForOneToManyToMany.map(r => (
+    // @ts-ignore
+    `${options.dataFormats[r.fromOneField.formatName].name}`
+  )) as OneToManyToManyFunctionName<T, typeof relationsForOneToManyToMany[number]>[]
+
+  const namesForManyToManyFieldRef1 = relationsForManyToManyFieldRef1.map(r => (
+    // @ts-ignore
+    `${options.dataFormats[r.fieldRef2.formatName].pluralizedName}`
+  )) as ManyToManyFieldRef1FunctionName<T, typeof relationsForManyToManyFieldRef1[number]>[]
+
+  const namesForManyToManyFieldRef2 = relationsForManyToManyFieldRef2.map(r => (
+    // @ts-ignore
+    `${options.dataFormats[r.fieldRef1.formatName].pluralizedName}`
+  )) as ManyToManyFieldRef2FunctionName<T, typeof relationsForManyToManyFieldRef2[number]>[]
 
   // -- Getter function dicts for each type
 
@@ -143,9 +181,10 @@ export const createEntityDbStore = <
 
     return {
       key: functionName,
-      value: async (linkedFieldValue: any) => (
-        objectPropsToCamelCase(options.db.queryGetFirstRow(sql, [linkedFieldValue]))
-      ),
+      value: async (linkedFieldValue: any) => {
+        const row = await options.db.queryGetFirstRow(sql, [linkedFieldValue])
+        return objectPropsToCamelCase(row)
+      },
     }
   }) as unknown as OneToOneFromOneFunctionDict<T, K, L>
 
@@ -155,9 +194,10 @@ export const createEntityDbStore = <
 
     return {
       key: functionName,
-      value: async (linkedFieldValue: any) => (
-        objectPropsToCamelCase(options.db.queryGetFirstRow(sql, [linkedFieldValue]))
-      ),
+      value: async (linkedFieldValue: any) => {
+        const row = await options.db.queryGetFirstRow(sql, [linkedFieldValue])
+        return objectPropsToCamelCase(row)
+      },
     }
   }) as unknown as OneToOneToOneFunctionDict<T, K, L>
 
@@ -168,8 +208,8 @@ export const createEntityDbStore = <
     return {
       key: functionName,
       value: async (linkedFieldValue: any) => {
-        const result = await options.db.queryGetRows(sql, [linkedFieldValue])
-        return result.map(objectPropsToCamelCase)
+        const rows = await options.db.queryGetRows(sql, [linkedFieldValue])
+        return rows.map(objectPropsToCamelCase)
       },
     }
   }) as unknown as OneToManyFromOneFunctionDict<T, K, L>
@@ -180,9 +220,10 @@ export const createEntityDbStore = <
 
     return {
       key: functionName,
-      value: async (linkedFieldValue: any) => (
-        objectPropsToCamelCase(options.db.queryGetFirstRow(sql, [linkedFieldValue]))
-      ),
+      value: async (linkedFieldValue: any) => {
+        const row = await options.db.queryGetFirstRow(sql, [linkedFieldValue])
+        return objectPropsToCamelCase(row)
+      },
     }
   }) as unknown as OneToManyToManyFunctionDict<T, K, L>
 
@@ -194,8 +235,8 @@ export const createEntityDbStore = <
     return {
       key: functionName,
       value: async (localFieldValue: any) => {
-        const result = await options.db.queryGetRows(sql, [localFieldValue])
-        return result.map(objectPropsToCamelCase)
+        const rows = await options.db.queryGetRows(sql, [localFieldValue])
+        return rows.map(objectPropsToCamelCase)
       },
     }
   }) as unknown as ManyToManyFieldRef1FunctionDict<T, K, L>
@@ -208,8 +249,8 @@ export const createEntityDbStore = <
     return {
       key: functionName,
       value: async (localFieldValue: any) => {
-        const result = await options.db.queryGetRows(sql, [localFieldValue])
-        return result.map(objectPropsToCamelCase)
+        const rows = await options.db.queryGetRows(sql, [localFieldValue])
+        return rows.map(objectPropsToCamelCase)
       },
     }
   }) as unknown as ManyToManyFieldRef2FunctionDict<T, K, L>
@@ -235,6 +276,44 @@ export const createEntityDbStore = <
   return {
     ...baseStore,
     ...relationsStore,
+    getByIdWithAllRelations: async (id: number) => {
+      const baseRecord = await baseStore.getById(id)
+
+      const propertyNameAndResultPromiseList: ({ result: any, propertyName: string })[] = await Promise.all([]
+        .concat(functionNamesForOneToOneFromOne.map((functionName, i) => (
+          // @ts-ignore
+          relationsStore[functionName](id).then(result => ({ result, propertyName: namesForOneToOneFromOne[i] }))
+        )))
+        .concat(functionNamesForOneToOneToOne.map((functionName, i) => (
+          // @ts-ignore
+          relationsStore[functionName](id).then(result => ({ result, propertyName: namesForOneToOneToOne[i] }))
+        )))
+        .concat(functionNamesForOneToManyFromOne.map((functionName, i) => (
+          // @ts-ignore
+          relationsStore[functionName](id).then(result => ({ result, propertyName: namesForOneToManyFromOne[i] }))
+        )))
+        .concat(functionNamesForOneToManyToMany.map((functionName, i) => (
+          // @ts-ignore
+          relationsStore[functionName](id).then(result => ({ result, propertyName: namesForOneToManyToMany[i] }))
+        )))
+        .concat(functionNamesForManyToManyFieldRef1.map((functionName, i) => (
+          // @ts-ignore
+          relationsStore[functionName](id).then(result => ({ result, propertyName: namesForManyToManyFieldRef1[i] }))
+        )))
+        .concat(functionNamesForManyToManyFieldRef2.map((functionName, i) => (
+          // @ts-ignore
+          relationsStore[functionName](id).then(result => ({ result, propertyName: namesForManyToManyFieldRef2[i] }))
+        ))))
+
+      const relatedRecordsDict = toDict(propertyNameAndResultPromiseList, item => ({
+        key: item.propertyName, value: item.result,
+      }))
+
+      return {
+        ...baseRecord,
+        ...relatedRecordsDict,
+      }
+    },
     provision: () => options.db.queryGetRows(createTableSql)
       .then(() => true),
     unprovision: () => options.db.queryGetRows(`drop table if exists ${localDataFormat.sql.tableName}`)

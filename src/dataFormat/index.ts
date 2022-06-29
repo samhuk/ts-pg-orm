@@ -11,7 +11,7 @@ import {
   DataFormatSqlInfo,
 } from './types'
 import { toDictReadonly } from '../helpers/dict'
-import { camelCaseToSnakeCase } from '../helpers/string'
+import { camelCaseToSnakeCase, capitalize } from '../helpers/string'
 import { convertDataFormatDeclarationToCreateTableSql } from './sql'
 import { createSampleData } from './sampleData'
 import { COMMON_FIELDS } from './common'
@@ -106,8 +106,13 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     deleteSqlBase: `update ${tableName} set date_deleted = CURRENT_TIMESTAMP`,
   } : null
 
+  const pluralizedName = dataFormatDeclaration.pluralizedName ?? `${dataFormatDeclaration.name}s` as any
+
   return {
     name: dataFormatDeclaration.name,
+    capitalizedName: capitalize(dataFormatDeclaration.name) as any,
+    pluralizedName,
+    capitalizedPluralizedName: capitalize(pluralizedName),
     declaration: dataFormatDeclaration,
     fields,
     fieldNames: fieldNamesDict,

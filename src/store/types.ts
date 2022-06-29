@@ -22,40 +22,90 @@ import {
 import { StoreBase } from './base/types'
 
 export type OneToOneFromOneFunctionName<
-  K extends RelationDeclaration<DataFormatDeclarations, RelationType.ONE_TO_ONE>
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_ONE>,
 > = K extends { getRelatedToOneFieldRecordsStoreName: string }
   ? K['getRelatedToOneFieldRecordsStoreName']
-  : `getRelated${Capitalize<K['toOneField']['formatName']>}RecordOn${Capitalize<K['toOneField']['fieldName']>}`
+  // @ts-ignore
+  : `get${DataFormatsDict<T>[K['toOneField']['formatName']]['capitalizedName']}Of${DataFormatsDict<T>[K['fromOneField']['formatName']]['capitalizedName']}`
 
 export type OneToOneToOneFunctionName<
-  K extends RelationDeclaration<DataFormatDeclarations, RelationType.ONE_TO_ONE>
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_ONE>
 > = K extends { getRelatedFromOneFieldRecordsStoreName: string }
   ? K['getRelatedFromOneFieldRecordsStoreName']
-  : `getRelated${Capitalize<K['fromOneField']['formatName']>}RecordOn${Capitalize<K['fromOneField']['fieldName']>}`
+  // @ts-ignore
+  : `get${DataFormatsDict<T>[K['fromOneField']['formatName']]['capitalizedName']}Of${DataFormatsDict<T>[K['toOneField']['formatName']]['capitalizedName']}`
 
 export type OneToManyFromOneFunctionName<
-   K extends RelationDeclaration<DataFormatDeclarations, RelationType.ONE_TO_MANY>
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_MANY>
 > = K extends { getRelatedToManyFieldRecordsStoreName: string }
   ? K['getRelatedToManyFieldRecordsStoreName']
-  : `getRelated${Capitalize<K['toManyField']['formatName']>}RecordsOn${Capitalize<K['toManyField']['fieldName']>}`
+  // @ts-ignore
+  : `get${DataFormatsDict<T>[K['toManyField']['formatName']]['capitalizedPluralizedName']}Of${DataFormatsDict<T>[K['fromOneField']['formatName']]['capitalizedName']}`
 
 export type OneToManyToManyFunctionName<
-   K extends RelationDeclaration<DataFormatDeclarations, RelationType.ONE_TO_MANY>
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_MANY>
 > = K extends { getRelatedFromOneFieldRecordsStoreName: string }
   ? K['getRelatedFromOneFieldRecordsStoreName']
-  : `getRelated${Capitalize<K['fromOneField']['formatName']>}RecordOn${Capitalize<K['fromOneField']['fieldName']>}`
+  // @ts-ignore
+  : `get${DataFormatsDict<T>[K['fromOneField']['formatName']]['capitalizedName']}Of${DataFormatsDict<T>[K['toManyField']['formatName']]['capitalizedName']}`
 
 export type ManyToManyFieldRef1FunctionName<
-  K extends RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.MANY_TO_MANY>
 > = K extends { getRelatedFieldRef2RecordsStoreName: string }
   ? K['getRelatedFieldRef2RecordsStoreName']
-  : `getRelated${Capitalize<K['fieldRef2']['formatName']>}RecordsOn${Capitalize<K['fieldRef2']['fieldName']>}`
+  // @ts-ignore
+  : `get${DataFormatsDict<T>[K['fieldRef2']['formatName']]['capitalizedPluralizedName']}Of${DataFormatsDict<T>[K['fieldRef1']['formatName']]['capitalizedName']}`
 
 export type ManyToManyFieldRef2FunctionName<
-  K extends RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.MANY_TO_MANY>
 > = K extends { getRelatedFieldRef1RecordsStoreName: string }
   ? K['getRelatedFieldRef1RecordsStoreName']
-  : `getRelated${Capitalize<K['fieldRef1']['formatName']>}RecordsOn${Capitalize<K['fieldRef1']['fieldName']>}`
+  // @ts-ignore
+  : `get${DataFormatsDict<T>[K['fieldRef1']['formatName']]['capitalizedPluralizedName']}Of${DataFormatsDict<T>[K['fieldRef2']['formatName']]['capitalizedName']}`
+
+// --
+
+export type OneToOneFromOneName<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_ONE>
+  // @ts-ignore
+> = `${DataFormatsDict<T>[K['toOneField']['formatName']]['name']}`
+
+export type OneToOneToOneName<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_ONE>
+  // @ts-ignore
+> = `${DataFormatsDict<T>[K['fromOneField']['formatName']]['name']}`
+
+export type OneToManyFromOneName<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_MANY>
+  // @ts-ignore
+> = `${DataFormatsDict<T>[K['toManyField']['formatName']]['pluralizedName']}`
+
+export type OneToManyToManyName<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.ONE_TO_MANY>
+  // @ts-ignore
+> = `${DataFormatsDict<T>[K['fromOneField']['formatName']]['name']}`
+
+export type ManyToManyFieldRef1Name<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.MANY_TO_MANY>
+  // @ts-ignore
+> = `${DataFormatsDict<T>[K['fieldRef2']['formatName']]['pluralizedName']}`
+
+export type ManyToManyFieldRef2Name<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration<T, RelationType.MANY_TO_MANY>
+  // @ts-ignore
+> = `${DataFormatsDict<T>[K['fieldRef1']['formatName']]['pluralizedName']}`
 
 // --
 
@@ -102,7 +152,7 @@ export type OneToOneFromOneFunctionDict<
   [K1 in keyof PickAny<
       RelationsDict<T, K>, ExtractRelevantRelationNamesWithOneToOneFromOne<L, K>
       // @ts-ignore
-    > as OneToOneFromOneFunctionName<RelationsDict<T, K>[K1]>
+    > as OneToOneFromOneFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
     // @ts-ignore
@@ -119,7 +169,7 @@ export type OneToOneToOneFunctionDict<
       RelationsDict<T, K>,
       ExtractRelevantRelationNamesWithOneToOneToOne<L, K>
       // @ts-ignore
-    > as OneToOneToOneFunctionName<RelationsDict<T, K>[K1]>
+    > as OneToOneToOneFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
     // @ts-ignore
@@ -136,7 +186,7 @@ export type OneToManyFromOneFunctionDict<
       RelationsDict<T, K>,
       ExtractRelevantRelationNamesWithOneToManyFromOne<L, K>
       // @ts-ignore
-    > as OneToManyFromOneFunctionName<RelationsDict<T, K>[K1]>
+    > as OneToManyFromOneFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
     // @ts-ignore
@@ -153,7 +203,7 @@ export type OneToManyToManyFunctionDict<
      RelationsDict<T, K>,
      ExtractRelevantRelationNamesWithOneToManyToMany<L, K>
      // @ts-ignore
-    > as OneToManyToManyFunctionName<RelationsDict<T, K>[K1]>
+    > as OneToManyToManyFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
     // @ts-ignore
@@ -170,7 +220,7 @@ export type ManyToManyFieldRef1FunctionDict<
       RelationsDict<T, K>,
       ExtractRelevantRelationNamesWithManyToManyFieldRef1<L, K>
       // @ts-ignore
-    > as ManyToManyFieldRef1FunctionName<RelationsDict<T, K>[K1]>
+    > as ManyToManyFieldRef1FunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
     // @ts-ignore
@@ -187,12 +237,97 @@ export type ManyToManyFieldRef2FunctionDict<
       RelationsDict<T, K>,
       ExtractRelevantRelationNamesWithManyToManyFieldRef2<L, K>
       // @ts-ignore
-    > as ManyToManyFieldRef2FunctionName<RelationsDict<T, K>[K1]>
+    > as ManyToManyFieldRef2FunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
   ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
+}
+
+// --
+
+export type OneToOneFromOneDict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  [K1 in keyof PickAny<
+      RelationsDict<T, K>, ExtractRelevantRelationNamesWithOneToOneFromOne<L, K>
+      // @ts-ignore
+    > as OneToOneFromOneName<T, RelationsDict<T, K>[K1]>
+    // @ts-ignore
+  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
+}
+
+export type OneToOneToOneDict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  [K1 in keyof PickAny<
+      RelationsDict<T, K>,
+      ExtractRelevantRelationNamesWithOneToOneToOne<L, K>
+      // @ts-ignore
+    > as OneToOneToOneName<T, RelationsDict<T, K>[K1]>
+    // @ts-ignore
+  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
+}
+
+export type OneToManyFromOneDict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  [K1 in keyof PickAny<
+      RelationsDict<T, K>,
+      ExtractRelevantRelationNamesWithOneToManyFromOne<L, K>
+      // @ts-ignore
+    > as OneToManyFromOneName<T, RelationsDict<T, K>[K1]>
+    // @ts-ignore
+  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
+}
+
+export type OneToManyToManyDict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  [K1 in keyof PickAny<
+     RelationsDict<T, K>,
+     ExtractRelevantRelationNamesWithOneToManyToMany<L, K>
+     // @ts-ignore
+    > as OneToManyToManyName<T, RelationsDict<T, K>[K1]>
+    // @ts-ignore
+  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
+}
+
+export type ManyToManyFieldRef1Dict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  [K1 in keyof PickAny<
+      RelationsDict<T, K>,
+      ExtractRelevantRelationNamesWithManyToManyFieldRef1<L, K>
+      // @ts-ignore
+    > as ManyToManyFieldRef1Name<T, RelationsDict<T, K>[K1]>
+    // @ts-ignore
+  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
+}
+
+export type ManyToManyFieldRef2Dict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  [K1 in keyof PickAny<
+      RelationsDict<T, K>,
+      ExtractRelevantRelationNamesWithManyToManyFieldRef2<L, K>
+      // @ts-ignore
+    > as ManyToManyFieldRef2Name<T, RelationsDict<T, K>[K1]>
+    // @ts-ignore
+  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
 }
 
 // --
@@ -207,6 +342,22 @@ export type RelationGetterFunctionsDict<
   & OneToManyToManyFunctionDict<T, K, L>
   & ManyToManyFieldRef1FunctionDict<T, K, L>
   & ManyToManyFieldRef2FunctionDict<T, K, L>
+
+export type GetWithRelatedDataDict<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number]['name'],
+> = {
+  getByIdWithAllRelations: (id: number) => Promise<
+    DataFormatDeclarationToRecord<Extract<T[number], { name: L }>>
+    & OneToOneFromOneDict<T, K, L>
+    & OneToOneToOneDict<T, K, L>
+    & OneToManyFromOneDict<T, K, L>
+    & OneToManyToManyDict<T, K, L>
+    & ManyToManyFieldRef1Dict<T, K, L>
+    & ManyToManyFieldRef2Dict<T, K, L>
+  >
+}
 
 export type StoreOptions<
   T extends DataFormatDeclarations,
@@ -227,6 +378,7 @@ export type Store<
   // The data format declaration
 > = StoreBase<Extract<T[number], { name: L }>>
   & RelationGetterFunctionsDict<T, K, L>
+  & GetWithRelatedDataDict<T, K, L>
   & {
     unprovision: () => Promise<boolean>
     provision: () => Promise<boolean>

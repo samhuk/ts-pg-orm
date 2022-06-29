@@ -17,9 +17,8 @@ const _createEntities = <
     dataFormatDeclarations: T,
     relationDeclarations: K,
   ): Entities<T, K> => {
-  // @ts-ignore
-  const manyToManyRelationsList: Relation<T, RelationType.MANY_TO_MANY>[] = Object.values(relationsDict)
-    .filter(r => (r as Relation<T>).type === RelationType.MANY_TO_MANY)
+  const manyToManyRelationsList = Object.values(relationsDict)
+    .filter(r => (r as Relation<T>).type === RelationType.MANY_TO_MANY) as Relation<T, RelationType.MANY_TO_MANY>[]
 
   return {
     dataFormats: dataFormatsDict,

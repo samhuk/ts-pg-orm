@@ -156,9 +156,15 @@ export type DataFormatField<
  */
 export type MutableDataFormatDeclaration = {
   /**
-   * The camel-case, singular name of the format, e.g. "user", "userGroup", "recipe".
+   * The camel-case, singular name of the format, e.g. "user", "userGroup", "recipe", etc.
    */
   name: string
+  /**
+   * The camel-case, pluralized name of the format, e.g. "users", "userGroups", "recipes", etc.
+   *
+   * Default: `name` with "s" suffix.
+   */
+  pluralizedName?: string
   /**
    * Optional display name. Default: Title-case version of `name`.
    */
@@ -410,6 +416,18 @@ export type DataFormat<T extends DataFormatDeclaration = DataFormatDeclaration> 
    * The camel-case name of the data format.
    */
   name: T['name']
+  /**
+   * The pluralized camel-case name of the data format.
+   */
+  pluralizedName: T extends { pluralizedName: string } ? T['pluralizedName'] : `${T['name']}s`
+  /**
+   * Capitalized version of `name`, e.g. "User", "UserGroup", "Recipe", etc.
+   */
+  capitalizedName: Capitalize<T['name']>
+  /**
+   * Capitalized and pluralized version of `pluralizedName`, e.g. "Users", "UserGroups", "Recipes", etc.
+   */
+  capitalizedPluralizedName: Capitalize<T extends { pluralizedName: string } ? T['pluralizedName'] : `${T['name']}s`>
   /**
    * The original data format declaration.
    */

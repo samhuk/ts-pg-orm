@@ -13,33 +13,41 @@ describe('sql', () => {
   test('createOneToOneFromOneRelationSelectSql', () => {
     const fn = createOneToOneFromOneRelationSelectSql
 
-    const sql = fn(entities.dataFormats, entities.relations['e1.a <--> e2.d'])
+    const sql = fn(entities.dataFormats, entities.relations['user.id <--> userAddress.userId'])
 
-    expect(sql).toBe(`select * from "e2" where d = $1 limit 1`)
+    expect(sql).toBe(`select "user_address".user_id, "user_address".street_address, "user_address".post_code from "user"
+join "user_address" on "user_address".user_id = "user".id
+where "user".id = $1 limit 1`)
   })
 
   test('createOneToOneToOneRelationSelectSql', () => {
     const fn = createOneToOneToOneRelationSelectSql
 
-    const sql = fn(entities.dataFormats, entities.relations['e1.a <--> e2.d'])
+    const sql = fn(entities.dataFormats, entities.relations['user.id <--> userAddress.userId'])
 
-    expect(sql).toBe(`select * from "e1" where a = $1 limit 1`)
+    expect(sql).toBe(`select "user".id, "user".name from "user_address"
+join "user" on "user".id = "user_address".user_id
+where "user_address".id = $1 limit 1`)
   })
 
   test('createOneToManyFromOneRelationSelectSql', () => {
     const fn = createOneToManyFromOneRelationSelectSql
 
-    const sql = fn(entities.dataFormats, entities.relations['e1.b <-->> e2.e'])
+    const sql = fn(entities.dataFormats, entities.relations['user.id <-->> recipe.createdByUserId'])
 
-    expect(sql).toBe(`select * from "e2" where e = $1`)
+    expect(sql).toBe(`select "recipe".id, "recipe".created_by_user_id from "user"
+join "recipe" on "recipe".created_by_user_id = "user".id
+where "user".id = $1`)
   })
 
   test('createOneToManyToManyRelationSelectSql', () => {
     const fn = createOneToManyToManyRelationSelectSql
 
-    const sql = fn(entities.dataFormats, entities.relations['e1.b <-->> e2.e'])
+    const sql = fn(entities.dataFormats, entities.relations['user.id <-->> recipe.createdByUserId'])
 
-    expect(sql).toBe(`select * from "e1" where b = $1 limit 1`)
+    expect(sql).toBe(`select "user".id, "user".name from "recipe"
+join "user" on "user".id = "recipe".created_by_user_id
+where "recipe".id = $1 limit 1`)
   })
 
   test('createManyToManyFieldRef1RelationSelectSql', () => {
@@ -47,7 +55,9 @@ describe('sql', () => {
 
     const sql = fn(entities.dataFormats, entities.relations['user.id <<-->> userGroup.id'])
 
-    expect(sql).toBe(`select "user_group".id, "user_group".name from "user"\njoin user_to_user_group on user_to_user_group.user_id = "user".id\njoin "user_group" on "user_group".id = user_to_user_group.user_group_id\nwhere "user".id = $1`)
+    expect(sql).toBe(`select "user_group".id, "user_group".name from "user"
+join user_to_user_group on user_to_user_group.user_id = "user".id
+join "user_group" on "user_group".id = user_to_user_group.user_group_id\nwhere "user".id = $1`)
   })
 
   test('createManyToManyFieldRef2RelationSelectSql', () => {
@@ -55,6 +65,8 @@ describe('sql', () => {
 
     const sql = fn(entities.dataFormats, entities.relations['user.id <<-->> userGroup.id'])
 
-    expect(sql).toBe(`select "user".id, "user".name from "user_group"\njoin user_to_user_group on user_to_user_group.user_group_id = "user_group".id\njoin "user" on "user".id = user_to_user_group.user_id\nwhere "user_group".id = $1`)
+    expect(sql).toBe(`select "user".id, "user".name from "user_group"
+join user_to_user_group on user_to_user_group.user_group_id = "user_group".id
+join "user" on "user".id = user_to_user_group.user_id\nwhere "user_group".id = $1`)
   })
 })

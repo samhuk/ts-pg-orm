@@ -9,10 +9,21 @@ export const createOneToOneFromOneRelationSelectSql = <
     relation: Relation<T, RelationType.ONE_TO_ONE, RelationDeclaration<T, RelationType.ONE_TO_ONE>>,
   ) => {
   // @ts-ignore
+  const localDataFormat = dataFormats[relation.fromOneField.formatName] as DataFormat
+  const localTableName = localDataFormat.sql.tableName
+  const localColumnName = localDataFormat.sql.columnNames[relation.fromOneField.fieldName]
+
+  // @ts-ignore
   const foreignDataFormat = dataFormats[relation.toOneField.formatName] as DataFormat
+  const foreignTableName = foreignDataFormat.sql.tableName
   const foreignColumnName = foreignDataFormat.sql.columnNames[relation.toOneField.fieldName]
-  const sourceSql = foreignDataFormat.sql.selectSqlBase
-  return `${sourceSql} where ${foreignColumnName} = $1 limit 1`
+  const foreignColumnsSql = foreignDataFormat.sql.columnNameList
+    .map(columnName => `${foreignTableName}.${columnName}`)
+    .join(', ')
+
+  return `select ${foreignColumnsSql} from ${localTableName}
+join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${localTableName}.${localColumnName}
+where ${localTableName}.id = $1 limit 1`
 }
 
 export const createOneToOneToOneRelationSelectSql = <
@@ -22,10 +33,21 @@ export const createOneToOneToOneRelationSelectSql = <
     relation: Relation<T, RelationType.ONE_TO_ONE, RelationDeclaration<T, RelationType.ONE_TO_ONE>>,
   ) => {
   // @ts-ignore
+  const localDataFormat = dataFormats[relation.toOneField.formatName] as DataFormat
+  const localTableName = localDataFormat.sql.tableName
+  const localColumnName = localDataFormat.sql.columnNames[relation.toOneField.fieldName]
+
+  // @ts-ignore
   const foreignDataFormat = dataFormats[relation.fromOneField.formatName] as DataFormat
+  const foreignTableName = foreignDataFormat.sql.tableName
   const foreignColumnName = foreignDataFormat.sql.columnNames[relation.fromOneField.fieldName]
-  const sourceSql = foreignDataFormat.sql.selectSqlBase
-  return `${sourceSql} where ${foreignColumnName} = $1 limit 1`
+  const foreignColumnsSql = foreignDataFormat.sql.columnNameList
+    .map(columnName => `${foreignTableName}.${columnName}`)
+    .join(', ')
+
+  return `select ${foreignColumnsSql} from ${localTableName}
+join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${localTableName}.${localColumnName}
+where ${localTableName}.id = $1 limit 1`
 }
 
 export const createOneToManyFromOneRelationSelectSql = <
@@ -35,10 +57,21 @@ export const createOneToManyFromOneRelationSelectSql = <
     relation: Relation<T, RelationType.ONE_TO_MANY, RelationDeclaration<T, RelationType.ONE_TO_MANY>>,
   ) => {
   // @ts-ignore
+  const localDataFormat = dataFormats[relation.fromOneField.formatName] as DataFormat
+  const localTableName = localDataFormat.sql.tableName
+  const localColumnName = localDataFormat.sql.columnNames[relation.fromOneField.fieldName]
+
+  // @ts-ignore
   const foreignDataFormat = dataFormats[relation.toManyField.formatName] as DataFormat
-  const sourceSql = foreignDataFormat.sql.selectSqlBase
+  const foreignTableName = foreignDataFormat.sql.tableName
   const foreignColumnName = foreignDataFormat.sql.columnNames[relation.toManyField.fieldName]
-  return `${sourceSql} where ${foreignColumnName} = $1`
+  const foreignColumnsSql = foreignDataFormat.sql.columnNameList
+    .map(columnName => `${foreignTableName}.${columnName}`)
+    .join(', ')
+
+  return `select ${foreignColumnsSql} from ${localTableName}
+join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${localTableName}.${localColumnName}
+where ${localTableName}.id = $1`
 }
 
 export const createOneToManyToManyRelationSelectSql = <
@@ -48,10 +81,21 @@ export const createOneToManyToManyRelationSelectSql = <
     relation: Relation<T, RelationType.ONE_TO_MANY, RelationDeclaration<T, RelationType.ONE_TO_MANY>>,
   ) => {
   // @ts-ignore
+  const localDataFormat = dataFormats[relation.toManyField.formatName] as DataFormat
+  const localTableName = localDataFormat.sql.tableName
+  const localColumnName = localDataFormat.sql.columnNames[relation.toManyField.fieldName]
+
+  // @ts-ignore
   const foreignDataFormat = dataFormats[relation.fromOneField.formatName] as DataFormat
-  const sourceSql = foreignDataFormat.sql.selectSqlBase
+  const foreignTableName = foreignDataFormat.sql.tableName
   const foreignColumnName = foreignDataFormat.sql.columnNames[relation.fromOneField.fieldName]
-  return `${sourceSql} where ${foreignColumnName} = $1 limit 1`
+  const foreignColumnsSql = foreignDataFormat.sql.columnNameList
+    .map(columnName => `${foreignTableName}.${columnName}`)
+    .join(', ')
+
+  return `select ${foreignColumnsSql} from ${localTableName}
+join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${localTableName}.${localColumnName}
+where ${localTableName}.id = $1 limit 1`
 }
 
 export const createManyToManyFieldRef1RelationSelectSql = <
@@ -79,7 +123,7 @@ export const createManyToManyFieldRef1RelationSelectSql = <
     `select ${foreignColumnsSql} from ${localTableName}
 join ${joinTableTableName} on ${joinTableTableName}.${createManyToManyJoinTableFieldRef1ColumnName(relation)} = ${localTableName}.${localColumnName}
 join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${joinTableTableName}.${createManyToManyJoinTableFieldRef2ColumnName(relation)}
-where ${localTableName}.${localColumnName} = $1`
+where ${localTableName}.id = $1`
   )
 }
 
@@ -108,6 +152,6 @@ export const createManyToManyFieldRef2RelationSelectSql = <
     `select ${foreignColumnsSql} from ${localTableName}
 join ${joinTableTableName} on ${joinTableTableName}.${createManyToManyJoinTableFieldRef2ColumnName(relation)} = ${localTableName}.${localColumnName}
 join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${joinTableTableName}.${createManyToManyJoinTableFieldRef1ColumnName(relation)}
-where ${localTableName}.${localColumnName} = $1`
+where ${localTableName}.id = $1`
   )
 }

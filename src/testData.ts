@@ -37,8 +37,28 @@ export const d4 = createDataFormatDeclaration({
   ],
 } as const)
 
+export const d5 = createDataFormatDeclaration({
+  name: 'userAddress',
+  pluralizedName: 'userAddresses',
+  fields: [
+    { name: 'userId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+    { name: 'streetAddress', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200 },
+    { name: 'postCode', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 10 },
+  ],
+} as const)
+
+export const d6 = createDataFormatDeclaration({
+  name: 'recipe',
+  fields: [
+    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
+    { name: 'createdByUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+  ],
+} as const)
+
+const dfds = [d1, d2, d3, d4, d5, d6] as const
+
 export const entities = createEntities()
-  .loadDataFormats([d1, d2, d3, d4] as const)
+  .loadDataFormats(dfds)
   .loadRelations(dfs => [
     {
       type: RelationType.ONE_TO_ONE,
@@ -61,5 +81,15 @@ export const entities = createEntities()
       fieldRef2: dfs.userGroup.fieldRefs.id,
       getRelatedFieldRef1RecordsStoreName: 'getUsersOfUserGroup',
       getRelatedFieldRef2RecordsStoreName: 'getUserGroupsOfUser',
+    },
+    {
+      type: RelationType.ONE_TO_ONE,
+      fromOneField: dfs.user.fieldRefs.id,
+      toOneField: dfs.userAddress.fieldRefs.userId,
+    },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: dfs.user.fieldRefs.id,
+      toManyField: dfs.recipe.fieldRefs.createdByUserId,
     },
   ] as const)
