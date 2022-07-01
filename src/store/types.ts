@@ -348,6 +348,9 @@ export type GetWithRelatedDataDict<
   K extends RelationDeclarations<T>,
   L extends T[number]['name'],
 > = {
+  /**
+   * Gets the record with the given id, along with all it's immediate related records.
+   */
   getByIdWithAllRelations: (id: number) => Promise<
     DataFormatDeclarationToRecord<Extract<T[number], { name: L }>>
     & OneToOneFromOneDict<T, K, L>
@@ -370,6 +373,9 @@ export type StoreOptions<
   dataFormatName: L,
 }
 
+/**
+ * A store that is created for a particular entity
+ */
 export type Store<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
@@ -380,6 +386,12 @@ export type Store<
   & RelationGetterFunctionsDict<T, K, L>
   & GetWithRelatedDataDict<T, K, L>
   & {
+    /**
+     * Unrovisions the store, e.g. if a database store, this will drop the table.
+     */
     unprovision: () => Promise<boolean>
+    /**
+     * Provisions the store, e.g. if a database store, this will create the table.
+     */
     provision: () => Promise<boolean>
   }
