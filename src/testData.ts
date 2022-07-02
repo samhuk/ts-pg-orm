@@ -4,24 +4,6 @@ import { DataType, NumberDataSubType, StringDataSubType } from './dataFormat/typ
 import { RelationType } from './relations/types'
 
 export const d1 = createDataFormatDeclaration({
-  name: 'e1',
-  fields: [
-    { name: 'a', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-    { name: 'b', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-    { name: 'c', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-  ],
-} as const)
-
-export const d2 = createDataFormatDeclaration({
-  name: 'e2',
-  fields: [
-    { name: 'd', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-    { name: 'e', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-    { name: 'f', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-  ],
-} as const)
-
-export const d3 = createDataFormatDeclaration({
   name: 'user',
   fields: [
     { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
@@ -29,7 +11,7 @@ export const d3 = createDataFormatDeclaration({
   ],
 } as const)
 
-export const d4 = createDataFormatDeclaration({
+export const d2 = createDataFormatDeclaration({
   name: 'userGroup',
   fields: [
     { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
@@ -37,7 +19,7 @@ export const d4 = createDataFormatDeclaration({
   ],
 } as const)
 
-export const d5 = createDataFormatDeclaration({
+export const d3 = createDataFormatDeclaration({
   name: 'userAddress',
   pluralizedName: 'userAddresses',
   fields: [
@@ -47,7 +29,7 @@ export const d5 = createDataFormatDeclaration({
   ],
 } as const)
 
-export const d6 = createDataFormatDeclaration({
+export const d4 = createDataFormatDeclaration({
   name: 'recipe',
   fields: [
     { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
@@ -55,32 +37,15 @@ export const d6 = createDataFormatDeclaration({
   ],
 } as const)
 
-const dfds = [d1, d2, d3, d4, d5, d6] as const
+const dfds = [d1, d2, d3, d4] as const
 
 export const entities = createEntities()
   .loadDataFormats(dfds)
   .loadRelations(dfs => [
     {
-      type: RelationType.ONE_TO_ONE,
-      fromOneField: dfs.e1.fieldRefs.a,
-      toOneField: dfs.e2.fieldRefs.d,
-    },
-    {
-      type: RelationType.ONE_TO_MANY,
-      fromOneField: dfs.e1.fieldRefs.b,
-      toManyField: dfs.e2.fieldRefs.e,
-    },
-    {
-      type: RelationType.MANY_TO_MANY,
-      fieldRef1: dfs.e1.fieldRefs.c,
-      fieldRef2: dfs.e2.fieldRefs.f,
-    },
-    {
       type: RelationType.MANY_TO_MANY,
       fieldRef1: dfs.user.fieldRefs.id,
       fieldRef2: dfs.userGroup.fieldRefs.id,
-      getRelatedFieldRef1RecordsStoreName: 'getUsersOfUserGroup',
-      getRelatedFieldRef2RecordsStoreName: 'getUserGroupsOfUser',
     },
     {
       type: RelationType.ONE_TO_ONE,
@@ -91,5 +56,37 @@ export const entities = createEntities()
       type: RelationType.ONE_TO_MANY,
       fromOneField: dfs.user.fieldRefs.id,
       toManyField: dfs.recipe.fieldRefs.createdByUserId,
+    },
+  ] as const)
+
+export const entitiesWithNamesProvided = createEntities()
+  .loadDataFormats(dfds)
+  .loadRelations(dfs => [
+    {
+      type: RelationType.MANY_TO_MANY,
+      fieldRef1: dfs.user.fieldRefs.id,
+      fieldRef2: dfs.userGroup.fieldRefs.id,
+      getRelatedFieldRef1RecordsName: 'getUsers',
+      getRelatedFieldRef2RecordsName: 'getUserGroups',
+      relatedFieldRef1RecordsName: 'relatedUsers',
+      relatedFieldRef2RecordsName: 'relatedUserGroups',
+    },
+    {
+      type: RelationType.ONE_TO_ONE,
+      fromOneField: dfs.user.fieldRefs.id,
+      toOneField: dfs.userAddress.fieldRefs.userId,
+      getRelatedFromOneRecordsName: 'getUser',
+      getRelatedToOneRecordsName: 'getUserAddress',
+      relatedFromOneRecordsName: 'relatedUser',
+      relatedToOneRecordsName: 'relatedUserAddress',
+    },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: dfs.user.fieldRefs.id,
+      toManyField: dfs.recipe.fieldRefs.createdByUserId,
+      getRelatedFromOneRecordsName: 'getUser',
+      getRelatedToManyRecordsName: 'getRecipes',
+      relatedFromOneRecordsName: 'relatedUser',
+      relatedToManyRecordsName: 'relatedRecipes',
     },
   ] as const)

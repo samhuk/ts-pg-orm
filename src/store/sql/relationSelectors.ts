@@ -2,6 +2,10 @@ import { DataFormat, DataFormatDeclarations, DataFormatsDict, FieldRef } from '.
 import { createManyToManyJoinTableFieldRef2ColumnName, createManyToManyJoinTableFieldRef1ColumnName } from '../../relations/sql'
 import { Relation, RelationDeclaration, RelationType } from '../../relations/types'
 
+/**
+ * Gets various useful sql information for constructing SQL statements
+ * for related data
+ */
 const getSqlInformation = <
 T extends DataFormatDeclarations,
 >(
@@ -31,6 +35,10 @@ T extends DataFormatDeclarations,
   }
 }
 
+/**
+ * Creates the select SQL for getting the related "toOne" record for
+ * a "fromOne" record as part of a one-to-one relation.
+ */
 export const createOneToOneFromOneRelationSelectSql = <
   T extends DataFormatDeclarations,
 >(
@@ -44,6 +52,10 @@ join ${sqlInfo.foreignTableName} on ${sqlInfo.foreignTableName}.${sqlInfo.foreig
 where ${sqlInfo.localTableName}.id = $1 limit 1`
 }
 
+/**
+ * Creates the select SQL for getting the related "fromOne" record for
+ * a "toOne" record as part of a one-to-one relation.
+ */
 export const createOneToOneToOneRelationSelectSql = <
   T extends DataFormatDeclarations,
 >(
@@ -57,6 +69,10 @@ join ${sqlInfo.foreignTableName} on ${sqlInfo.foreignTableName}.${sqlInfo.foreig
 where ${sqlInfo.localTableName}.id = $1 limit 1`
 }
 
+/**
+ * Creates the select SQL for getting the related "toMany" records for
+ * a "fromOne" record as part of a one-to-many relation.
+ */
 export const createOneToManyFromOneRelationSelectSql = <
   T extends DataFormatDeclarations,
 >(
@@ -70,6 +86,10 @@ join ${sqlInfo.foreignTableName} on ${sqlInfo.foreignTableName}.${sqlInfo.foreig
 where ${sqlInfo.localTableName}.id = $1`
 }
 
+/**
+ * Creates the select SQL for getting the related "fromOne" record for
+ * a "toMany" record as part of a one-to-many relation.
+ */
 export const createOneToManyToManyRelationSelectSql = <
   T extends DataFormatDeclarations,
 >(
@@ -83,6 +103,10 @@ join ${sqlInfo.foreignTableName} on ${sqlInfo.foreignTableName}.${sqlInfo.foreig
 where ${sqlInfo.localTableName}.id = $1 limit 1`
 }
 
+/**
+ * Creates the select SQL for getting the related "fieldRef2" records for
+ * a "fieldRef1" record as part of a many-to-many relation.
+ */
 export const createManyToManyFieldRef1RelationSelectSql = <
   T extends DataFormatDeclarations,
 >(
@@ -100,6 +124,10 @@ where ${sqlInfo.localTableName}.id = $1`
   )
 }
 
+/**
+ * Creates the select SQL for getting the related "fieldRef1" records for
+ * a "fieldRef2" record as part of a many-to-many relation.
+ */
 export const createManyToManyFieldRef2RelationSelectSql = <
   T extends DataFormatDeclarations,
 >(

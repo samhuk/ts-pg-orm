@@ -4,11 +4,11 @@ A package for creating data formats and relations with strict type enforcement a
 
 ## What and Why?
 
-There has always been an inconvenient separation between Typescript types and the Javascript code that operates on them. Without code repetition, lots of constants, or otherwise cumbersome workarounds, one cannot easily nor scalably attach metadata to properties of types; one cannot iterate over the fields and perform particular operations for each one, one cannot do a lot.
+There has always been an inconvenient separation between Typescript types and the Javascript code that operates on them. Without repetition, coupling, constants, and/or otherwise cumbersome workarounds, one cannot easily attach metadata to type properties or iterate over them and perform particular operations on them.
 
-Non-native solutions to this problem typically use a *type-to-Javascript* approach to expose types to Javascript code, which typically involves either custom Typescript transformers or a new language with its own compiler down to Typescript.
+Non-native solutions to this often use a *type-to-Javascript* approach to expose types to Javascript code, which typically involves either custom Typescript transformers or a new language with its own compiler down to Typescript.
 
-`ts-entity-framework` takes the opposite approach - *Javascript-to-type*. This package allows you to define "Data Format Declarations" in Javascript (essentially a list of fields with metadata), with the one-liner ability to turn them into various types. This approach requires only native Javascript and Typescript functionality.
+`ts-entity-framework` takes the opposite approach - *Javascript-to-type*, allowing one to define "Data Format Declarations" in Javascript (essentially a list of fields with metadata), with the one-liner ability to turn them into various types. This approach requires only native JS and TS functionality.
 
 ## Usage
 
@@ -47,13 +47,11 @@ const ENTITIES = createEntities()
     USER_GROUP_DFD
   ] as const)
   .loadRelations(dfs => [
-    // Create many-to-many relation between user and userGroup entities
+    // Create many-to-many relation between user and userGroup entities, linked on id fields.
     {
       type: RelationType.MANY_TO_MANY,
       fieldRef1: dfs.user.fieldRefs.id,
-      fieldRef2: dfs.userGroup.fieldRefs.id,
-      getRelatedFieldRef1RecordsStoreName: 'getUsersOfUserGroup',
-      getRelatedFieldRef2RecordsStoreName: 'getUserGroupsOfUser',
+      fieldRef2: dfs.userGroup.fieldRefs.id
     },
   ] as const)
 ```
@@ -73,17 +71,20 @@ export type UserGroupRecord = DataFormatDeclarationToRecord<typeof USER_GROUP_DF
 // { id: number, name: string }
 ```
 
-Create PostgreSQL stores for entities:
+Create and provision PostgreSQL stores for entities:
 
 ```typescript
-// Provide own db service
-const baseUserDbStore = ENTITIES.sqldb.createEntityDbStore('user', dbService)
-const baseUserGroupDbStore = ENTITIES.sqldb.createEntityDbStore('userGroup', dbService)
-// Create join tables (a.k.a "junction table") for all many-to-many relations, i.e. user_to_user_group
+import { DbService } from 'ts-entity-framework/dist/dataFormat/types'
+// Define PostgreSql DB service, with query, queryGetFirstRow, and queryGetRows functions.
+const dbService: DbService = { ... }
+// Create DB stores for entities
+const userDbStore = ENTITIES.sqldb.createEntityDbStore('user', dbService)
+const userGroupDbStore = ENTITIES.sqldb.createEntityDbStore('userGroup', dbService)
+// Create join table (a.k.a "junction table") for many-to-many relations, i.e. user_to_user_group
 await ENTITIES.sqldb.createJoinTables(dbService)
 // Create entity tables
-await baseUserDbStore.provision()
-await baseUserGroupDbStore.provision()
+await userDbStore.provision()
+await userGroupDbStore.provision()
 ```
 
 Use created types and stores in your application, all fully type-enforced!:
@@ -91,13 +92,18 @@ Use created types and stores in your application, all fully type-enforced!:
 ```typescript
 // Perform CRUD operations on entities
 const createUserOptions: CreateUserRecordOptions = { name: 'newUser' }
-const user: UserRecord = await baseUserDbStore.add(createUserOptions)
-// Get related entity data according to data formats and relations
-const userGroups = await baseUserDbStore.getUserGroupsOfUser(user.id)
-// Use data format sql information to create type-enforced SQL statements
+// Get entity record
+const user: UserRecord = await userDbStore.add(createUserOptions)
+// Get related entity records
+const userGroups = await userDbStore.getUserGroupsOfUser(user.id)
+// Get entity record with all related entity records
+const userWithUserGroups = await userDbStore.getByIdWithAllRelations(user.id)
+// Get entity record with some related entity records
+const userWithUserGroups = await userDbStore.getByIdWithRelations(user.id, ['userGroups'])
+// Use data format sql information to create custom type-enforced SQL statements
 const userSqlInfo = ENTITIES.dataFormats.user.sql
-const customUserSql = `select ${userSqlInfo.columnNames.name} from` /* ... */
-// And so on...
+const customUserSql = `select ${userSqlInfo.columnNames.name} from ${userSqlInfo.tableName}`
+// select name from "user"
 ```
 
 ## Development

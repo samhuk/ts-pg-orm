@@ -47,21 +47,27 @@ type MutableRelationDeclaration<
   [RelationType.ONE_TO_ONE]: {
     fromOneField: ExtractAvailableFieldRefs<T>
     toOneField: ExtractAvailableFieldRefs<T>
-    getRelatedFromOneFieldRecordsStoreName?: string
-    getRelatedToOneFieldRecordsStoreName?: string
+    getRelatedFromOneRecordsName?: string
+    getRelatedToOneRecordsName?: string
+    relatedFromOneRecordsName?: string
+    relatedToOneRecordsName?: string
   },
   [RelationType.ONE_TO_MANY]: {
     fromOneField: ExtractAvailableFieldRefs<T>
     toManyField: ExtractAvailableFieldRefs<T>
-    getRelatedFromOneFieldRecordsStoreName?: string
-    getRelatedToManyFieldRecordsStoreName?: string
+    getRelatedFromOneRecordsName?: string
+    getRelatedToManyRecordsName?: string
+    relatedFromOneRecordsName?: string
+    relatedToManyRecordsName?: string
   },
   [RelationType.MANY_TO_MANY]: {
     includeDateCreated?: boolean
     fieldRef1: ExtractAvailableFieldRefs<T>
     fieldRef2: ExtractAvailableFieldRefs<T>
-    getRelatedFieldRef1RecordsStoreName?: string
-    getRelatedFieldRef2RecordsStoreName?: string
+    getRelatedFieldRef1RecordsName?: string
+    getRelatedFieldRef2RecordsName?: string
+    relatedFieldRef1RecordsName?: string
+    relatedFieldRef2RecordsName?: string
   },
 }, K>
 
@@ -201,52 +207,55 @@ Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_ONE, fromOne
 * where the given data format is the "to one" in the relations.
 */
 export type ExtractRelevantRelationsWithOneToOneToOne<T extends string, K extends RelationDeclarations> =
-Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_ONE, toOneField: { formatName: T } }>
+  Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_ONE, toOneField: { formatName: T } }>
 
 /**
 * Extracts the relations that are relevant to the given data format declaration name,
 * where the given data format is the "from one" in the relations.
 */
 export type ExtractRelevantRelationsWithOneToManyFromOne<T extends string, K extends RelationDeclarations> =
-Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_MANY, fromOneField: { formatName: T } }>
+  Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_MANY, fromOneField: { formatName: T } }>
 
 /**
 * Extracts the relations that are relevant to the given data format declaration name,
 * where the given data format is the "to many" in the relations.
 */
 export type ExtractRelevantRelationsWithOneToManyToMany<T extends string, K extends RelationDeclarations> =
-Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_MANY, toManyField: { formatName: T } }>
+  Extract<ExtractRelevantRelations<T, K>, { type: RelationType.ONE_TO_MANY, toManyField: { formatName: T } }>
 
 /**
 * Extracts the relations that are relevant to the given data format declaration name,
 * where the given data format is the "fieldRef1" in the relations.
 */
 export type ExtractRelevantRelationsWithManyToManyFieldRef1<T extends string, K extends RelationDeclarations> =
-Extract<ExtractRelevantRelations<T, K>, { type: RelationType.MANY_TO_MANY, fieldRef1: { formatName: T } }>
+  Extract<ExtractRelevantRelations<T, K>, { type: RelationType.MANY_TO_MANY, fieldRef1: { formatName: T } }>
 
 /**
 * Extracts the relations that are relevant to the given data format declaration name,
 * where the given data format is the "fieldRef2" in the relations.
 */
 export type ExtractRelevantRelationsWithManyToManyFieldRef2<T extends string, K extends RelationDeclarations> =
-Extract<ExtractRelevantRelations<T, K>, { type: RelationType.MANY_TO_MANY, fieldRef2: { formatName: T } }>
+  Extract<ExtractRelevantRelations<T, K>, { type: RelationType.MANY_TO_MANY, fieldRef2: { formatName: T } }>
 
 // --
 
 export type ExtractRelevantRelationNamesWithOneToOneFromOne<T extends string, K extends RelationDeclarations> =
-ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToOneFromOne<T, K>>
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToOneFromOne<T, K>>
 
 export type ExtractRelevantRelationNamesWithOneToOneToOne<T extends string, K extends RelationDeclarations> =
-ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToOneToOne<T, K>>
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToOneToOne<T, K>>
 
 export type ExtractRelevantRelationNamesWithOneToManyFromOne<T extends string, K extends RelationDeclarations> =
-ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToManyFromOne<T, K>>
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToManyFromOne<T, K>>
 
 export type ExtractRelevantRelationNamesWithOneToManyToMany<T extends string, K extends RelationDeclarations> =
-ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToManyToMany<T, K>>
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToManyToMany<T, K>>
 
 export type ExtractRelevantRelationNamesWithManyToManyFieldRef1<T extends string, K extends RelationDeclarations> =
-ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithManyToManyFieldRef1<T, K>>
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithManyToManyFieldRef1<T, K>>
 
 export type ExtractRelevantRelationNamesWithManyToManyFieldRef2<T extends string, K extends RelationDeclarations> =
-ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithManyToManyFieldRef2<T, K>>
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithManyToManyFieldRef2<T, K>>
+
+export type ExtractRelevantRelationNames<T extends string, K extends RelationDeclarations> =
+  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelations<T, K>>
