@@ -1,6 +1,6 @@
 {
   "name": "ts-entity-framework",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Typescript entity framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
