@@ -271,7 +271,7 @@ export type OneToOneFromOneDict<
       // @ts-ignore
     > as OneToOneFromOneName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
+  ]: ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>
 }
 
 export type OneToOneToOneDict<
@@ -285,7 +285,7 @@ export type OneToOneToOneDict<
       // @ts-ignore
     > as OneToOneToOneName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
+  ]: ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>
 }
 
 export type OneToManyFromOneDict<
@@ -299,7 +299,7 @@ export type OneToManyFromOneDict<
       // @ts-ignore
     > as OneToManyFromOneName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
+  ]: ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]
 }
 
 export type OneToManyToManyDict<
@@ -313,7 +313,7 @@ export type OneToManyToManyDict<
      // @ts-ignore
     > as OneToManyToManyName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
+  ]: ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>
 }
 
 export type ManyToManyFieldRef1Dict<
@@ -327,7 +327,7 @@ export type ManyToManyFieldRef1Dict<
       // @ts-ignore
     > as ManyToManyFieldRef1Name<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
+  ]: ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]
 }
 
 export type ManyToManyFieldRef2Dict<
@@ -341,7 +341,7 @@ export type ManyToManyFieldRef2Dict<
       // @ts-ignore
     > as ManyToManyFieldRef2Name<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
+  ]: ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]
 }
 
 // --

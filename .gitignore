@@ -5,3 +5,4 @@
 .DS_Store
 /debug.log
 /package-lock.json
+/build-examples

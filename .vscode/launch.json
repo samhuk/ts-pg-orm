@@ -11,5 +11,16 @@
       ],
       "preLaunchTask": "unitTestsDebugPreLaunchTask"
     },
+    {
+      "name": "Run Example API",
+      "type": "node",
+      "request": "launch",
+      "program": "./build-examples/examples/articleApi.js",
+      "args": [
+          "--runInBand",
+          "--no-cache"
+      ],
+      "preLaunchTask": "exampleApiDebugPreLaunchTask"
+    },
   ]
 }

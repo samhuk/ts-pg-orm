@@ -106,6 +106,12 @@ const customUserSql = `select ${userSqlInfo.columnNames.name} from ${userSqlInfo
 // select name from "user"
 ```
 
+## Examples
+
+Example APIs can be found at ./src/examples.
+
+Run `npm run start-example-api` to build and run the api, and send a request to http://localhost:3000/userProfile/1 to try it out.
+
 ## Development
 
 `ts-entity-framework` is currently in an early state of development, primarily being used as a provider of PostgreSQL stores for data formats with simple data types (i.e. string, number, date, jsonb). More PostgreSQL data types or transformations to other SQL databases altogether could be added later as per need or request.

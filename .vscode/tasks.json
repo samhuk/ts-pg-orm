@@ -10,5 +10,15 @@
         "close": true
       }
     },
+    {
+      "label": "exampleApiDebugPreLaunchTask",
+      "type": "shell",
+      "command": "npm run build-examples",
+      "presentation": {
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "close": true
+      }
+    },
   ]
 }
