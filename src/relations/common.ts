@@ -4,13 +4,13 @@ import { RelationDeclaration, RelationType } from './types'
 const createRelationDeclaration = <T extends RelationDeclaration>(d: T): T => d
 
 /**
- * Creates a one-to-many relation from a "user" data format's "id" field
+ * Creates a one-to-many relation from a "userGroup" data format's "id" field
  * to the given field reference.
  *
  * @example
  * createDefaultOneToManyRelationFromUser({
  *   formatName: 'recipe',
- *   fieldName: 'createdByUserId',
+ *   fieldName: 'belongsToUserGroupId',
  * })
  */
 export const createDefaultOneToManyRelationFromUserGroup = <T extends FieldRef>(
