@@ -15,16 +15,6 @@ export const createUuidField = <
     allowNull,
   } as const)
 
-export const createSha256Field = <
-  TName extends string,
-  TAllowNull extends boolean,
->(name: TName, allowNull?: TAllowNull) => ({
-    name,
-    dataType: DataType.STRING,
-    dataSubType: StringDataSubType.SHA_256,
-    allowNull,
-  } as const)
-
 export const COMMON_FIELDS = createCommonFields({
   /**
    * "id" serial integer id field. Likely used as the primary key.
@@ -53,6 +43,15 @@ export const COMMON_FIELDS = createCommonFields({
     dataType: DataType.DATE,
     dataSubType: DateDataSubType.DATE_TIME_WITH_TIMEZONE,
     defaultToCurrentEpoch: true,
+  },
+  /**
+   * "dateLastModified" date-time field
+   */
+  dateLastModified: {
+    name: 'dateLastModified',
+    dataType: DataType.DATE,
+    dataSubType: DateDataSubType.DATE_TIME_WITH_TIMEZONE,
+    allowNull: true,
   },
   /**
    * "dateDeleted" date-time field
