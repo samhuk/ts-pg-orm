@@ -1,6 +1,6 @@
 # ts-entity-framework
 
-A package for creating data formats and relations with strict type enforcement and transformations to PostgreSQL SQL statements.
+A package for creating data formats, relations, and postgresql data stores with strict Typescript type enforcement and advanced type features.
 
 ## What and Why?
 
