@@ -372,8 +372,7 @@ export type RelatedDataDict<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   L extends T[number]['name'],
-> =
-  OneToOneFromOneDict<T, K, L>
+> = OneToOneFromOneDict<T, K, L>
   & OneToOneToOneDict<T, K, L>
   & OneToManyFromOneDict<T, K, L>
   & OneToManyToManyDict<T, K, L>
@@ -391,6 +390,9 @@ export type GetWithRelatedDataDict<
   getByIdWithAllRelations: (id: number) => Promise<
     DataFormatDeclarationToRecord<Extract<T[number], { name: L }>> & RelatedDataDict<T, K, L>
   >
+  /**
+   * Gets the record with the given id, along with the selected immediate related records.
+   */
   getByIdWithRelations: <
     TRelatedDataPropertyNames extends RelatedDataPropertyNamesUnion<T, K, L>[]
   >(id: number, relations: TRelatedDataPropertyNames) => Promise<
