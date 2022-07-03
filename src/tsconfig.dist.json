@@ -4,6 +4,9 @@
   "include": [
     "./"
   ],
+  "exclude": [
+    "./**/*.spec.ts"
+  ],
   "compilerOptions": {
     "module": "CommonJS",
     "declaration": true,
