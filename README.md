@@ -12,7 +12,7 @@ Non-native solutions to this often use a *type-to-Javascript* approach to expose
 
 ## Usage
 
-Create data formats:
+Create Data Format Declarations:
 
 ```typescript
 import { createDataFormatDeclaration } from 'ts-entity-framework/dist/dataFormat'
@@ -35,7 +35,22 @@ export const USER_GROUP_DFD = createDataFormatDeclaration({
 } as const)
 ```
 
-Load data formats and relations between them to create entities:
+Create types from Data Format Declarations:
+
+```typescript
+import { DataFormatDeclarationToRecord, CreateRecordOptions } from 'ts-entity-framework/dist/dataFormat/types'
+
+export type UserRecord = DataFormatDeclarationToRecord<typeof USER_DFD>
+// { id: number, name: string }
+
+export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
+// { name: string }
+
+export type UserGroupRecord = DataFormatDeclarationToRecord<typeof USER_GROUP_DFD>
+// { id: number, name: string }
+```
+
+Load Data Format Declarations and Relations to create entities:
 
 ```typescript
 import { createEntities } from 'ts-entity-framework'
@@ -56,21 +71,6 @@ const ENTITIES = createEntities()
   ] as const)
 ```
 
-Create types:
-
-```typescript
-import { DataFormatDeclarationToRecord, CreateRecordOptions } from 'ts-entity-framework/dist/dataFormat/types'
-
-export type UserRecord = DataFormatDeclarationToRecord<typeof USER_DFD>
-// { id: number, name: string }
-
-export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
-// { name: string }
-
-export type UserGroupRecord = DataFormatDeclarationToRecord<typeof USER_GROUP_DFD>
-// { id: number, name: string }
-```
-
 Create and provision PostgreSQL stores for entities:
 
 ```typescript
@@ -87,7 +87,7 @@ await userDbStore.provision()
 await userGroupDbStore.provision()
 ```
 
-Use created types and stores in your application, all fully type-enforced!:
+Use types and stores throughout your application, all fully type-enforced!:
 
 ```typescript
 // Perform CRUD operations on entities
