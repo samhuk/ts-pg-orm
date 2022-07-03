@@ -8,6 +8,9 @@ const relationTypeToArrowText = {
   [RelationType.ONE_TO_ONE]: '<-->',
 }
 
+/**
+ * Creates the unique name for a relation.
+ */
 export const createRelationName = <
   T extends DataFormatDeclarations,
   K extends RelationDeclaration<T>
@@ -35,14 +38,7 @@ export const createRelation = <
     const _d = d as RelationDeclaration<T, RelationType.MANY_TO_MANY>
     const joinTableName = createManyToManyJoinTableName(_d)
     const relation: Relation<T, RelationType.MANY_TO_MANY, RelationDeclaration<T, RelationType.MANY_TO_MANY>> = {
-      type: _d.type,
-      fieldRef1: _d.fieldRef1,
-      fieldRef2: _d.fieldRef2,
-      includeDateCreated: _d.includeDateCreated,
-      getRelatedFieldRef1RecordsName: _d.getRelatedFieldRef1RecordsName,
-      getRelatedFieldRef2RecordsName: _d.getRelatedFieldRef2RecordsName,
-      relatedFieldRef1RecordsName: _d.relatedFieldRef1RecordsName,
-      relatedFieldRef2RecordsName: _d.relatedFieldRef2RecordsName,
+      ..._d,
       sql: enableSql ? {
         type: _d.type,
         createJoinTableSql: createManyToManyJoinTableSql(_d),
@@ -57,13 +53,7 @@ export const createRelation = <
   if (d.type === RelationType.ONE_TO_MANY) {
     const _d = d as RelationDeclaration<T, RelationType.ONE_TO_MANY>
     const relation: Relation<T, RelationType.ONE_TO_MANY, RelationDeclaration<T, RelationType.ONE_TO_MANY>> = {
-      type: _d.type,
-      fromOneField: _d.fromOneField,
-      toManyField: _d.toManyField,
-      getRelatedFromOneRecordsName: _d.getRelatedFromOneRecordsName,
-      getRelatedToManyRecordsName: _d.getRelatedToManyRecordsName,
-      relatedFromOneRecordsName: _d.relatedFromOneRecordsName,
-      relatedToManyRecordsName: _d.relatedToManyRecordsName,
+      ..._d,
       sql: enableSql ? {
         type: _d.type,
         foreignKeySql: createOneToManyForeignKeySql(_d),
@@ -76,13 +66,7 @@ export const createRelation = <
   if (d.type === RelationType.ONE_TO_ONE) {
     const _d = d as RelationDeclaration<T, RelationType.ONE_TO_ONE>
     const relation: Relation<T, RelationType.ONE_TO_ONE, RelationDeclaration<T, RelationType.ONE_TO_ONE>> = {
-      type: _d.type,
-      fromOneField: _d.fromOneField,
-      toOneField: _d.toOneField,
-      getRelatedFromOneRecordsName: _d.getRelatedFromOneRecordsName,
-      getRelatedToOneRecordsName: _d.getRelatedToOneRecordsName,
-      relatedFromOneRecordsName: _d.relatedFromOneRecordsName,
-      relatedToOneRecordsName: _d.relatedToOneRecordsName,
+      ..._d,
       sql: enableSql ? {
         type: _d.type,
         foreignKeySql: createOneToOneForeignKeySql(_d),
