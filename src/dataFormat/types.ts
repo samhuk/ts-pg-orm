@@ -273,6 +273,20 @@ type DataFormatFieldBase = {
 
 type DataFormatFieldWithoutGeneric = DataFormatFieldBase & ToDiscrimUnion<ToDiscrimUnion<DataTypeSubTypeMapping, 'dataType'>, 'dataSubType'>
 
+export type FieldSubSet<
+  T extends readonly DataFormatField[]
+> = {
+  name: string
+  fields: T[number]['name'][]
+}
+
+export type ExtractFieldSubSetNames<T extends DataFormatDeclaration> = T['fieldSubSets'][number]['name']
+
+export type ExtractFieldSubSet<
+  T extends DataFormatDeclaration,
+  TName extends ExtractFieldSubSetNames<T>,
+> = Extract<T['fieldSubSets'][number], { name: TName }>
+
 export type DataFormatField<
   TDataType extends DataType = DataType,
   TDataSubType extends DataTypeToSubType[TDataType] = any,
@@ -283,25 +297,37 @@ export type DataFormatField<
  * Declares a data format. A data format details the list of fields of a particular entity
  * within the application.
  */
-export type MutableDataFormatDeclaration = {
+export type MutableDataFormatDeclaration<T extends readonly DataFormatField[] = readonly DataFormatField[]> = {
   /**
    * The camel-case, singular name of the format, e.g. "user", "userGroup", "recipe", etc.
+   *
+   * This will determine things like the table name for postgresql tables and the property
+   * names of certain returned data from store functions.
    */
   name: string
   /**
    * The camel-case, pluralized name of the format, e.g. "users", "userGroups", "recipes", etc.
    *
+   * This will determine things like the property names of certain returned data from store functions.
+   *
    * Default: `name` with "s" suffix.
    */
   pluralizedName?: string
   /**
-   * Optional display name. Default: Title-case version of `name`.
+   * Optional display name. Default: Title-case version of `name`, e.g. "User", "User Group", "Recipe".
    */
   displayName?: string
   /**
    * The list of fields within the data format.
    */
-  fields: DataFormatField[]
+  fields: T
+  /**
+   * A list of named sub-sets of fields.
+   *
+   * These are used later on to provide convenient selecting store functions
+   * to retreive data with a sub-set of fields of the data format.
+   */
+  fieldSubSets?: FieldSubSet<T>[]
 }
 
 export type DataFormatDeclaration = DeepReadonly<MutableDataFormatDeclaration>

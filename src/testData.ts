@@ -1,6 +1,7 @@
 import { createEntities } from '.'
 import { createDataFormatDeclaration } from './dataFormat'
-import { DataType, NumberDataSubType, StringDataSubType } from './dataFormat/types'
+import { BASE_ENTITY_FIELDS } from './dataFormat/common'
+import { DataType, DateDataSubType, NumberDataSubType, StringDataSubType } from './dataFormat/types'
 import { RelationType } from './relations/types'
 
 export const d1 = createDataFormatDeclaration({
@@ -37,7 +38,28 @@ export const d4 = createDataFormatDeclaration({
   ],
 } as const)
 
-const dfds = [d1, d2, d3, d4] as const
+export const d5 = createDataFormatDeclaration({
+  name: 'article',
+  fields: [
+    ...BASE_ENTITY_FIELDS,
+    { name: 'title', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200 },
+    { name: 'datePublished', dataType: DataType.DATE, dataSubType: DateDataSubType.DATE_TIME_WITH_TIMEZONE, allowNull: true },
+    { name: 'createdByUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+  ],
+  fieldSubSets: [
+    {
+      name: 'metaData',
+      fields: ['uuid', 'title', 'createdByUserId'],
+    },
+
+    {
+      name: 'selectOption',
+      fields: ['uuid', 'title'],
+    },
+  ],
+} as const)
+
+const dfds = [d1, d2, d3, d4, d5] as const
 
 export const entities = createEntities()
   .loadDataFormats(dfds)

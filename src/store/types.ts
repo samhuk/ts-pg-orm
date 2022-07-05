@@ -1,9 +1,11 @@
 import { PickAny } from '../helpers/types'
 import {
+  DataFormatDeclaration,
   DataFormatDeclarations,
   DataFormatDeclarationToRecord,
   DataFormatFieldToRecordPropertyValue,
   DataFormatsDict,
+  FieldSubSet,
 } from '../dataFormat/types'
 import {
   RelationDeclaration,
@@ -168,7 +170,7 @@ export type OneToOneFromOneFunctionDict<
       // @ts-ignore
     > as OneToOneFromOneFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+  ]: (id: number) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
   )
@@ -185,7 +187,7 @@ export type OneToOneToOneFunctionDict<
       // @ts-ignore
     > as OneToOneToOneFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+  ]: (id: number) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
   )
@@ -202,7 +204,7 @@ export type OneToManyFromOneFunctionDict<
       // @ts-ignore
     > as OneToManyFromOneFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+  ]: (id: number) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
@@ -219,7 +221,7 @@ export type OneToManyToManyFunctionDict<
      // @ts-ignore
     > as OneToManyToManyFunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+  ]: (id: number) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>>
   )
@@ -236,7 +238,7 @@ export type ManyToManyFieldRef1FunctionDict<
       // @ts-ignore
     > as ManyToManyFieldRef1FunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+  ]: (id: number) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
@@ -253,7 +255,7 @@ export type ManyToManyFieldRef2FunctionDict<
       // @ts-ignore
     > as ManyToManyFieldRef2FunctionName<T, RelationsDict<T, K>[K1]>
     // @ts-ignore
-  ]: (linkedFieldValue: ExtractRelationForeignFieldValueType<T, RelationsDict<T, K>[K1], L>) => (
+  ]: (id: number) => (
     // @ts-ignore
     Promise<ExtractRelationForeignRecord<T, RelationsDict<T, K>[K1], L>[]>
   )
@@ -379,6 +381,39 @@ export type RelatedDataDict<
   & ManyToManyFieldRef1Dict<T, K, L>
   & ManyToManyFieldRef2Dict<T, K, L>
 
+// --
+
+export type FieldSubSetsDict<
+  T extends DataFormatDeclaration,
+> = {
+  [K1 in keyof T['fieldSubSets'] & `${bigint}` as T['fieldSubSets'][K1] extends infer TFieldSubSet
+    ? (TFieldSubSet & FieldSubSet<T['fields']>)['name']
+    : never
+  ]: T['fieldSubSets'][K1]
+}
+
+export type FieldSubSetFunctionDict<
+  T extends DataFormatDeclaration,
+> = {
+  [K1 in keyof T['fieldSubSets'] & `${bigint}` as T['fieldSubSets'][K1] extends infer TFieldSubSet
+    ? (TFieldSubSet & FieldSubSet<T['fields']>)['name']
+    : never
+  ]: T['fieldSubSets'][K1]
+}
+
+export type FieldSubSetDataFunctionsDict<
+  T extends DataFormatDeclaration,
+> = {
+  // @ts-ignore
+  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ById`]: (id: number) => Promise<PickAny<DataFormatDeclarationToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>>
+} & {
+  // @ts-ignore
+  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ByUuid`]: (id: number) => Promise<PickAny<DataFormatDeclarationToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>>
+} & {
+  // @ts-ignore
+  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ListByDataQuery`]: (id: number) => Promise<PickAny<DataFormatDeclarationToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>[]>
+}
+
 export type GetWithRelatedDataDict<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
@@ -434,3 +469,4 @@ export type Store<
      */
     provision: () => Promise<boolean>
   }
+  & FieldSubSetDataFunctionsDict<Extract<T[number], { name: L }>>

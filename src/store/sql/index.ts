@@ -1,6 +1,7 @@
+import { DataQuery } from '@samhuk/data-query/dist/types'
 import { toDict } from '../../helpers/dict'
-import { objectPropsToCamelCase } from '../../helpers/string'
-import { DataFormat, DataFormatDeclarations } from '../../dataFormat/types'
+import { capitalize, objectPropsToCamelCase } from '../../helpers/string'
+import { DataFormat, DataFormatDeclaration, DataFormatDeclarations, ExtractFieldSubSetNames } from '../../dataFormat/types'
 import { RelationDeclarations, Relation, RelationType, RelationsDict, ExtractRelevantRelations } from '../../relations/types'
 import { createDbStoreBase } from '../base/db'
 import { StoreBase } from '../base/types'
@@ -18,6 +19,7 @@ import {
   OneToManyToManyFunctionDict,
   OneToOneFromOneFunctionDict,
   OneToOneToOneFunctionDict,
+  FieldSubSetDataFunctionsDict,
 } from '../types'
 import {
   createOneToOneFromOneRelationSelectSql,
@@ -62,6 +64,18 @@ const getRelevantRelationsForForeignKeys = <
       return (_r.type === RelationType.ONE_TO_MANY && _r.toManyField.formatName === dataFormat.name)
         || (_r.type === RelationType.ONE_TO_ONE && _r.toOneField.formatName === dataFormat.name)
     }) as Relation<T, RelationType.ONE_TO_MANY | RelationType.ONE_TO_ONE>[]
+
+const createSelectSqlBaseForFieldSubSet = <
+  T extends DataFormatDeclaration,
+>(
+    dataFormat: DataFormat<T>,
+    fieldSubSetName: ExtractFieldSubSetNames<T>,
+  ): string => {
+  const fieldSubSet = dataFormat.declaration.fieldSubSets.find(fss => fss.name === fieldSubSetName)
+  // @ts-ignore
+  const columnsSql = fieldSubSet.fields.map(fieldName => dataFormat.sql.columnNames[fieldName]).join(', ')
+  return `select ${columnsSql} from ${dataFormat.sql.tableName}`
+}
 
 export const createEntityDbStore = <
   T extends DataFormatDeclarations,
@@ -139,6 +153,36 @@ export const createEntityDbStore = <
     // @ts-ignore
     ?? `get${options.dataFormats[r.fieldRef1.formatName].capitalizedPluralizedName}Of${options.dataFormats[r.fieldRef2.formatName].capitalizedName}`
   )) as ManyToManyFieldRef2FunctionName<T, typeof relationsForManyToManyFieldRef2[number]>[]
+
+  // Create the list of field sub set data functions dicts
+  const fieldSubSetFunctionsDicts = localDataFormat.declaration.fieldSubSets?.map(fss => {
+    const selectSqlBase = createSelectSqlBaseForFieldSubSet(localDataFormat, fss.name)
+    const capitalizedFieldSubSetName = capitalize(fss.name)
+    const getByIdSql = `${selectSqlBase} where id = $1`
+    const getByUuidSql = `${selectSqlBase} where uuid = $1`
+
+    return {
+      [`get${capitalizedFieldSubSetName}ById`]: async (id: number) => {
+        const row = await options.db.queryGetFirstRow(getByIdSql, [id])
+        return objectPropsToCamelCase(row)
+      },
+      [`get${capitalizedFieldSubSetName}ByUuid`]: async (uuid: string) => {
+        const row = await options.db.queryGetFirstRow(getByUuidSql, [uuid])
+        return objectPropsToCamelCase(row)
+      },
+      [`get${capitalizedFieldSubSetName}ListByDataQuery`]: async (query: DataQuery) => {
+        const rows = await options.db.queryGetRows(`${selectSqlBase} ${query.pSqlSql.orderByLimitOffset}`)
+        return rows.map(r => objectPropsToCamelCase(r))
+      },
+    }
+  }) ?? []
+
+  // Flatten out the list of field sub set data dicts
+  const fieldSubSetFunctionsDict = {} as FieldSubSetDataFunctionsDict<TLocalDataFormatDeclaration>
+  fieldSubSetFunctionsDicts.forEach(dict => {
+    // @ts-ignore
+    Object.entries(dict).forEach(([k, v]) => fieldSubSetFunctionsDict[k] = v)
+  })
 
   // -- Function name to function dicts for get-related-data for each relation type
 
@@ -301,6 +345,7 @@ export const createEntityDbStore = <
   return {
     ...baseStore,
     ...getRelatedDataFunctionNameToFunctionDict,
+    ...fieldSubSetFunctionsDict,
     getByIdWithAllRelations: async (id: number) => {
       const baseRecord = await baseStore.getById(id)
 

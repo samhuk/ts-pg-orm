@@ -236,6 +236,34 @@ describe('createEntityDbStore', () => {
     })
   })
 
+  describe('field sub set store functions', () => {
+    test('getMetaDataById', async () => {
+      // -- Arrange
+      const mockDbService = createMockDbService()
+      const store = createEntityDbStore({
+        db: mockDbService,
+        dataFormats: entities.dataFormats,
+        relations: entities.relations,
+        dataFormatName: 'article',
+      })
+      mockDbService.queueResponse({ uuid: 'foo', title: 'bar', createdByUserId: 1 })
+      // -- Act
+      const articleMetaData = await store.getMetaDataById(1)
+      // -- Assert
+      // Assert record props
+      expect(articleMetaData).toBeDefined()
+      expect(articleMetaData.uuid).toBe('foo')
+      expect(articleMetaData.title).toBe('bar')
+      expect(articleMetaData.createdByUserId).toBe(1)
+      expect(mockDbService.receivedQueries).toEqual([
+        {
+          parameters: [1],
+          sql: 'select uuid, title, created_by_user_id from "article" where id = $1',
+        },
+      ])
+    })
+  })
+
   test('use of provided db service', async () => {
     // -- Arrange
     const mockDbService = createMockDbService()
