@@ -108,9 +108,13 @@ const customUserSql = `select ${userSqlInfo.columnNames.name} from ${userSqlInfo
 
 ## Examples
 
-Examples can be found within ./src/examples, showing more advanced usages of `ts-entity-framework`.
+Examples can be found within ./src/examples, showing more complete and realistic usages of `ts-entity-framework`.
 
-Run `npm run start-example-api` to build and run the example api. Try sending a HTTP GET request to http://localhost:3000/userProfile/1 to see `ts-entity-framework` in action.
+### Article API
+
+This is a simple single-endpoint api that has two entities - "User" and "UserArticle", with a single relation linking them.
+
+Run `npm run start-article-api` to build and start the server (don't forget top run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1 to see `ts-entity-framework`.
 
 ## Development
 
