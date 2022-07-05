@@ -38,15 +38,15 @@ export const USER_GROUP_DFD = createDataFormatDeclaration({
 Create types from Data Format Declarations:
 
 ```typescript
-import { DataFormatDeclarationToRecord, CreateRecordOptions } from 'ts-entity-framework/dist/dataFormat/types'
+import { ToRecord, CreateRecordOptions } from 'ts-entity-framework/dist/dataFormat/types'
 
-export type UserRecord = DataFormatDeclarationToRecord<typeof USER_DFD>
+export type UserRecord = ToRecord<typeof USER_DFD>
 // { id: number, name: string }
 
 export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
 // { name: string }
 
-export type UserGroupRecord = DataFormatDeclarationToRecord<typeof USER_GROUP_DFD>
+export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
 // { id: number, name: string }
 ```
 

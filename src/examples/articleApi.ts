@@ -4,7 +4,7 @@ import { exit } from 'process'
 import { createEntities } from '..'
 import { createDataFormatDeclaration } from '../dataFormat'
 import { BASE_ENTITY_FIELDS, COMMON_FIELDS } from '../dataFormat/common'
-import { DataFormatDeclarationToRecord, DataType, StringDataSubType } from '../dataFormat/types'
+import { ToRecord, DataType, StringDataSubType } from '../dataFormat/types'
 import { createMockDbService, MockDbService } from '../mock/dbService'
 import { createDefaultManyToManyRelation } from '../relations/common'
 import { RelationType } from '../relations/types'
@@ -81,8 +81,8 @@ export const ENTITIES = createEntities()
   ] as const)
 
 // -- Create types from ENTITIES
-type UserRecord = DataFormatDeclarationToRecord<typeof USER_DFD>
-type UserArticleRecord = DataFormatDeclarationToRecord<typeof USER_ARTICLE_DFD>
+type UserRecord = ToRecord<typeof USER_DFD>
+type UserArticleRecord = ToRecord<typeof USER_ARTICLE_DFD>
 
 // TODO: This will be improved.
 type UserStore = Store<

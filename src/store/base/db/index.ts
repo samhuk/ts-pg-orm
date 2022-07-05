@@ -5,7 +5,7 @@ import {
   CreateRecordOptions,
   DataFormat,
   DataFormatDeclaration,
-  DataFormatDeclarationToRecord,
+  ToRecord,
   ManualCreateRecordOptions,
 } from '../../../dataFormat/types'
 import { createInsertReturningSql } from '../../../helpers/sql'
@@ -18,7 +18,7 @@ async function add<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   options: CreateRecordOptions<T>,
-): Promise<DataFormatDeclarationToRecord<T>> {
+): Promise<ToRecord<T>> {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.createRecordFieldNames.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
 
@@ -32,7 +32,7 @@ async function addManual<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   options: ManualCreateRecordOptions<T>,
-): Promise<DataFormatDeclarationToRecord<T>> {
+): Promise<ToRecord<T>> {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.fieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
   /* TODO: Why is this required? ManualCreateRecordOptions<T> clearly will always include all
@@ -50,7 +50,7 @@ async function getByDataQuery<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   query: DataQuery,
-): Promise<DataFormatDeclarationToRecord<T>[]> {
+): Promise<ToRecord<T>[]> {
   const sql = `${df.sql.selectSqlBase} ${query.pSqlSql.orderByLimitOffset}`
   const row = await db.queryGetFirstRow(sql)
   return objectPropsToCamelCase(row)
@@ -60,7 +60,7 @@ async function getById<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   id: number,
-): Promise<DataFormatDeclarationToRecord<T>> {
+): Promise<ToRecord<T>> {
   const sql = `${df.sql.selectSqlBase} where id = $1 limit 1`
   const row = await db.queryGetFirstRow(sql, [id])
   return objectPropsToCamelCase(row)
@@ -70,7 +70,7 @@ async function getByUuid<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   uuid: string,
-): Promise<DataFormatDeclarationToRecord<T>> {
+): Promise<ToRecord<T>> {
   const sql = `${df.sql.selectSqlBase} where uuid = $1 limit 1`
   const row = await db.queryGetFirstRow(sql, [uuid])
   return objectPropsToCamelCase(row)
@@ -96,8 +96,8 @@ async function addRandomRecords<T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   count: number,
-): Promise<DataFormatDeclarationToRecord<T>[]> {
-  const recordPromises: Promise<DataFormatDeclarationToRecord<T>>[] = []
+): Promise<ToRecord<T>[]> {
+  const recordPromises: Promise<ToRecord<T>>[] = []
   for (let i = 0; i < count; i += 1)
     recordPromises.push(add(db, df, df.createRandomCreateOptions()))
   return Promise.all(recordPromises)

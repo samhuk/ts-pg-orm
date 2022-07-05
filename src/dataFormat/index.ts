@@ -27,7 +27,7 @@ import { COMMON_FIELDS } from './common'
  * after ~2 hours, I can't figure out why. Something unique about DataFormatField?
  */
 
-type DataFormatDeclarationToFieldsDict<T extends DataFormatDeclaration> = (
+type ToFieldsDict<T extends DataFormatDeclaration> = (
   { [fieldName in T['fields'][number]['name']]: Extract<T['fields'][number], { name: fieldName }> }
 )
 
@@ -50,7 +50,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
   options?: { enablePostgreSql?: boolean },
 ): Readonly<DataFormat<T>> => {
   type FieldNames = ExtractDataFormatFieldNames<T>
-  type FieldsDict = DataFormatDeclarationToFieldsDict<T>
+  type FieldsDict = ToFieldsDict<T>
 
   // Create field name to field name dict
   const fieldNamesDict = toDictReadonly(dataFormatDeclaration.fields, f => ({

@@ -2,7 +2,7 @@ import { PickAny } from '../helpers/types'
 import {
   DataFormatDeclaration,
   DataFormatDeclarations,
-  DataFormatDeclarationToRecord,
+  ToRecord,
   DataFormatFieldToRecordPropertyValue,
   DataFormatsDict,
   FieldSubSet,
@@ -153,7 +153,7 @@ type ExtractRelationForeignRecord<
   K extends RelationDeclaration<T>,
   // The local data format name
   L extends T[number]['name']
-> = DataFormatDeclarationToRecord<
+> = ToRecord<
   Extract<
     T[number],
     { name: ExtractForeignFormatNameFromRelation<K, L> }
@@ -405,13 +405,13 @@ export type FieldSubSetDataFunctionsDict<
   T extends DataFormatDeclaration,
 > = {
   // @ts-ignore
-  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ById`]: (id: number) => Promise<PickAny<DataFormatDeclarationToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>>
+  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ById`]: (id: number) => Promise<PickAny<ToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>>
 } & {
   // @ts-ignore
-  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ByUuid`]: (id: number) => Promise<PickAny<DataFormatDeclarationToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>>
+  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ByUuid`]: (id: number) => Promise<PickAny<ToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>>
 } & {
   // @ts-ignore
-  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ListByDataQuery`]: (id: number) => Promise<PickAny<DataFormatDeclarationToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>[]>
+  [TFieldSubSetName in keyof FieldSubSetsDict<T> as `get${Capitalize<FieldSubSetsDict<T>[TFieldSubSetName]['name']>}ListByDataQuery`]: (id: number) => Promise<PickAny<ToRecord<T>, FieldSubSetsDict<T>[TFieldSubSetName]['fields'][number]>[]>
 }
 
 export type GetWithRelatedDataDict<
@@ -423,7 +423,7 @@ export type GetWithRelatedDataDict<
    * Gets the record with the given id, along with all it's immediate related records.
    */
   getByIdWithAllRelations: (id: number) => Promise<
-    DataFormatDeclarationToRecord<Extract<T[number], { name: L }>> & RelatedDataDict<T, K, L>
+    ToRecord<Extract<T[number], { name: L }>> & RelatedDataDict<T, K, L>
   >
   /**
    * Gets the record with the given id, along with the selected immediate related records.
@@ -431,7 +431,7 @@ export type GetWithRelatedDataDict<
   getByIdWithRelations: <
     TRelatedDataPropertyNames extends RelatedDataPropertyNamesUnion<T, K, L>[]
   >(id: number, relations: TRelatedDataPropertyNames) => Promise<
-    DataFormatDeclarationToRecord<Extract<T[number], { name: L }>>
+    ToRecord<Extract<T[number], { name: L }>>
     & Pick<RelatedDataDict<T, K, L>, TRelatedDataPropertyNames[number]>
   >
 }
