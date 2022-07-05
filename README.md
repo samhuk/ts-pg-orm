@@ -11,7 +11,7 @@ There has always been an inconvenient separation between Typescript types and th
 
 Non-native solutions to this often use a *type-to-Javascript* approach to expose types to Javascript code, which typically involves either custom Typescript transformers or a new language with its own compiler down to Typescript.
 
-`ts-entity-framework` takes an *Javascript-to-type* approach, allowing one to define Data Format Declarations in Javascript, with a one-liner ability to turn them into useful entity types. This approach requires only native JS and TS functionality.
+`ts-entity-framework` takes a *Javascript-to-type* approach, allowing one to define Data Format Declarations in Javascript, with a one-liner ability to turn them into useful entity types. This approach requires only native JS and TS functionality.
 
 ## Usage
 
