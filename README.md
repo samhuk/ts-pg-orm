@@ -1,6 +1,6 @@
 # ts-entity-framework
 
-A package for creating data formats, relations, and postgresql data stores with strict Typescript type enforcement and advanced type features.
+A package for creating data formats, relations, and postgresql data stores with strict Typescript type enforcement.
 
 ## What and Why?
 
@@ -8,7 +8,7 @@ There has always been an inconvenient separation between Typescript types and th
 
 Non-native solutions to this often use a *type-to-Javascript* approach to expose types to Javascript code, which typically involves either custom Typescript transformers or a new language with its own compiler down to Typescript.
 
-`ts-entity-framework` takes the opposite approach - *Javascript-to-type*, allowing one to define "Data Format Declarations" in Javascript (essentially a list of fields with metadata), with the one-liner ability to turn them into various types. This approach requires only native JS and TS functionality.
+`ts-entity-framework` takes an *Javascript-to-type* approach, allowing one to define Data Format Declarations in Javascript, with a one-liner ability to turn them into useful entity types. This approach requires only native JS and TS functionality.
 
 ## Usage
 
@@ -35,7 +35,7 @@ export const USER_GROUP_DFD = createDataFormatDeclaration({
 } as const)
 ```
 
-Create types from Data Format Declarations:
+Create entity types from Data Format Declarations:
 
 ```typescript
 import { ToRecord, CreateRecordOptions } from 'ts-entity-framework/dist/dataFormat/types'
@@ -50,7 +50,7 @@ export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
 // { id: number, name: string }
 ```
 
-Load Data Format Declarations and Relations to create entities:
+Load Data Format Declarations and Relations to create Entities:
 
 ```typescript
 import { createEntities } from 'ts-entity-framework'
@@ -71,7 +71,7 @@ const ENTITIES = createEntities()
   ] as const)
 ```
 
-Create and provision PostgreSQL stores for entities:
+Create and provision PostgreSQL entity stores:
 
 ```typescript
 import { DbService } from 'ts-entity-framework/dist/dataFormat/types'
