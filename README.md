@@ -1,5 +1,8 @@
 # ts-entity-framework
 
+![build](https://github.com/samhuk/ts-entity-framework/actions/workflows/build.yaml/badge.svg)
+![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
+
 A package for creating data formats, relations, and postgresql data stores with strict Typescript type enforcement.
 
 ## What and Why?

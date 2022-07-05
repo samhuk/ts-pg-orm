@@ -31,7 +31,7 @@
 
     "start": "tsc --project ./src/tsconfig.json --watch",
 
-    "prepublish": "npm run clean-all && npm run check"
+    "prepublish": "npm run check"
   },
   "repository": "https://github.com/samhuk/ts-entity-framework",
   "author": "",
