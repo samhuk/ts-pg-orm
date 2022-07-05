@@ -5,7 +5,7 @@ import {
 } from './dataFormat/types'
 import { createRelationName, createRelation } from './relations'
 import { Relation, RelationDeclarations, RelationsDict, RelationType } from './relations/types'
-import { createEntityDbStore } from './store/sql'
+import { createStore } from './store/sql'
 import { Entities, UnloadedEntities, EntitiesWithDataFormats, CreateEntitiesOptions } from './types'
 
 const _createEntities = <
@@ -44,7 +44,7 @@ const _createEntities = <
           .map(r => r.sql.createJoinTableSql)
           .map(sql => db.query(sql)),
       ).then(() => true),
-      createEntityDbStore: (entityName, db) => createEntityDbStore({
+      createStore: (entityName, db) => createStore({
         dataFormatName: entityName,
         db,
         dataFormats: dataFormatsDict,

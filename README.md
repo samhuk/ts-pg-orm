@@ -81,8 +81,8 @@ import { DbService } from 'ts-entity-framework/dist/dataFormat/types'
 // Define PostgreSql DB service, with query, queryGetFirstRow, and queryGetRows functions.
 const dbService: DbService = { ... }
 // Create DB stores for entities
-const userDbStore = ENTITIES.sqldb.createEntityDbStore('user', dbService)
-const userGroupDbStore = ENTITIES.sqldb.createEntityDbStore('userGroup', dbService)
+const userDbStore = ENTITIES.sqldb.createStore('user', dbService)
+const userGroupDbStore = ENTITIES.sqldb.createStore('userGroup', dbService)
 // Create join table (a.k.a "junction table") for many-to-many relations, i.e. user_to_user_group
 await ENTITIES.sqldb.createJoinTables(dbService)
 // Create entity tables

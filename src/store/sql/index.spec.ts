@@ -1,12 +1,12 @@
-import { createEntityDbStore } from '.'
+import { createStore } from '.'
 import { createMockDbService } from '../../mock/dbService'
 import { entities, entitiesWithNamesProvided } from '../../testData'
 
-describe('createEntityDbStore', () => {
+describe('createStore', () => {
   describe('getting related data', () => {
     test('user', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -20,7 +20,7 @@ describe('createEntityDbStore', () => {
 
     test('userGroup', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -32,7 +32,7 @@ describe('createEntityDbStore', () => {
 
     test('userAddress', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -44,7 +44,7 @@ describe('createEntityDbStore', () => {
 
     test('recipe', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -58,7 +58,7 @@ describe('createEntityDbStore', () => {
   describe('getting related data - with custom names provided', () => {
     test('user', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entitiesWithNamesProvided.dataFormats,
         relations: entitiesWithNamesProvided.relations,
@@ -72,7 +72,7 @@ describe('createEntityDbStore', () => {
 
     test('userGroup', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entitiesWithNamesProvided.dataFormats,
         relations: entitiesWithNamesProvided.relations,
@@ -84,7 +84,7 @@ describe('createEntityDbStore', () => {
 
     test('userAddress', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entitiesWithNamesProvided.dataFormats,
         relations: entitiesWithNamesProvided.relations,
@@ -96,7 +96,7 @@ describe('createEntityDbStore', () => {
 
     test('recipe', () => {
       // -- Arrange + Act
-      const store = createEntityDbStore({
+      const store = createStore({
         db: null,
         dataFormats: entitiesWithNamesProvided.dataFormats,
         relations: entitiesWithNamesProvided.relations,
@@ -110,7 +110,7 @@ describe('createEntityDbStore', () => {
   test('getWithAllRelations', async () => {
     // -- Arrange
     const mockDbService = createMockDbService()
-    const store = createEntityDbStore({
+    const store = createStore({
       db: mockDbService,
       dataFormats: entities.dataFormats,
       relations: entities.relations,
@@ -136,7 +136,7 @@ describe('createEntityDbStore', () => {
   test('getWithAllRelations - names provided for related data', async () => {
     // -- Arrange
     const mockDbService = createMockDbService()
-    const store = createEntityDbStore({
+    const store = createStore({
       db: mockDbService,
       dataFormats: entitiesWithNamesProvided.dataFormats,
       relations: entitiesWithNamesProvided.relations,
@@ -163,7 +163,7 @@ describe('createEntityDbStore', () => {
     test('filter for only recipes', async () => {
       // -- Arrange
       const mockDbService = createMockDbService()
-      const store = createEntityDbStore({
+      const store = createStore({
         db: mockDbService,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -188,7 +188,7 @@ describe('createEntityDbStore', () => {
     test('filter for only user address', async () => {
       // -- Arrange
       const mockDbService = createMockDbService()
-      const store = createEntityDbStore({
+      const store = createStore({
         db: mockDbService,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -213,7 +213,7 @@ describe('createEntityDbStore', () => {
     test('filter for only user groups', async () => {
       // -- Arrange
       const mockDbService = createMockDbService()
-      const store = createEntityDbStore({
+      const store = createStore({
         db: mockDbService,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -240,7 +240,7 @@ describe('createEntityDbStore', () => {
     test('getMetaDataById', async () => {
       // -- Arrange
       const mockDbService = createMockDbService()
-      const store = createEntityDbStore({
+      const store = createStore({
         db: mockDbService,
         dataFormats: entities.dataFormats,
         relations: entities.relations,
@@ -267,7 +267,7 @@ describe('createEntityDbStore', () => {
   test('use of provided db service', async () => {
     // -- Arrange
     const mockDbService = createMockDbService()
-    const store = createEntityDbStore({
+    const store = createStore({
       db: mockDbService,
       dataFormats: entities.dataFormats,
       relations: entities.relations,

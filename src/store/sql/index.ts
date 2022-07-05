@@ -77,7 +77,7 @@ const createSelectSqlBaseForFieldSubSet = <
   return `select ${columnsSql} from ${dataFormat.sql.tableName}`
 }
 
-export const createEntityDbStore = <
+export const createStore = <
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   // The chosen data format declaration name

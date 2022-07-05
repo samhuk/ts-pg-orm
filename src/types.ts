@@ -102,6 +102,6 @@ export type Entities<
     /**
      * Create an entitiy DB store for the particular named entity.
      */
-    createEntityDbStore: <L extends T[number]['name']>(entityName: L, db: DbService) => Store<T, K, L>
+    createStore: <L extends T[number]['name']>(entityName: L, db: DbService) => Store<T, K, L>
   }
 }
