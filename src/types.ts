@@ -10,6 +10,9 @@ export type UnloadedEntities = {
 }
 
 export type EntitiesWithDataFormats<T extends DataFormatDeclarations> = {
+  /**
+   * The Data Formats that have been loaded.
+   */
   dataFormats: DataFormatsDict<T>
   /**
    * Loads the provided relation declarations that is created by `relationDeclarationsCreator`.
@@ -27,8 +30,17 @@ export type DbServiceQueryResult<TRow> = {
  * A generic database client service.
  */
 export type DbService = {
+  /**
+   * Base query function that returns rows and rowCount.
+   */
   query: <TRow extends any>(sql: string, parameters?: any[]) => Promise<DbServiceQueryResult<TRow>>
+  /**
+   * Query then returns all rows.
+   */
   queryGetRows: <TRow extends any>(sql: string, parameters?: any[]) => Promise<TRow[]>
+  /**
+   * Query then returns first row, if exists. `undefined` otherwise.
+   */
   queryGetFirstRow: <TRow extends any>(sql: string, parameters?: any[]) => Promise<TRow>
 }
 
@@ -36,26 +48,60 @@ export type DbService = {
  * Options for the creation of an Entities instance.
  */
 export type CreateEntitiesOptions = {
+  /**
+   * True to create and enable postgresql-related information and functionality respectively.
+   *
+   * If this is `false`, no SQL information and functionality will be present.
+   */
   enablePostgreSql?: boolean
 }
 
 /**
- * An Entities instance, containing the original data format and relation declarations, and enriched
- * information about them.
+ * An Entities instance with the loaded Data Formats and Relations.
  */
 export type Entities<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
 > = {
+  /**
+   * The loaded Data Formats.
+   */
   dataFormats: DataFormatsDict<T>
+  /**
+   * The loaded Relations between all of the Data Formats.
+   */
   relations: RelationsDict<T, K>
+  /**
+   * The original list of Data Format Declarations that was loaded.
+   */
   dataFormatDeclarations: T,
+  /**
+   * The original list of Relation Declarations that was loaded.
+   */
   relationDeclarations: K
+  /**
+   * PostgreSQL-related information and functionality
+   */
   sqldb: {
+    /**
+     * Drop a particular join table.
+     */
     dropJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db: DbService) => Promise<boolean>
+    /**
+     * Create a particular join table.
+     */
     createJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db: DbService) => Promise<boolean>
+    /**
+     * Drop all join tables.
+     */
     dropJoinTables: (db: DbService) => Promise<boolean>
+    /**
+     * Create all join tables.
+     */
     createJoinTables: (db: DbService) => Promise<boolean>
+    /**
+     * Create an entitiy DB store for the particular named entity.
+     */
     createEntityDbStore: <L extends T[number]['name']>(entityName: L, db: DbService) => Store<T, K, L>
   }
 }

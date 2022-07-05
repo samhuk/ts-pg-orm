@@ -54,6 +54,10 @@ const _createEntities = <
   }
 }
 
+/**
+ * Creates an `UnloadedEntities` instance that accepts the loading of
+ * Data Format Declarations.
+ */
 export const createEntities = (
   options?: CreateEntitiesOptions,
 ): UnloadedEntities => ({

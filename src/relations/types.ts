@@ -32,6 +32,10 @@ export enum RelationType {
    * For example, user <<-->> userGroup is a many-to-many relation since multiple
    * users can be related to one user group and multiple user groups can be related
    * to one user.
+   *
+   * Note: Many-to-many relations require a join (a.k.a "junction"/"mapping") table.
+   * Use `createJoinTables` to create them once the relations have been loaded into
+   * the entities instance.
    */
   MANY_TO_MANY,
 }

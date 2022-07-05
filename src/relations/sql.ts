@@ -21,7 +21,7 @@ export const createManyToManyJoinTableFieldRef2ColumnName = (r: RelationDeclarat
 }
 
 /**
- * Creates the join-table "create table" sql text required for the
+ * Creates the join table "create table" sql text required for the
  * given many-to-many relation.
  */
 export const createManyToManyJoinTableSql = (r: RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>) => {

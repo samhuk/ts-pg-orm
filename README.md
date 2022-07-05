@@ -12,7 +12,7 @@ Non-native solutions to this often use a *type-to-Javascript* approach to expose
 
 ## Usage
 
-Create Data Format Declarations:
+Define Data Format Declarations:
 
 ```typescript
 import { createDataFormatDeclaration } from 'ts-entity-framework/dist/dataFormat'
@@ -87,7 +87,7 @@ await userDbStore.provision()
 await userGroupDbStore.provision()
 ```
 
-Use types and stores throughout your application, all fully type-enforced!:
+Use types and stores throughout your application, all fully type-enforced:
 
 ```typescript
 // Perform CRUD operations on entities
@@ -108,9 +108,9 @@ const customUserSql = `select ${userSqlInfo.columnNames.name} from ${userSqlInfo
 
 ## Examples
 
-Example APIs can be found at ./src/examples.
+Examples can be found within ./src/examples, showing more advanced usages of `ts-entity-framework`.
 
-Run `npm run start-example-api` to build and run the api, and send a request to http://localhost:3000/userProfile/1 to try it out.
+Run `npm run start-example-api` to build and run the example api. Try sending a HTTP GET request to http://localhost:3000/userProfile/1 to see `ts-entity-framework` in action.
 
 ## Development
 
