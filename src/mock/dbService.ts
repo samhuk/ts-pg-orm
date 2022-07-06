@@ -3,6 +3,7 @@ import { DbService } from '../types'
 export type MockDbService = DbService & {
   queuedResponses: any[]
   queueResponse: (response: any) => void
+  queueResponses: (responses: any[]) => void
   receivedQueries: { sql: string, parameters?: any[] }[]
   clearReceivedQueries: () => void
 }
@@ -18,9 +19,12 @@ export const createMockDbService = (): MockDbService => {
     return Promise.resolve(instance.queuedResponses[j])
   }
 
+  const queueResponse = (r: any) => instance.queuedResponses.push(r)
+
   return instance = {
     queuedResponses: [],
-    queueResponse: response => instance.queuedResponses.push(response),
+    queueResponse,
+    queueResponses: responses => responses.forEach(queueResponse),
 
     receivedQueries: [],
     clearReceivedQueries: () => instance.receivedQueries = [],

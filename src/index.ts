@@ -3,10 +3,11 @@ import {
   DataFormatDeclarations,
   DataFormatsDict,
 } from './dataFormat/types'
+import { toDict } from './helpers/dict'
 import { createRelationName, createRelation } from './relations'
 import { Relation, RelationDeclarations, RelationsDict, RelationType } from './relations/types'
 import { createStore } from './store/sql'
-import { Entities, UnloadedEntities, EntitiesWithDataFormats, CreateEntitiesOptions } from './types'
+import { Entities, UnloadedEntities, EntitiesWithDataFormats, CreateEntitiesOptions, StoresDict } from './types'
 
 const _createEntities = <
   T extends DataFormatDeclarations,
@@ -50,6 +51,25 @@ const _createEntities = <
         dataFormats: dataFormatsDict,
         relations: relationsDict,
       }),
+      createAndReprovisionStores: async (db, provisionOrder) => {
+        const storesDict = toDict(provisionOrder as string[], entityName => ({
+          key: entityName,
+          value: createStore({
+            dataFormatName: entityName,
+            db,
+            dataFormats: dataFormatsDict,
+            relations: relationsDict,
+          }),
+        })) as unknown as StoresDict<T, K>
+
+        const reverseProvisionOrder = provisionOrder.slice(0).reverse()
+
+        await Promise.all(reverseProvisionOrder.map(entityName => storesDict[entityName].provision()))
+
+        await Promise.all(provisionOrder.map(entityName => storesDict[entityName].provision()))
+
+        return storesDict
+      },
     },
   }
 }

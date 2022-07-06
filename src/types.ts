@@ -56,6 +56,13 @@ export type CreateEntitiesOptions = {
   enablePostgreSql?: boolean
 }
 
+export type StoresDict<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+> = {
+  [TName in keyof DataFormatsDict<T>]: Store<T, K, (TName & string)>
+}
+
 /**
  * An Entities instance with the loaded Data Formats and Relations.
  */
@@ -100,8 +107,14 @@ export type Entities<
      */
     createJoinTables: (db: DbService) => Promise<boolean>
     /**
-     * Create an entitiy DB store for the particular named entity.
+     * Create an entity DB store for the particular named entity.
      */
     createStore: <L extends T[number]['name']>(entityName: L, db: DbService) => Store<T, K, L>
+    /**
+     * Creates, unprovisions, then provisions entity DB stores for all loaded entities, returning a dictionary of stores.
+     *
+     * Warning: This will wipe all data in existing tables of entities.
+     */
+    createAndReprovisionStores: (db: DbService, provisionOrder: (keyof StoresDict<T, K>)[]) => Promise<StoresDict<T, K>>
   }
 }
