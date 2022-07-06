@@ -23,7 +23,7 @@ describe('createEntities', () => {
         'article',
         'recipe',
         'userAddress',
-      ])
+      ], true)
 
       // -- Assert
       expect(stores.user).toBeDefined()
