@@ -80,14 +80,10 @@ Create and provision PostgreSQL entity stores:
 import { DbService } from 'ts-entity-framework/dist/dataFormat/types'
 // Define PostgreSql DB service, with query, queryGetFirstRow, and queryGetRows functions.
 const dbService: DbService = { ... }
-// Create DB stores for entities
-const userDbStore = ENTITIES.sqldb.createStore('user', dbService)
-const userGroupDbStore = ENTITIES.sqldb.createStore('userGroup', dbService)
+// Create and provision DB stores for entities
+const stores = ENTITIES.sqldb.createAndProvisionStores(dbService, ['user', 'userGroup'])
 // Create join table (a.k.a "junction table") for many-to-many relations, i.e. user_to_user_group
 await ENTITIES.sqldb.createJoinTables(dbService)
-// Create entity tables
-await userDbStore.provision()
-await userGroupDbStore.provision()
 ```
 
 Use types and stores throughout your application, all fully type-enforced:
@@ -96,13 +92,13 @@ Use types and stores throughout your application, all fully type-enforced:
 // Perform CRUD operations on entities
 const createUserOptions: CreateUserRecordOptions = { name: 'newUser' }
 // Get entity record
-const user: UserRecord = await userDbStore.add(createUserOptions)
+const user: UserRecord = await stores.user.add(createUserOptions)
 // Get related entity records
-const userGroups = await userDbStore.getUserGroupsOfUser(user.id)
+const userGroups = await stores.userGroups.getUserGroupsOfUser(user.id)
 // Get entity record with all related entity records
-const userWithUserGroups = await userDbStore.getByIdWithAllRelations(user.id)
+const userWithUserGroups = await stores.user.getByIdWithAllRelations(user.id)
 // Get entity record with some related entity records
-const userWithUserGroups = await userDbStore.getByIdWithRelations(user.id, ['userGroups'])
+const userWithUserGroups = await stores.userGroups.getByIdWithRelations(user.id, ['userGroups'])
 // Use data format sql information to create custom type-enforced SQL statements
 const userSqlInfo = ENTITIES.dataFormats.user.sql
 const customUserSql = `select ${userSqlInfo.columnNames.name} from ${userSqlInfo.tableName}`
