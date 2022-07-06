@@ -68,7 +68,7 @@ const _createEntities = <
         const unprovisionOrder = unprovisionStores == null || unprovisionStores === false
           ? []
           : unprovisionStores === true
-            ? []
+            ? reverseProvisionOrder
             : reverseProvisionOrder.filter(entityName => unprovisionStores.indexOf(entityName) !== -1)
 
         // Unprovision stores
