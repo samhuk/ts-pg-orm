@@ -111,10 +111,30 @@ export type Entities<
      */
     createStore: <L extends T[number]['name']>(entityName: L, db: DbService) => Store<T, K, L>
     /**
-     * Creates, unprovisions, then provisions entity DB stores for all loaded entities, returning a dictionary of stores.
+     * Creates then provisions entity DB stores for all loaded entities, returning a dictionary of stores.
+     *
+     * Optionally, stores can be first unprovisioned (i.e. drop table) before provisioning.
      *
      * Warning: This will wipe all data in existing tables of entities.
      */
-    createAndReprovisionStores: (db: DbService, provisionOrder: (keyof StoresDict<T, K>)[]) => Promise<StoresDict<T, K>>
+    createAndProvisionStores: (
+      /**
+       * DB client service
+       */
+      db: DbService,
+      /**
+       * The order to provision the entity stores
+       */
+      provisionOrder: (keyof StoresDict<T, K>)[],
+      /**
+       * `true` to first unprovision entity stores (i.e. drop tables) before provisioning.
+       *
+       * Alternatively, an array of entity names can be provided which will define which
+       * stores are first unprovisioned.
+       *
+       * Default: `false`
+       */
+      unprovisionStores?: boolean | (keyof StoresDict<T, K>)[],
+    ) => Promise<StoresDict<T, K>>
   }
 }

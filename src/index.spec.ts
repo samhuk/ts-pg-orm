@@ -17,7 +17,7 @@ describe('createEntities', () => {
       })
 
       // -- Act
-      const stores = await entities.sqldb.createAndReprovisionStores(db, [
+      const stores = await entities.sqldb.createAndProvisionStores(db, [
         'user',
         'userGroup',
         'article',

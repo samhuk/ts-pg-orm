@@ -51,7 +51,8 @@ const _createEntities = <
         dataFormats: dataFormatsDict,
         relations: relationsDict,
       }),
-      createAndReprovisionStores: async (db, provisionOrder) => {
+      createAndProvisionStores: async (db, provisionOrder, unprovisionStores) => {
+        // Create stores
         const storesDict = toDict(provisionOrder as string[], entityName => ({
           key: entityName,
           value: createStore({
@@ -64,8 +65,16 @@ const _createEntities = <
 
         const reverseProvisionOrder = provisionOrder.slice(0).reverse()
 
-        await Promise.all(reverseProvisionOrder.map(entityName => storesDict[entityName].provision()))
+        const unprovisionOrder = unprovisionStores == null || unprovisionStores === false
+          ? []
+          : unprovisionStores === true
+            ? []
+            : reverseProvisionOrder.filter(entityName => unprovisionStores.indexOf(entityName) !== -1)
 
+        // Unprovision stores
+        await Promise.all(unprovisionOrder.map(entityName => storesDict[entityName].provision()))
+
+        // Provision stores
         await Promise.all(provisionOrder.map(entityName => storesDict[entityName].provision()))
 
         return storesDict
