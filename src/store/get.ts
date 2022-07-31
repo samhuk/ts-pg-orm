@@ -270,7 +270,8 @@ export const getSingle = async (
 
   const localFields = removeDuplicates((options.fields ?? []).concat(requiredLocalFieldsForRelations))
   const columnsSql = createColumnsSql(localDataFormat, localFields)
-  const whereSql = createDataFilter(options.filter).toSql() ?? ''
+  const whereClauseSql = createDataFilter(options.filter).toSql()
+  const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
   const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${whereSql} limit 1`
   const localRecordRow = await db.queryGetFirstRow(getLocalRecordSql)
   const localRecord = objectPropsToCamelCase(localRecordRow)
@@ -291,7 +292,7 @@ export const getMultiple = async (
   entities: Entities,
   db: DbService,
   localDataFormat: DataFormat,
-  options: AnyGetFunctionOptions<0>,
+  options: AnyGetFunctionOptions<1>,
 ) => {
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, localDataFormat)
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
@@ -299,8 +300,8 @@ export const getMultiple = async (
 
   const localFields = removeDuplicates((options.fields ?? []).concat(requiredLocalFieldsForRelations))
   const columnsSql = createColumnsSql(localDataFormat, localFields)
-  const whereSql = createDataFilter(options.filter).toSql() ?? ''
-  const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${whereSql} limit 1`
+  const querySql = createDataQuery(options.query).toSql()?.whereOrderByLimitOffset
+  const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${querySql}`
 
   const localRecordRows = await db.queryGetRows(getLocalRecordSql)
   const localRecords = localRecordRows.map(r => objectPropsToCamelCase(r))
