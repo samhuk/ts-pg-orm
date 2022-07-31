@@ -4,6 +4,7 @@
 // create robust and fully type-safe controller logic.
 // ------------------------------------------------------------------
 
+import { Operator } from '@samhuk/data-filter/dist/types'
 import { createServer, Server, ServerResponse } from 'http'
 import { exit } from 'process'
 import { UserProfilePageData } from './entities'
@@ -27,7 +28,12 @@ const init = async () => {
     // Handle GET /userProfile/1
     if (req.method === 'GET' && req.url === '/userProfile/1') {
       // Use the created types and stores to have robust and fully type-safe controller logic.
-      const userWithArticles: UserProfilePageData = await stores.user.getByIdWithRelations(1, ['articles'])
+      const userWithArticles: UserProfilePageData = await stores.user.getSingle({
+        filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+        relations: {
+          articles: { },
+        },
+      })
       sendSuccessResponse(res, server, userWithArticles)
       return
     }

@@ -9,6 +9,7 @@ import {
   CreateRecordFieldNames,
   CreateRecordOptions,
   DataFormatSqlInfo,
+  CapitalizedFieldNames,
 } from './types'
 import { toDictReadonly } from '../helpers/dict'
 import { camelCaseToSnakeCase, capitalize } from '../helpers/string'
@@ -96,6 +97,13 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
   // Create table name
   const tableName = `"${camelCaseToSnakeCase(dataFormatDeclaration.name)}"`
 
+  const fieldSubSetSelectSqlBases = {} as any
+
+  dataFormatDeclaration.fieldSubSets?.forEach(fss => {
+    const columnsSql = fss.fields.map(fname => `${tableName}.${(columnNamesDict as any)[fname]}`).join(', ')
+    fieldSubSetSelectSqlBases[fss.name] = `select ${columnsSql} from ${tableName}`
+  })
+
   const sql: DataFormatSqlInfo<T> = (options?.enablePostgreSql ?? true) ? {
     tableName,
     columnNames: columnNamesDict,
@@ -104,9 +112,15 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     selectSqlBase: createSelectSqlBase(dataFormatDeclaration, columnNamesDict),
     updateSqlBase: `update ${tableName} set`,
     deleteSqlBase: `update ${tableName} set date_deleted = CURRENT_TIMESTAMP`,
+    fieldSubSetSelectSqlBases,
   } : null
 
   const pluralizedName = dataFormatDeclaration.pluralizedName ?? `${dataFormatDeclaration.name}s` as any
+
+  const capitalizedFieldNames = toDictReadonly(
+    dataFormatDeclaration.fields,
+    f => ({ key: f.name, value: capitalize(f.name) }),
+  ) as CapitalizedFieldNames<T>
 
   return {
     name: dataFormatDeclaration.name,
@@ -117,6 +131,9 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     fields,
     fieldNames: fieldNamesDict,
     fieldNameList,
+    fieldNamesWithEnabledGetByList: fieldNameList.filter(fname => fields[fname].enableGetBy ?? false),
+    fieldNamesWithEnabledDeleteByList: fieldNameList.filter(fname => fields[fname].enableDeleteBy ?? false),
+    capitalizedFieldNames,
     sql,
     fieldRefs: fieldRefsDict,
     createRecordFieldNames,

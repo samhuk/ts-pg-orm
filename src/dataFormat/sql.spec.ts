@@ -20,13 +20,24 @@ alter table if exists public."user"
     })
 
     test('test 1 - recipe', () => {
-      const sql = fn(entities.dataFormats.recipe.declaration, [entities.relations['user.id <-->> recipe.createdByUserId']])
+      const sql = fn(
+        entities.dataFormats.recipe.declaration,
+        [
+          entities.relations['user.id <-->> recipe.createdByUserId'],
+          entities.relations['image.id <-->> recipe.imageId'],
+        ],
+      )
       expect(sql).toBe(`create table if not exists public."recipe"
 (
   id serial not null primary key,
   created_by_user_id integer,
+  image_id integer,
   constraint recipe_to_user_created_by_user_id_fkey foreign key (created_by_user_id)
     references public.user (id) match simple
+    on update no action
+    on delete no action,
+  constraint recipe_to_image_image_id_fkey foreign key (image_id)
+    references public.image (id) match simple
     on update no action
     on delete no action
 )

@@ -6,7 +6,7 @@ import {
 import { toDict } from './helpers/dict'
 import { createRelationName, createRelation } from './relations'
 import { Relation, RelationDeclarations, RelationsDict, RelationType } from './relations/types'
-import { createStore } from './store/sql'
+import { createDbStore } from './store'
 import { Entities, UnloadedEntities, EntitiesWithDataFormats, CreateEntitiesOptions, StoresDict } from './types'
 
 const _createEntities = <
@@ -18,15 +18,16 @@ const _createEntities = <
     dataFormatDeclarations: T,
     relationDeclarations: K,
   ): Entities<T, K> => {
+  let entities: Entities<T, K>
   const manyToManyRelationsList = Object.values(relationsDict)
     .filter(r => (r as Relation<T>).type === RelationType.MANY_TO_MANY) as Relation<T, RelationType.MANY_TO_MANY>[]
 
-  return {
+  return entities = {
     dataFormats: dataFormatsDict,
     relations: relationsDict,
     dataFormatDeclarations,
     relationDeclarations,
-    sqldb: {
+    sql: {
       dropJoinTable: (relationName, db) => db.query(
         // @ts-ignore
         (relationsDict[relationName] as Relation<T, RelationType.MANY_TO_MANY>).dropJoinTableSql,
@@ -45,22 +46,13 @@ const _createEntities = <
           .map(r => r.sql.createJoinTableSql)
           .map(sql => db.query(sql)),
       ).then(() => true),
-      createStore: (entityName, db) => createStore({
-        dataFormatName: entityName,
-        db,
-        dataFormats: dataFormatsDict,
-        relations: relationsDict,
-      }),
+      // @ts-ignore
+      createStore: (entityName, db) => createDbStore(db, entities, entityName),
       createAndProvisionStores: async (db, provisionOrder, unprovisionStores) => {
         // Create stores
         const storesDict = toDict(provisionOrder as string[], entityName => ({
           key: entityName,
-          value: createStore({
-            dataFormatName: entityName,
-            db,
-            dataFormats: dataFormatsDict,
-            relations: relationsDict,
-          }),
+          value: createDbStore(db, entities, entityName),
         })) as unknown as StoresDict<T, K>
 
         const reverseProvisionOrder = provisionOrder.slice(0).reverse()

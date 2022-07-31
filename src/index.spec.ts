@@ -1,3 +1,4 @@
+import { Operator } from '@samhuk/data-filter/dist/types'
 import { createMockDbService } from './mock/dbService'
 import { entities } from './testData'
 
@@ -17,7 +18,7 @@ describe('createEntities', () => {
       })
 
       // -- Act
-      const stores = await entities.sqldb.createAndProvisionStores(db, [
+      const stores = await entities.sql.createAndProvisionStores(db, [
         'user',
         'userGroup',
         'article',
@@ -33,7 +34,7 @@ describe('createEntities', () => {
       expect(stores.userAddress).toBeDefined()
 
       // -- Act
-      const user = await stores.user.getById(1)
+      const user = await stores.user.getSingle({ filter: { field: 'id', op: Operator.EQUALS, val: 1 } })
 
       // -- Assert
       expect(user).toEqual({

@@ -46,8 +46,8 @@ export const createAndProvisionStores = async () => {
   const db = createMockDbService()
   queueMockDbServiceResponses(db)
   // -- Create stores
-  const userDbStore = await ENTITIES.sqldb.createStore('user', db)
-  const userArticleDbStore = await ENTITIES.sqldb.createStore('userArticle', db)
+  const userDbStore = await ENTITIES.sql.createStore('user', db)
+  const userArticleDbStore = await ENTITIES.sql.createStore('userArticle', db)
   // -- Provision stores and join table
   await userDbStore.provision()
   await userArticleDbStore.provision()

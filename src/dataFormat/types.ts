@@ -265,10 +265,18 @@ type ToDiscrimUnion<T, K extends keyof T> = T extends unknown ? {
 
 type DataFormatFieldBase = {
   displayName?: string
-  foreignKeySettings?: {
-    foreignDataItemName: string
-    foreignDataItemFieldName: string
-  }
+  /**
+   * Determines whether the field will be available to get records from
+   * entity stores by, i.e. if field is "id" and `enableGetBy` is `true`,
+   * then stores will have `getById(id: number)` present.
+   */
+  enableGetBy?: boolean
+  /**
+   * Determines whether the field will be available to delete records from
+   * entity stores by, i.e. if field is "id" and `enableDeleteBy` is `true`,
+   * then stores will have `deleteById(id: number)` present.
+   */
+   enableDeleteBy?: boolean
 }
 
 type DataFormatFieldWithoutGeneric = DataFormatFieldBase & ToDiscrimUnion<ToDiscrimUnion<DataTypeSubTypeMapping, 'dataType'>, 'dataSubType'>
@@ -282,10 +290,38 @@ export type FieldSubSet<
 
 export type ExtractFieldSubSetNames<T extends DataFormatDeclaration> = T['fieldSubSets'][number]['name']
 
+export type ExtractFieldNamesWithGetBy<T extends DataFormatDeclaration> =
+  Extract<T['fields'][number], { enableGetBy: true }>['name']
+
+export type ExtractFieldNamesWithDeleteBy<T extends DataFormatDeclaration> =
+  Extract<T['fields'][number], { enableDeleteBy: true }>['name']
+
+export type CapitalizedFieldNames<T extends DataFormatDeclaration> =
+  { [TFieldName in ExtractDataFormatFieldNames<T>]: Capitalize<TFieldName> }
+
+type ExtractFieldSubSetFieldNames<
+  T extends DataFormatDeclaration,
+  K extends ExtractFieldSubSetNames<T>,
+> = Extract<T['fieldSubSets'][number], { name: K }>['fields'][number]
+
+export type ToFieldSubSetRecord<
+  T extends DataFormatDeclaration,
+  K extends ExtractFieldSubSetNames<T>,
+> = PickAny<ToRecord<T>, ExtractFieldSubSetFieldNames<T, K>>
+
 export type ExtractFieldSubSet<
   T extends DataFormatDeclaration,
   TName extends ExtractFieldSubSetNames<T>,
 > = Extract<T['fieldSubSets'][number], { name: TName }>
+
+export type FieldSubSetsSelectSqlBaseDict<
+  T extends DataFormatDeclaration,
+> = {
+  [K1 in keyof T['fieldSubSets'] & `${bigint}` as T['fieldSubSets'][K1] extends infer TFieldSubSet
+    ? TFieldSubSet extends FieldSubSet<T['fields']> ? TFieldSubSet['name'] : never
+    : never
+  ]: string
+}
 
 export type DataFormatField<
   TDataType extends DataType = DataType,
@@ -553,6 +589,10 @@ export type DataFormatSqlInfo<T extends DataFormatDeclaration> = {
    */
   selectSqlBase: string
   /**
+   * Dictionary that maps each field sub set name to its select sql base, i.e. select id, uuid, name from "user"
+   */
+  fieldSubSetSelectSqlBases: FieldSubSetsSelectSqlBaseDict<T>
+  /**
    * The "`update {quoted table name} set`" sql
    */
   updateSqlBase: string
@@ -595,6 +635,9 @@ export type DataFormat<T extends DataFormatDeclaration = DataFormatDeclaration> 
    * A dictionary of the field names of the declaration.
    */
   fieldNames: { [fieldName in ExtractDataFormatFieldNames<T>]: fieldName }
+  fieldNamesWithEnabledGetByList: ExtractFieldNamesWithGetBy<T>[]
+  fieldNamesWithEnabledDeleteByList: ExtractFieldNamesWithDeleteBy<T>[]
+  capitalizedFieldNames: CapitalizedFieldNames<T>
   /**
    * List of field names.
    */

@@ -7,7 +7,7 @@ import { RelationType } from './relations/types'
 export const d1 = createDataFormatDeclaration({
   name: 'user',
   fields: [
-    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
+    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL, enableGetBy: true },
     { name: 'name', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 50 },
   ],
 } as const)
@@ -15,7 +15,7 @@ export const d1 = createDataFormatDeclaration({
 export const d2 = createDataFormatDeclaration({
   name: 'userGroup',
   fields: [
-    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
+    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL, enableGetBy: true },
     { name: 'name', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 50 },
   ],
 } as const)
@@ -24,7 +24,7 @@ export const d3 = createDataFormatDeclaration({
   name: 'userAddress',
   pluralizedName: 'userAddresses',
   fields: [
-    { name: 'userId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+    { name: 'userId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER, enableGetBy: true },
     { name: 'streetAddress', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200 },
     { name: 'postCode', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 10 },
   ],
@@ -33,8 +33,9 @@ export const d3 = createDataFormatDeclaration({
 export const d4 = createDataFormatDeclaration({
   name: 'recipe',
   fields: [
-    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL },
+    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL, enableGetBy: true },
     { name: 'createdByUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+    { name: 'imageId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
   ],
 } as const)
 
@@ -42,7 +43,7 @@ export const d5 = createDataFormatDeclaration({
   name: 'article',
   fields: [
     ...BASE_ENTITY_FIELDS,
-    { name: 'title', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200 },
+    { name: 'title', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200, enableGetBy: true },
     { name: 'datePublished', dataType: DataType.DATE, dataSubType: DateDataSubType.DATE_TIME_WITH_TIMEZONE, allowNull: true },
     { name: 'createdByUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
   ],
@@ -51,7 +52,6 @@ export const d5 = createDataFormatDeclaration({
       name: 'metaData',
       fields: ['uuid', 'title', 'createdByUserId'],
     },
-
     {
       name: 'selectOption',
       fields: ['uuid', 'title'],
@@ -59,7 +59,16 @@ export const d5 = createDataFormatDeclaration({
   ],
 } as const)
 
-const dfds = [d1, d2, d3, d4, d5] as const
+export const d6 = createDataFormatDeclaration({
+  name: 'image',
+  fields: [
+    { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL, enableGetBy: true },
+    { name: 'fileName', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 250 },
+    { name: 'createdByUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+  ],
+} as const)
+
+const dfds = [d1, d2, d3, d4, d5, d6] as const
 
 export const entities = createEntities()
   .loadDataFormats(dfds)
@@ -79,6 +88,16 @@ export const entities = createEntities()
       fromOneField: dfs.user.fieldRefs.id,
       toManyField: dfs.recipe.fieldRefs.createdByUserId,
     },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: dfs.image.fieldRefs.id,
+      toManyField: dfs.recipe.fieldRefs.imageId,
+    },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: dfs.user.fieldRefs.id,
+      toManyField: dfs.image.fieldRefs.createdByUserId,
+    },
   ] as const)
 
 export const entitiesWithNamesProvided = createEntities()
@@ -88,8 +107,6 @@ export const entitiesWithNamesProvided = createEntities()
       type: RelationType.MANY_TO_MANY,
       fieldRef1: dfs.user.fieldRefs.id,
       fieldRef2: dfs.userGroup.fieldRefs.id,
-      getRelatedFieldRef1RecordsName: 'getUsers',
-      getRelatedFieldRef2RecordsName: 'getUserGroups',
       relatedFieldRef1RecordsName: 'relatedUsers',
       relatedFieldRef2RecordsName: 'relatedUserGroups',
     },
@@ -97,8 +114,6 @@ export const entitiesWithNamesProvided = createEntities()
       type: RelationType.ONE_TO_ONE,
       fromOneField: dfs.user.fieldRefs.id,
       toOneField: dfs.userAddress.fieldRefs.userId,
-      getRelatedFromOneRecordsName: 'getUser',
-      getRelatedToOneRecordsName: 'getUserAddress',
       relatedFromOneRecordsName: 'relatedUser',
       relatedToOneRecordsName: 'relatedUserAddress',
     },
@@ -106,8 +121,6 @@ export const entitiesWithNamesProvided = createEntities()
       type: RelationType.ONE_TO_MANY,
       fromOneField: dfs.user.fieldRefs.id,
       toManyField: dfs.recipe.fieldRefs.createdByUserId,
-      getRelatedFromOneRecordsName: 'getUser',
-      getRelatedToManyRecordsName: 'getRecipes',
       relatedFromOneRecordsName: 'relatedUser',
       relatedToManyRecordsName: 'relatedRecipes',
     },

@@ -8,16 +8,10 @@ export const createManyToManyJoinTableName = (r: RelationDeclaration<DataFormatD
   return `${tableName1}_to_${tableName2}`
 }
 
-export const createManyToManyJoinTableFieldRef1ColumnName = (r: RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>) => {
-  const tableName1 = camelCaseToSnakeCase(r.fieldRef1.formatName)
-  const fieldName1 = camelCaseToSnakeCase(r.fieldRef1.fieldName)
-  return `${tableName1}_${fieldName1}`
-}
-
-export const createManyToManyJoinTableFieldRef2ColumnName = (r: RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>) => {
-  const tableName2 = camelCaseToSnakeCase(r.fieldRef2.formatName)
-  const fieldName2 = camelCaseToSnakeCase(r.fieldRef2.fieldName)
-  return `${tableName2}_${fieldName2}`
+export const createManyToManyJoinTableFieldRefColumnName = (fieldRef: FieldRef) => {
+  const tableName = camelCaseToSnakeCase(fieldRef.formatName)
+  const fieldName = camelCaseToSnakeCase(fieldRef.fieldName)
+  return `${tableName}_${fieldName}`
 }
 
 /**
@@ -29,8 +23,8 @@ export const createManyToManyJoinTableSql = (r: RelationDeclaration<DataFormatDe
   const tableName2 = camelCaseToSnakeCase(r.fieldRef2.formatName)
   const fieldName1 = camelCaseToSnakeCase(r.fieldRef1.fieldName)
   const fieldName2 = camelCaseToSnakeCase(r.fieldRef2.fieldName)
-  const columnName1 = `${tableName1}_${fieldName1}`
-  const columnName2 = `${tableName2}_${fieldName2}`
+  const columnName1 = createManyToManyJoinTableFieldRefColumnName(r.fieldRef1)
+  const columnName2 = createManyToManyJoinTableFieldRefColumnName(r.fieldRef2)
 
   const tableName = `${tableName1}_to_${tableName2}`
 

@@ -51,16 +51,12 @@ type MutableRelationDeclaration<
   [RelationType.ONE_TO_ONE]: {
     fromOneField: ExtractAvailableFieldRefs<T>
     toOneField: ExtractAvailableFieldRefs<T>
-    getRelatedFromOneRecordsName?: string
-    getRelatedToOneRecordsName?: string
     relatedFromOneRecordsName?: string
     relatedToOneRecordsName?: string
   },
   [RelationType.ONE_TO_MANY]: {
     fromOneField: ExtractAvailableFieldRefs<T>
     toManyField: ExtractAvailableFieldRefs<T>
-    getRelatedFromOneRecordsName?: string
-    getRelatedToManyRecordsName?: string
     relatedFromOneRecordsName?: string
     relatedToManyRecordsName?: string
   },
@@ -68,8 +64,6 @@ type MutableRelationDeclaration<
     includeDateCreated?: boolean
     fieldRef1: ExtractAvailableFieldRefs<T>
     fieldRef2: ExtractAvailableFieldRefs<T>
-    getRelatedFieldRef1RecordsName?: string
-    getRelatedFieldRef2RecordsName?: string
     relatedFieldRef1RecordsName?: string
     relatedFieldRef2RecordsName?: string
   },
@@ -82,7 +76,7 @@ export type RelationDeclaration<
 
 export type RelationDeclarations<T extends DataFormatDeclarations = DataFormatDeclarations> = Readonly<RelationDeclaration<T>[]>
 
-export type ExtractRelationNameFromRelationDeclaration<
+export type ToRelationName<
   K extends RelationDeclaration
 > = {
   [RelationType.MANY_TO_MANY]: K extends { type: RelationType.MANY_TO_MANY } ? `${K['fieldRef1']['formatName']}.${K['fieldRef1']['fieldName']} <<-->> ${K['fieldRef2']['formatName']}.${K['fieldRef2']['fieldName']}` : never
@@ -110,6 +104,20 @@ export type ExtractLocalFieldRefFromRelation<
       ? K['fromOneField']
       : K['toOneField']
     : never
+}[K['type']]
+
+export type IsForeignFormatPluralFromRelation<
+  K extends RelationDeclaration,
+  // The local data format name
+  L extends string
+> = {
+  [RelationType.MANY_TO_MANY]: 1
+  [RelationType.ONE_TO_MANY]: K extends { type: RelationType.ONE_TO_MANY }
+    ? K['fromOneField']['formatName'] extends L
+      ? 1
+      : 0
+    : never
+  [RelationType.ONE_TO_ONE]: 0
 }[K['type']]
 
 export type ExtractForeignFieldRefFromRelation<
@@ -150,15 +158,23 @@ type RelationSqlProperties<
   T extends RelationType = RelationType,
 > = TypeDependantBaseIntersection<RelationType, {
   [RelationType.ONE_TO_ONE]: {
-    foreignKeySql: string
+    sql: {
+      foreignKeySql: string
+    }
   },
   [RelationType.ONE_TO_MANY]: {
-    foreignKeySql: string
+    sql: {
+      foreignKeySql: string
+    }
   },
   [RelationType.MANY_TO_MANY]: {
-    createJoinTableSql: string
-    joinTableName: string
-    dropJoinTableSql: string
+    sql: {
+      createJoinTableSql: string
+      joinTableName: string
+      joinTableFieldRef1ColumnName: string
+      joinTableFieldRef2ColumnName: string
+      dropJoinTableSql: string
+    }
   },
 }, T>
 
@@ -166,13 +182,14 @@ export type Relation<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationType = RelationType,
   L extends RelationDeclaration<T, K> = RelationDeclaration<T, K>
-> = L & {
-  sql: RelationSqlProperties<K>
-}
+> = L & RelationSqlProperties<K>
 
-export type RelationsDict<T extends DataFormatDeclarations, K extends RelationDeclarations<T>> = {
+export type RelationsDict<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+> = {
   [K1 in keyof K & `${bigint}` as K[K1] extends infer TRelationDeclaration
-    ? ExtractRelationNameFromRelationDeclaration<TRelationDeclaration & RelationDeclaration<T>>
+    ? ToRelationName<TRelationDeclaration & RelationDeclaration<T>>
     : never
   // @ts-ignore
   ]: K[K1] extends RelationDeclaration<T> ? Relation<T, K[K1]['type'], K[K1]> : never
@@ -184,7 +201,7 @@ export type RelationsList<T extends DataFormatDeclarations, K extends RelationDe
 }
 
 export type ExtractRelationNamesOfManyToManyRelations<T extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<Extract<T[number], { type: RelationType.MANY_TO_MANY }>>
+  ToRelationName<Extract<T[number], { type: RelationType.MANY_TO_MANY }>>
 
 /**
  * Extracts the relations that are relevant to the given data format declaration name.
@@ -244,22 +261,22 @@ export type ExtractRelevantRelationsWithManyToManyFieldRef2<T extends string, K 
 // --
 
 export type ExtractRelevantRelationNamesWithOneToOneFromOne<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToOneFromOne<T, K>>
+  ToRelationName<ExtractRelevantRelationsWithOneToOneFromOne<T, K>>
 
 export type ExtractRelevantRelationNamesWithOneToOneToOne<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToOneToOne<T, K>>
+  ToRelationName<ExtractRelevantRelationsWithOneToOneToOne<T, K>>
 
 export type ExtractRelevantRelationNamesWithOneToManyFromOne<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToManyFromOne<T, K>>
+  ToRelationName<ExtractRelevantRelationsWithOneToManyFromOne<T, K>>
 
 export type ExtractRelevantRelationNamesWithOneToManyToMany<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithOneToManyToMany<T, K>>
+  ToRelationName<ExtractRelevantRelationsWithOneToManyToMany<T, K>>
 
 export type ExtractRelevantRelationNamesWithManyToManyFieldRef1<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithManyToManyFieldRef1<T, K>>
+  ToRelationName<ExtractRelevantRelationsWithManyToManyFieldRef1<T, K>>
 
 export type ExtractRelevantRelationNamesWithManyToManyFieldRef2<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelationsWithManyToManyFieldRef2<T, K>>
+  ToRelationName<ExtractRelevantRelationsWithManyToManyFieldRef2<T, K>>
 
 export type ExtractRelevantRelationNames<T extends string, K extends RelationDeclarations> =
-  ExtractRelationNameFromRelationDeclaration<ExtractRelevantRelations<T, K>>
+  ToRelationName<ExtractRelevantRelations<T, K>>

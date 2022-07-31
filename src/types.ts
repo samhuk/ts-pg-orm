@@ -18,7 +18,9 @@ export type EntitiesWithDataFormats<T extends DataFormatDeclarations> = {
    * Loads the provided relation declarations that is created by `relationDeclarationsCreator`.
    * Use the field refs of the provided data formats to create the relations easily.
    */
-  loadRelations: <K extends RelationDeclarations<T>>(relationDeclarationsCreator: (dataFormats: DataFormatsDict<T>) => K) => Entities<T, K>
+  loadRelations: <K extends RelationDeclarations<T>>(
+    relationDeclarationsCreator: (dataFormats: DataFormatsDict<T>) => K,
+  ) => Entities<T, K>
 }
 
 export type DbServiceQueryResult<TRow> = {
@@ -89,7 +91,7 @@ export type Entities<
   /**
    * PostgreSQL-related information and functionality
    */
-  sqldb: {
+  sql: {
     /**
      * Drop a particular join table.
      */

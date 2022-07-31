@@ -1,6 +1,12 @@
 import { DataFormatDeclarations } from '../dataFormat/types'
-import { createManyToManyJoinTableName, createManyToManyJoinTableSql, createOneToManyForeignKeySql, createOneToOneForeignKeySql } from './sql'
-import { RelationType, RelationDeclaration, Relation, ExtractRelationNameFromRelationDeclaration } from './types'
+import {
+  createManyToManyJoinTableFieldRefColumnName,
+  createManyToManyJoinTableName,
+  createManyToManyJoinTableSql,
+  createOneToManyForeignKeySql,
+  createOneToOneForeignKeySql,
+} from './sql'
+import { RelationType, RelationDeclaration, Relation, ToRelationName } from './types'
 
 const relationTypeToArrowText = {
   [RelationType.MANY_TO_MANY]: '<<-->>',
@@ -14,14 +20,14 @@ const relationTypeToArrowText = {
 export const createRelationName = <
   T extends DataFormatDeclarations,
   K extends RelationDeclaration<T>
->(d: K): ExtractRelationNameFromRelationDeclaration<K> => {
+>(d: K): ToRelationName<K> => {
   switch (d.type) {
     case RelationType.MANY_TO_MANY:
-      return `${d.fieldRef1.formatName}.${d.fieldRef1.fieldName} ${relationTypeToArrowText[RelationType.MANY_TO_MANY]} ${d.fieldRef2.formatName}.${d.fieldRef2.fieldName}` as ExtractRelationNameFromRelationDeclaration<K>
+      return `${d.fieldRef1.formatName}.${d.fieldRef1.fieldName} ${relationTypeToArrowText[RelationType.MANY_TO_MANY]} ${d.fieldRef2.formatName}.${d.fieldRef2.fieldName}` as ToRelationName<K>
     case RelationType.ONE_TO_MANY:
-      return `${d.fromOneField.formatName}.${d.fromOneField.fieldName} ${relationTypeToArrowText[RelationType.ONE_TO_MANY]} ${d.toManyField.formatName}.${d.toManyField.fieldName}` as ExtractRelationNameFromRelationDeclaration<K>
+      return `${d.fromOneField.formatName}.${d.fromOneField.fieldName} ${relationTypeToArrowText[RelationType.ONE_TO_MANY]} ${d.toManyField.formatName}.${d.toManyField.fieldName}` as ToRelationName<K>
     case RelationType.ONE_TO_ONE:
-      return `${d.fromOneField.formatName}.${d.fromOneField.fieldName} ${relationTypeToArrowText[RelationType.ONE_TO_ONE]} ${d.toOneField.formatName}.${d.toOneField.fieldName}` as ExtractRelationNameFromRelationDeclaration<K>
+      return `${d.fromOneField.formatName}.${d.fromOneField.fieldName} ${relationTypeToArrowText[RelationType.ONE_TO_ONE]} ${d.toOneField.formatName}.${d.toOneField.fieldName}` as ToRelationName<K>
     default:
       return null
   }
@@ -40,9 +46,10 @@ export const createRelation = <
     const relation: Relation<T, RelationType.MANY_TO_MANY, RelationDeclaration<T, RelationType.MANY_TO_MANY>> = {
       ..._d,
       sql: enableSql ? {
-        type: _d.type,
         createJoinTableSql: createManyToManyJoinTableSql(_d),
         joinTableName,
+        joinTableFieldRef1ColumnName: createManyToManyJoinTableFieldRefColumnName(_d.fieldRef1),
+        joinTableFieldRef2ColumnName: createManyToManyJoinTableFieldRefColumnName(_d.fieldRef2),
         dropJoinTableSql: `drop table if exists ${joinTableName};`,
       } : null,
     }
@@ -55,7 +62,6 @@ export const createRelation = <
     const relation: Relation<T, RelationType.ONE_TO_MANY, RelationDeclaration<T, RelationType.ONE_TO_MANY>> = {
       ..._d,
       sql: enableSql ? {
-        type: _d.type,
         foreignKeySql: createOneToManyForeignKeySql(_d),
       } : null,
     }
@@ -68,7 +74,6 @@ export const createRelation = <
     const relation: Relation<T, RelationType.ONE_TO_ONE, RelationDeclaration<T, RelationType.ONE_TO_ONE>> = {
       ..._d,
       sql: enableSql ? {
-        type: _d.type,
         foreignKeySql: createOneToOneForeignKeySql(_d),
       } : null,
     }
