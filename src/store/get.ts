@@ -216,7 +216,9 @@ export const get = async (
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, thisDataFormat)
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
-  const localFields = removeDuplicates((options.fields ?? []).concat(requiredLocalFieldsForRelations))
+  const localFields = options.fields != null
+    ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
+    : thisDataFormat.fieldNameList
 
   const sql = createSelectSqlForRelatedData(
     parentDataFormat,
@@ -270,7 +272,9 @@ export const getSingle = async (
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
 
-  const localFields = removeDuplicates((options.fields ?? []).concat(requiredLocalFieldsForRelations))
+  const localFields = options.fields != null
+    ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
+    : localDataFormat.fieldNameList
   const columnsSql = createColumnsSql(localDataFormat, localFields)
   const whereClauseSql = createDataFilter(options.filter).toSql()
   const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
@@ -300,7 +304,9 @@ export const getMultiple = async (
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
 
-  const localFields = removeDuplicates((options.fields ?? []).concat(requiredLocalFieldsForRelations))
+  const localFields = options.fields != null
+    ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
+    : localDataFormat.fieldNameList
   const columnsSql = createColumnsSql(localDataFormat, localFields)
   const querySql = createDataQuery(options.query).toSql()?.whereOrderByLimitOffset
   const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${querySql}`
