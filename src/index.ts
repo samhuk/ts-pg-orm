@@ -61,10 +61,10 @@ const _createEntities = <
           ? []
           : unprovisionStores === true
             ? reverseProvisionOrder
-            : reverseProvisionOrder.filter(entityName => unprovisionStores.indexOf(entityName) !== -1)
+            : unprovisionStores
 
         // Unprovision stores
-        await Promise.all(unprovisionOrder.map(entityName => storesDict[entityName].provision()))
+        await Promise.all(unprovisionOrder.map(entityName => storesDict[entityName].unprovision()))
 
         // Provision stores
         await Promise.all(provisionOrder.map(entityName => storesDict[entityName].provision()))

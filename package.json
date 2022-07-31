@@ -10,20 +10,20 @@
   ],
   "scripts": {
     "clean-unit-tests": "rimraf ./build-test",
-    "build-unit-tests": "tsc -p ./src/tsconfig.test.json",
+    "build-unit-tests": "tsc -p ./tsconfig.test.json",
     "run-unit-tests": "jest",
     "unit-tests": "npm run clean-unit-tests && npm run build-unit-tests && npm run run-unit-tests",
     "lint": "eslint -c .eslintrc.json ./src --ext .ts,.tsx",
     "lint-errors-only": "eslint -c .eslintrc.json ./src --ext .ts,.tsx --quiet",
+    "clean": "rimraf ./dist",
+    "build-ts": "npm run clean && tsc -p ./tsconfig.dist.json",
+    "check": "npm rum lint-errors-only && npm run build-ts && npm run unit-tests",
+    "start": "tsc -p ./src/tsconfig.json --watch",
+
     "clean-examples": "rimraf ./build-examples",
     "build-examples": "tsc -p ./src/tsconfig.examples.json",
     "run-article-api": "node ./build-examples/examples/articleApi/index.js",
-    "start-article-api": "npm run clean-examples && npm run build-examples && npm run run-article-api",
-    "clean-build-dist": "rimraf ./dist",
-    "build-dist": "npm run clean-build-dist && tsc -p ./src/tsconfig.dist.json",
-    "clean-all": "npm run clean-unit-tests && npm run clean-examples && npm run clean-build-dist",
-    "check": "npm run clean-all && npm run clean-all npm rum lint-errors-only && npm run build-dist && npm run unit-tests",
-    "start": "tsc --project ./src/tsconfig.json --watch"
+    "start-article-api": "npm run clean-examples && npm run build-examples && npm run run-article-api"
   },
   "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",
