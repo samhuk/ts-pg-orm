@@ -1,7 +1,7 @@
 {
-  "name": "ts-entity-framework",
+  "name": "ts-pg-orm",
   "version": "2.1.0",
-  "description": "Typescript entity framework",
+  "description": "Typescript PostgreSQL ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -25,7 +25,7 @@
     "check": "npm run clean-all && npm run clean-all npm rum lint-errors-only && npm run build-dist && npm run unit-tests",
     "start": "tsc --project ./src/tsconfig.json --watch"
   },
-  "repository": "https://github.com/samhuk/ts-entity-framework",
+  "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",
   "license": "MIT",
   "publishConfig": {
