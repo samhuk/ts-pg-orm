@@ -130,7 +130,7 @@ const createSelectSqlForRelatedData = (
     const dataFilterNodeOrGroup = (options as AnyGetFunctionOptions<0>).filter
     if (dataFilterNodeOrGroup != null) {
       const whereSql = createDataFilter(dataFilterNodeOrGroup).toSql()
-      querySql = `${whereSql} and ${localTableName}.${localColumnName} = $1 limit 1`
+      querySql = `where ${whereSql} and ${localTableName}.${localColumnName} = $1 limit 1`
     }
     else {
       querySql = `where ${localTableName}.${localColumnName} = $1 limit 1`

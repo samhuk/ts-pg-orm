@@ -11,7 +11,7 @@ import { createInsertReturningSql } from '../helpers/sql'
 import { objectPropsToCamelCase } from '../helpers/string'
 import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
 import { DbService, Entities } from '../types'
-import { getSingle } from './get'
+import { getMultiple, getSingle } from './get'
 import { Store } from './types'
 
 async function add<T extends DataFormatDeclaration>(
@@ -95,8 +95,7 @@ export const createDbStore = <
     addManual: options => addManual(db, localDataFormat, options) as any,
     getSingle: options => getSingle(entities as any, db, localDataFormat, options as any) as any,
     // @ts-ignore
-    getMultiple: options => undefined, // TODO
-    // @ts-ignore
+    getMultiple: options => getMultiple(entities as any, db, localDataFormat, options as any) as any,
     updateSingle: options => undefined, // TODO
   }
 }
