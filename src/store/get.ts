@@ -239,10 +239,12 @@ export const get = async (
       )))
       : null
 
-    return localRecords.map((localRecord, i) => ({
-      ...localRecord,
-      ...relatedDataList[i],
-    }))
+    return relatedDataList != null
+      ? localRecords.map((localRecord, i) => ({
+        ...localRecord,
+        ...relatedDataList[i],
+      }))
+      : localRecords
   }
 
   const localRecordRow = await db.queryGetFirstRow(sql, [localFieldValue])
@@ -312,8 +314,10 @@ export const getMultiple = async (
     )))
     : null
 
-  return localRecords.map((localRecord, i) => ({
-    ...localRecord,
-    ...relatedDataList[i],
-  }))
+  return relatedDataList != null
+    ? localRecords.map((localRecord, i) => ({
+      ...localRecord,
+      ...relatedDataList[i],
+    }))
+    : localRecords
 }
