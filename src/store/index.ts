@@ -90,7 +90,7 @@ export const createDbStore = <
 
   return {
     provision: () => db.query(createTableSql) as Promise<any>,
-    unprovision: () => db.query(`drop table ${localDataFormat.sql.tableName}`) as Promise<any>,
+    unprovision: () => db.query(`drop table if exists ${localDataFormat.sql.tableName}`) as Promise<any>,
     add: options => add(db, localDataFormat, options) as any,
     addManual: options => addManual(db, localDataFormat, options) as any,
     getSingle: options => getSingle(entities as any, db, localDataFormat, options as any) as any,
