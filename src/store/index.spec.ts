@@ -57,55 +57,24 @@ describe('new', () => {
         },
       })
 
-      // const result3 = await store.getMultiple({
-      //   fields: ['name'],
-      //   relations: {
-      //     recipes: {
-      //       fields: ['id', 'createdByUserId'],
-      //       relations: {
-      //         image: {
-      //           fields: ['fileName'],
-      //         },
-      //         user: { },
-      //       },
-      //     },
-      //   },
-      // })
-
-      // const result2 = await store.updateSingle({
-      //   record: {
-      //     name: 'new name',
-      //   },
-      //   filter: {
-      //     field: 'id',
-      //     op: Operator.EQUALS,
-      //     val: 5,
-      //   },
-      //   return: false,
-      // })
-
       expect(result).toEqual({
-        id: 1,
         name: 'foo',
         recipes: [
           {
             id: 1,
             createdByUserId: 1,
-            imageId: 1,
             image: { fileName: 'foo' },
             user: { id: 1, name: 'foo' },
           },
           {
             id: 2,
             createdByUserId: 1,
-            imageId: 2,
             image: { fileName: 'bar' },
             user: { id: 1, name: 'foo' },
           },
           {
             id: 3,
             createdByUserId: 1,
-            imageId: 3,
             image: { fileName: 'fizz' },
             user: { id: 1, name: 'foo' },
           },

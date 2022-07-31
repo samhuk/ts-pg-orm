@@ -216,9 +216,11 @@ export const get = async (
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, thisDataFormat)
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
+  const localFieldsMinusThoseForRelations = options.fields ?? thisDataFormat.fieldNameList
   const localFields = options.fields != null
     ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
     : thisDataFormat.fieldNameList
+  const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
 
   const sql = createSelectSqlForRelatedData(
     parentDataFormat,
@@ -241,6 +243,8 @@ export const get = async (
       )))
       : null
 
+    localRecords.forEach(localRecord => fieldsToRemove.forEach(fName => delete localRecord[fName]))
+
     return relatedDataList != null
       ? localRecords.map((localRecord, i) => ({
         ...localRecord,
@@ -255,6 +259,8 @@ export const get = async (
   const relatedDataDict = options.relations != null && Object.keys(options.relations).length > 0
     ? await getRelatedDataOfRecord(entities, db, options, relatedDataPropertyNameToInfoDict, localRecord)
     : null
+
+  fieldsToRemove.forEach(fName => delete localRecord[fName])
 
   return {
     ...localRecord,
@@ -271,10 +277,11 @@ export const getSingle = async (
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, localDataFormat)
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
-
+  const localFieldsMinusThoseForRelations = options.fields ?? localDataFormat.fieldNameList
   const localFields = options.fields != null
     ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
     : localDataFormat.fieldNameList
+  const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
   const columnsSql = createColumnsSql(localDataFormat, localFields)
   const whereClauseSql = createDataFilter(options.filter).toSql()
   const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
@@ -285,6 +292,8 @@ export const getSingle = async (
   const relatedDataDict = options.relations != null && Object.keys(options.relations).length > 0
     ? await getRelatedDataOfRecord(entities, db, options, relatedDataPropertyNameToInfoDict, localRecord)
     : null
+
+  fieldsToRemove.forEach(fName => delete localRecord[fName])
 
   const result = {
     ...localRecord,
@@ -303,10 +312,11 @@ export const getMultiple = async (
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, localDataFormat)
   const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
-
+  const localFieldsMinusThoseForRelations = options.fields ?? localDataFormat.fieldNameList
   const localFields = options.fields != null
     ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
     : localDataFormat.fieldNameList
+  const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
   const columnsSql = createColumnsSql(localDataFormat, localFields)
   const querySql = createDataQuery(options.query).toSql()?.whereOrderByLimitOffset
   const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${querySql}`
@@ -319,6 +329,8 @@ export const getMultiple = async (
       getRelatedDataOfRecord(entities, db, options, relatedDataPropertyNameToInfoDict, localRecord)
     )))
     : null
+
+  localRecords.forEach(localRecord => fieldsToRemove.forEach(fName => delete localRecord[fName]))
 
   return relatedDataList != null
     ? localRecords.map((localRecord, i) => ({
