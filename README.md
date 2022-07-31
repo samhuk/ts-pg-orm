@@ -1,5 +1,7 @@
 # ts-pg-orm
 
+**ts-pg-orm is in early development**
+
 ![build](https://github.com/samhuk/ts-pg-orm/actions/workflows/build.yaml/badge.svg)
 ![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 
