@@ -80,6 +80,45 @@ describe('new', () => {
           },
         ],
       })
+
+      expect(db.receivedQueries).toEqual([
+        { parameters: undefined, sql: 'select "user"."name", "user"."id" from "user"  limit 1' },
+        { parameters: [1], sql: `select
+"recipe"."id", "recipe"."created_by_user_id", "recipe"."image_id"
+from "user"
+join "recipe" on "recipe".created_by_user_id = "user".id
+where "user".id = $1` },
+        { parameters: [1], sql: `select
+"image"."file_name", "image"."id", "image"."created_by_user_id"
+from "recipe"
+join "image" on "image".id = "recipe".image_id
+where "recipe".image_id = $1 limit 1` },
+        { parameters: [1], sql: `select
+"user"."id", "user"."name"
+from "recipe"
+join "user" on "user".id = "recipe".created_by_user_id
+where "recipe".created_by_user_id = $1 limit 1` },
+        { parameters: [2], sql: `select
+"image"."file_name", "image"."id", "image"."created_by_user_id"
+from "recipe"
+join "image" on "image".id = "recipe".image_id
+where "recipe".image_id = $1 limit 1` },
+        { parameters: [1], sql: `select
+"user"."id", "user"."name"
+from "recipe"
+join "user" on "user".id = "recipe".created_by_user_id
+where "recipe".created_by_user_id = $1 limit 1` },
+        { parameters: [3], sql: `select
+"image"."file_name", "image"."id", "image"."created_by_user_id"
+from "recipe"
+join "image" on "image".id = "recipe".image_id
+where "recipe".image_id = $1 limit 1` },
+        { parameters: [1], sql: `select
+"user"."id", "user"."name"
+from "recipe"
+join "user" on "user".id = "recipe".created_by_user_id
+where "recipe".created_by_user_id = $1 limit 1` },
+      ])
     })
   })
 })

@@ -134,18 +134,15 @@ const createSelectSqlForRelatedData = (
   }
   else {
     const dataFilterNodeOrGroup = (options as AnyGetFunctionOptions<0>).filter
-    if (dataFilterNodeOrGroup != null) {
-      const whereSql = createDataFilter(dataFilterNodeOrGroup).toSql({
+    const whereClauseSql = dataFilterNodeOrGroup != null
+      ? createDataFilter(dataFilterNodeOrGroup).toSql({
         transformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
       })
-      querySql = [
-        whereSql,
-        `${localTableName}.${localColumnName} = $1 limit 1`,
-      ].filter(s => s != null && s.length > 0).join(' and ')
-    }
-    else {
-      querySql = `where ${localTableName}.${localColumnName} = $1 limit 1`
-    }
+      : null
+    querySql = 'where '.concat([
+      whereClauseSql,
+      `${localTableName}.${localColumnName} = $1 limit 1`,
+    ].filter(s => s != null && s.length > 0).join(' and '))
   }
 
   if (relation.type === RelationType.ONE_TO_ONE || relation.type === RelationType.ONE_TO_MANY) {
