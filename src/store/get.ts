@@ -119,7 +119,10 @@ const createSelectSqlForRelatedData = (
   if (isForeignPlural) {
     const dataQueryRecord = (options as AnyGetFunctionOptions<1>).query
     if (dataQueryRecord != null) {
-      const dataQuerySqlInfo = createDataQuery(dataQueryRecord).toSql()
+      const dataQuerySqlInfo = createDataQuery(dataQueryRecord).toSql({
+        filterTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
+        sortingTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
+      })
       querySql = `${dataQuerySqlInfo.where} and ${localTableName}.${localColumnName} = $1 ${dataQuerySqlInfo.orderByLimitOffset}`
     }
     else {
@@ -129,7 +132,9 @@ const createSelectSqlForRelatedData = (
   else {
     const dataFilterNodeOrGroup = (options as AnyGetFunctionOptions<0>).filter
     if (dataFilterNodeOrGroup != null) {
-      const whereSql = createDataFilter(dataFilterNodeOrGroup).toSql()
+      const whereSql = createDataFilter(dataFilterNodeOrGroup).toSql({
+        transformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
+      })
       querySql = `where ${whereSql} and ${localTableName}.${localColumnName} = $1 limit 1`
     }
     else {
@@ -283,7 +288,9 @@ export const getSingle = async (
     : localDataFormat.fieldNameList
   const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
   const columnsSql = createColumnsSql(localDataFormat, localFields)
-  const whereClauseSql = createDataFilter(options.filter).toSql()
+  const whereClauseSql = createDataFilter(options.filter).toSql({
+    transformer: node => ({ left: localDataFormat.sql.columnNames[node.field] }),
+  })
   const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
   const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${whereSql} limit 1`
   const localRecordRow = await db.queryGetFirstRow(getLocalRecordSql)
@@ -318,7 +325,10 @@ export const getMultiple = async (
     : localDataFormat.fieldNameList
   const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
   const columnsSql = createColumnsSql(localDataFormat, localFields)
-  const querySql = createDataQuery(options.query).toSql()?.whereOrderByLimitOffset
+  const querySql = createDataQuery(options.query).toSql({
+    filterTransformer: node => ({ left: localDataFormat.sql.columnNames[node.field] }),
+    sortingTransformer: node => ({ left: localDataFormat.sql.columnNames[node.field] }),
+  })?.whereOrderByLimitOffset
   const getLocalRecordSql = `select ${columnsSql} from ${localDataFormat.sql.tableName} ${querySql}`
 
   const localRecordRows = await db.queryGetRows(getLocalRecordSql)
