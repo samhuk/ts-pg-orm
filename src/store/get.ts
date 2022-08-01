@@ -120,13 +120,14 @@ const createSelectSqlForRelatedData = (
     const dataQueryRecord = (options as AnyGetFunctionOptions<1>).query
     if (dataQueryRecord != null) {
       const dataQuerySqlInfo = createDataQuery(dataQueryRecord).toSql({
+        includeWhereWord: false,
         filterTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
         sortingTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
       })
-      querySql = [
+      querySql = 'where '.concat([
         dataQuerySqlInfo.where,
         `${localTableName}.${localColumnName} = $1 ${dataQuerySqlInfo.orderByLimitOffset}`,
-      ].filter(s => s != null && s.length > 0).join(' and ')
+      ].filter(s => s != null && s.length > 0).join(' and '))
     }
     else {
       querySql = `where ${localTableName}.${localColumnName} = $1`
