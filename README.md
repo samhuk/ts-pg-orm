@@ -7,7 +7,7 @@
 
 Typescript PostgreSQL ORM.
 
-A package for creating data formats, relations, and postgresql data stores with full Typescript integration.
+A package for creating data formats, relations, and postgresql data stores with full Typescript enforcement.
 
 ## Usage
 
@@ -78,7 +78,7 @@ import { DbService } from 'ts-pg-orm/dist/dataFormat/types'
 const dbService: DbService = { ... }
 // Create and provision DB stores for entities
 const stores = ENTITIES.sqldb.createAndProvisionStores(dbService, ['user', 'userGroup'])
-// Create join table (a.k.a "junction table") for many-to-many relations, i.e. user_to_user_group
+// Create any join (a.k.a "junction") tables for many-to-many relations, i.e. user_to_user_group
 await ENTITIES.sqldb.createJoinTables(dbService)
 ```
 
@@ -90,29 +90,36 @@ import { Operator } from '@samhuk/data-filter/dist/types'
 const createUserOptions: CreateUserRecordOptions = { name: 'newUser' }
 // Create records
 const user: UserRecord = await stores.user.add(createUserOptions)
-// Get record(s) by data filters and queries, with related data
-const userGroup = await stores.user.getSingle({
+// Get records by data filters and queries, with related data, recursively.
+const user = await stores.user.getSingle({
   fields: ['name'],
   filter: { field: 'id', op: Operator.EQUALS, val: 1 },
   relations: {
-    users: { },
+    userGroups: {
+      query: {
+        page: 1,
+        pageSize: 5,
+        sorting: [{ field: 'name', dir: SortingDirection.DESC }],
+        filter: { field: 'name', op: Operator.NOT_EQUALS, val: null },
+      },
+    },
   },
 })
-// Use type-enforced data format sql information to create SQL statements
-const userSqlInfo = ENTITIES.dataFormats.user.sql
+// Use type-enforced data format sql information to create bespoke SQL statements
+const sql = ENTITIES.dataFormats.user.sql
 // E.g. select name from "user"
-const customUserSql = `select ${userSqlInfo.columnNames.name} from ${userSqlInfo.tableName}`
+const customUserSql = `select ${sql.columnNames.name} from ${sql.tableName}`
 ```
 
 ## Examples
 
-Examples can be found within ./src/examples, showing more complete and realistic usages of `ts-pg-orm`.
+Examples can be found within ./src/examples, showing more complete and realistic usages.
 
 ### Article API
 
 This is a simple single-endpoint api that has two entities - "User" and "UserArticle", with a single relation linking them.
 
-Run `npm run start-article-api` to build and start the server (don't forget to run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1 to see `ts-pg-orm`.
+Run `npm run start-article-api` to build and start the server (don't forget to run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1.
 
 ## Development
 
