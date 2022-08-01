@@ -123,7 +123,10 @@ const createSelectSqlForRelatedData = (
         filterTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
         sortingTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
       })
-      querySql = `${dataQuerySqlInfo.where} and ${localTableName}.${localColumnName} = $1 ${dataQuerySqlInfo.orderByLimitOffset}`
+      querySql = [
+        dataQuerySqlInfo.where,
+        `${localTableName}.${localColumnName} = $1 ${dataQuerySqlInfo.orderByLimitOffset}`,
+      ].filter(s => s != null && s.length > 0).join(' and ')
     }
     else {
       querySql = `where ${localTableName}.${localColumnName} = $1`
@@ -135,7 +138,10 @@ const createSelectSqlForRelatedData = (
       const whereSql = createDataFilter(dataFilterNodeOrGroup).toSql({
         transformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
       })
-      querySql = `where ${whereSql} and ${localTableName}.${localColumnName} = $1 limit 1`
+      querySql = [
+        whereSql,
+        `${localTableName}.${localColumnName} = $1 limit 1`,
+      ].filter(s => s != null && s.length > 0).join(' and ')
     }
     else {
       querySql = `where ${localTableName}.${localColumnName} = $1 limit 1`
