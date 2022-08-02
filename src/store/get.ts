@@ -203,19 +203,20 @@ ${querySql}`
 const createSelectSqlForThisNode = (
   localDataFormat: DataFormat,
   foreignDataFormat: DataFormat,
-  localFieldName: string,
-  foreignFieldName: string,
-  relation: Relation,
+  relatedDataPropertyInfo: RelatedDataPropertyInfo,
   options: AnyGetFunctionOptions<0 | 1>,
-  isForeignPlural: boolean,
   localFieldNames: string[],
 ) => {
+  const isForeignPlural = relatedDataPropertyInfo.isForeignPlural
   const localTableName = localDataFormat.sql.tableName
   const foreignTableName = foreignDataFormat.sql.tableName
+  const localFieldName = relatedDataPropertyInfo.localFieldRef.fieldName
   const localColumnName = localDataFormat.sql.columnNames[localFieldName]
+  const foreignFieldName = relatedDataPropertyInfo.foreignFieldRef.fieldName
   const foreignColumnName = foreignDataFormat.sql.columnNames[foreignFieldName]
   const columnsSql = createColumnsSql(foreignDataFormat, localFieldNames)
   const querySql = createQuerySqlForRelatedData(localDataFormat, foreignDataFormat, localFieldName, options, isForeignPlural)
+  const relation = relatedDataPropertyInfo.relation
 
   if (relation.type === RelationType.ONE_TO_ONE || relation.type === RelationType.ONE_TO_MANY)
     return createSelectSqlForOneToOneOrOneToManyRelation(localTableName, foreignTableName, localColumnName, foreignColumnName, columnsSql, querySql)
@@ -324,16 +325,7 @@ export const get = async (
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)
 
   // Create sql used to select data (record or records) for this node
-  const selectSql = createSelectSqlForThisNode(
-    parentDataFormat,
-    dataFormat,
-    relatedDataPropertyInfo.localFieldRef.fieldName,
-    relatedDataPropertyInfo.foreignFieldRef.fieldName,
-    relatedDataPropertyInfo.relation,
-    options,
-    relatedDataPropertyInfo.isForeignPlural,
-    fieldsInfo.fieldsToSelectFor,
-  )
+  const selectSql = createSelectSqlForThisNode(parentDataFormat, dataFormat, relatedDataPropertyInfo, options, fieldsInfo.fieldsToSelectFor)
 
   // If this node is plural, get records, then recursively get the related data for each record
   if (relatedDataPropertyInfo.isForeignPlural) {
