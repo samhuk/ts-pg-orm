@@ -15,7 +15,7 @@ import { DbService, Entities } from '../types'
 import { getMultiple, getSingle } from './get'
 import { Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 
-const add = async <T extends DataFormatDeclaration>(
+const create = async <T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   options: CreateRecordOptions<T>,
@@ -29,7 +29,7 @@ const add = async <T extends DataFormatDeclaration>(
   return objectPropsToCamelCase(row)
 }
 
-const addManual = async <T extends DataFormatDeclaration>(
+const createManual = async <T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   options: ManualCreateRecordOptions<T>,
@@ -113,10 +113,10 @@ export const createDbStore = <
   return {
     provision: () => db.query(createTableSql) as Promise<any>,
     unprovision: () => db.query(`drop table if exists ${localDataFormat.sql.tableName}`) as Promise<any>,
-    add: options => add(db, localDataFormat, options) as any,
-    addManual: options => addManual(db, localDataFormat, options) as any,
+    create: options => create(db, localDataFormat, options) as any,
+    createManual: options => createManual(db, localDataFormat, options) as any,
     getSingle: options => getSingle(entities as any, db, localDataFormat, options as any) as any,
     getMultiple: options => getMultiple(entities as any, db, localDataFormat, options as any) as any,
-    updateSingle: options => updateSingle(db, localDataFormat, options) as any, // TODO
+    updateSingle: options => updateSingle(db, localDataFormat, options) as any,
   }
 }

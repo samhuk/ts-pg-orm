@@ -179,11 +179,11 @@ export type Store<
   /**
    * Adds a new record, excluding auto-generated fields.
    */
-  add: (options: CreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
+  create: (options: CreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
   /**
    * Adds a new record, including auto-generated fields.
    */
-  addManual: (options: ManualCreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
+  createManual: (options: ManualCreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
   /**
    * Retreives a single record, optionally including related data.
    */

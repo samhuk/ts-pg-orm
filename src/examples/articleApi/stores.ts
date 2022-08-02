@@ -16,7 +16,7 @@ const queueMockDbServiceResponses = (db: MockDbService) => {
   db.queueResponse(null)
   db.queueResponse(null)
 
-  // Responses for the individual add() calls
+  // Responses for the individual create() calls
   const newUser: any = {
     id: 1,
     uuid: randomUUID(),
@@ -62,11 +62,11 @@ export const createAndProvisionStores = async () => {
  * Populates the stores with some seed data.
  */
 export const populateSeedData = async (stores: Stores) => {
-  const newUser = await stores.user.add({
+  const newUser = await stores.user.create({
     name: 'user 1',
   })
 
-  const newUserArticle = await stores.userArticle.add({
+  const newUserArticle = await stores.userArticle.create({
     title: 'How to create entities',
     body: 'lorum ipsum foo bar fizz buzz',
     createdByUserId: newUser.id,

@@ -89,7 +89,7 @@ import { Operator } from '@samhuk/data-filter/dist/types'
 // Use types
 const createUserOptions: CreateUserRecordOptions = { name: 'newUser' }
 // Create records
-const user: UserRecord = await stores.user.add(createUserOptions)
+const user: UserRecord = await stores.user.create(createUserOptions)
 // Get records by data filters and queries, with related data, recursively.
 const user = await stores.user.getSingle({
   fields: ['name'],
