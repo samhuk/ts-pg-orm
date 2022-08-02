@@ -73,13 +73,11 @@ const ORM = createTsPgOrm()
 Create and provision PostgreSQL entity stores:
 
 ```typescript
-import { DbService } from 'ts-pg-orm/dist/dataFormat/types'
-// Define PostgreSql DB service, with query, queryGetFirstRow, and queryGetRows functions.
-const dbService: DbService = { ... }
+await ORM.initDbService({ host: 'localhost', port: 5432, ... })
 // Create and provision DB stores
-const stores = ORM.sqldb.createAndProvisionStores(dbService, ['user', 'userGroup'])
+const stores = await ORM.sql.createStores({ provisionOrder: ['user', 'userGroup'] })
 // Create any join (a.k.a "junction") tables for many-to-many relations, i.e. user_to_user_group
-await ORM.sqldb.createJoinTables(dbService)
+await ORM.sql.createJoinTables()
 ```
 
 Use types and stores throughout your application, all fully type-enforced:
