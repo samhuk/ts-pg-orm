@@ -1,4 +1,4 @@
-import { DbService } from '../types'
+import { DbService } from 'simple-pg-client/dist/types'
 
 export type MockDbService = DbService & {
   queuedResponses: any[]
@@ -30,6 +30,7 @@ export const createMockDbService = (): MockDbService => {
     clearReceivedQueries: () => instance.receivedQueries = [],
 
     query: sendResponse,
+    queryExists: undefined, // TODO
     queryGetRows: sendResponse,
     queryGetFirstRow: sendResponse,
   }

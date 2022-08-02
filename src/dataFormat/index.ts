@@ -17,17 +17,6 @@ import { convertDataFormatDeclarationToCreateTableSql } from './sql'
 import { createSampleData } from './sampleData'
 import { COMMON_FIELDS } from './common'
 
-// type DataFormatDeclarationToFieldsDict<T extends DataFormatDeclaration> = {
-//   [K in keyof T['fields'] & `${bigint}` as T['fields'][K] extends { name: infer TKey }
-//     ? `${TKey & string}`
-//     : never
-//   ]: T['fields'][K] extends DataFormatField ? T['fields'][K]['name'] : never
-// }
-
-/* TODO: The above is the "standard" way to convert an array to a dict, but it doesn't work, and
- * after ~2 hours, I can't figure out why. Something unique about DataFormatField?
- */
-
 type ToFieldsDict<T extends DataFormatDeclaration> = (
   { [fieldName in T['fields'][number]['name']]: Extract<T['fields'][number], { name: fieldName }> }
 )
@@ -48,7 +37,6 @@ const createSelectSqlBase = <T extends DataFormatDeclaration>(
  */
 export const createDataFormat = <T extends DataFormatDeclaration>(
   dataFormatDeclaration: T,
-  options?: { enablePostgreSql?: boolean },
 ): Readonly<DataFormat<T>> => {
   type FieldNames = ExtractDataFormatFieldNames<T>
   type FieldsDict = ToFieldsDict<T>
@@ -104,7 +92,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     fieldSubSetSelectSqlBases[fss.name] = `select ${columnsSql} from ${tableName}`
   })
 
-  const sql: DataFormatSqlInfo<T> = (options?.enablePostgreSql ?? true) ? {
+  const sql: DataFormatSqlInfo<T> = {
     tableName,
     columnNames: columnNamesDict,
     createCreateTableSql: relations => convertDataFormatDeclarationToCreateTableSql(dataFormatDeclaration, relations),
@@ -113,7 +101,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     updateSqlBase: `update ${tableName} set`,
     deleteSqlBase: `update ${tableName} set date_deleted = CURRENT_TIMESTAMP`,
     fieldSubSetSelectSqlBases,
-  } : null
+  }
 
   const pluralizedName = dataFormatDeclaration.pluralizedName ?? `${dataFormatDeclaration.name}s` as any
 

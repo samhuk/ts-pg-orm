@@ -1,11 +1,12 @@
 import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
+import { DbService } from 'simple-pg-client/dist/types'
 import { DataFormat, DataFormatDeclarations, FieldRef } from '../dataFormat/types'
 import { removeDuplicates } from '../helpers/array'
 import { toDict } from '../helpers/dict'
 import { objectPropsToCamelCase } from '../helpers/string'
 import { Relation, RelationType } from '../relations/types'
-import { DbService, Entities } from '../types'
+import { TsPgOrm } from '../types'
 import { AnyGetFunctionOptions } from './types/get'
 
 type RelatedDataPropertyInfo = {
@@ -37,11 +38,11 @@ const createColumnsSql = (df: DataFormat, fieldNames?: string[]) => (
 )
 
 const createRelatedDataPropertyNameToInfoDict = (
-  entities: Entities,
+  tsPgOrm: TsPgOrm,
   localDataFormat: DataFormat,
 ): RelatedDataPropertyNameToInfoDict => {
   const relatedDataPropertyNameToInfoDict: RelatedDataPropertyNameToInfoDict = {}
-  Object.values(entities.relations).forEach(r => {
+  Object.values(tsPgOrm.relations).forEach(r => {
     let localFieldRef: FieldRef
     let foreignFieldRef: FieldRef
     let manuallyDefinedRelatedDataPropertyName: string
@@ -92,8 +93,8 @@ const createRelatedDataPropertyNameToInfoDict = (
     if (localFieldRef != null) {
       const relatedDataPropertyName = manuallyDefinedRelatedDataPropertyName
       ?? (isForeignPlural
-        ? entities.dataFormats[foreignFieldRef.formatName].pluralizedName
-        : entities.dataFormats[foreignFieldRef.formatName].name
+        ? tsPgOrm.dataFormats[foreignFieldRef.formatName].pluralizedName
+        : tsPgOrm.dataFormats[foreignFieldRef.formatName].name
       )
       relatedDataPropertyNameToInfoDict[relatedDataPropertyName] = {
         relatedDataPropertyName,
@@ -277,7 +278,7 @@ const createSelectSqlForRootNode = (
 }
 
 const getRelatedDataOfRecord = async (
-  entities: Entities,
+  tsPgOrm: TsPgOrm,
   db: DbService,
   optionsRelations: { [relatedDataPropertyName: string]: AnyGetFunctionOptions },
   relatedDataPropertyNameToInfoDict: RelatedDataPropertyNameToInfoDict,
@@ -290,7 +291,7 @@ const getRelatedDataOfRecord = async (
         const fieldValueForRelatedDataProp = parentRecord[relatedDataPropertyInfo.localFieldRef.fieldName]
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return get(
-          entities,
+          tsPgOrm,
           db,
           childOptions,
           relatedDataPropertyInfo,
@@ -309,17 +310,17 @@ const getRelatedDataOfRecord = async (
 }
 
 export const get = async (
-  entities: Entities,
+  tsPgOrm: TsPgOrm,
   db: DbService,
   options: AnyGetFunctionOptions,
   relatedDataPropertyInfo: RelatedDataPropertyInfo,
   parentLinkedFieldValue: any,
 ) => {
   // Find parent and this data formats for this node
-  const parentDataFormat = entities.dataFormats[relatedDataPropertyInfo.localFieldRef.formatName]
-  const dataFormat = entities.dataFormats[relatedDataPropertyInfo.foreignFieldRef.formatName]
+  const parentDataFormat = tsPgOrm.dataFormats[relatedDataPropertyInfo.localFieldRef.formatName]
+  const dataFormat = tsPgOrm.dataFormats[relatedDataPropertyInfo.foreignFieldRef.formatName]
 
-  const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, dataFormat)
+  const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(tsPgOrm, dataFormat)
 
   // Determine field information for this node
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)
@@ -337,7 +338,7 @@ export const get = async (
 
     const relatedDataList = options.relations != null && Object.keys(options.relations).length > 0
       ? await Promise.all(records.map(record => (
-        getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
+        getRelatedDataOfRecord(tsPgOrm, db, options.relations, relatedDataPropertyNameToInfoDict, record)
       )))
       : null
 
@@ -362,7 +363,7 @@ export const get = async (
 
   // Get related data of the record for this node
   const relatedDataDict = options.relations != null && Object.keys(options.relations).length > 0
-    ? await getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
+    ? await getRelatedDataOfRecord(tsPgOrm, db, options.relations, relatedDataPropertyNameToInfoDict, record)
     : null
 
   // Remove fields that were only used for related data for this node (for linked field values)
@@ -375,12 +376,12 @@ export const get = async (
 }
 
 export const getSingle = async (
-  entities: Entities,
+  tsPgOrm: TsPgOrm,
   db: DbService,
   dataFormat: DataFormat,
   options: AnyGetFunctionOptions<0>,
 ) => {
-  const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, dataFormat)
+  const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(tsPgOrm, dataFormat)
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)
 
   const selectSql = createSelectSqlForRootNode(dataFormat, fieldsInfo.fieldsToSelectFor, false, options)
@@ -392,7 +393,7 @@ export const getSingle = async (
     return null
 
   const relatedDataDict = options.relations != null && Object.keys(options.relations).length > 0
-    ? await getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
+    ? await getRelatedDataOfRecord(tsPgOrm, db, options.relations, relatedDataPropertyNameToInfoDict, record)
     : null
 
   fieldsInfo.fieldsOnlyUsedForRelations.forEach(fName => delete record[fName])
@@ -404,12 +405,12 @@ export const getSingle = async (
 }
 
 export const getMultiple = async (
-  entities: Entities,
+  tsPgOrm: TsPgOrm,
   db: DbService,
   dataFormat: DataFormat,
   options: AnyGetFunctionOptions<1>,
 ) => {
-  const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, dataFormat)
+  const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(tsPgOrm, dataFormat)
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)
 
   const selectSql = createSelectSqlForRootNode(dataFormat, fieldsInfo.fieldsToSelectFor, true, options)
@@ -422,7 +423,7 @@ export const getMultiple = async (
 
   const relatedDataList = options.relations != null && Object.keys(options.relations).length > 0
     ? await Promise.all(records.map(record => (
-      getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
+      getRelatedDataOfRecord(tsPgOrm, db, options.relations, relatedDataPropertyNameToInfoDict, record)
     )))
     : null
 

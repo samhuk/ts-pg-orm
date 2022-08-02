@@ -1,4 +1,4 @@
-import { entities } from '../testData'
+import { tsPgOrm } from '../testData'
 import { convertDataFormatDeclarationToCreateTableSql } from './sql'
 
 describe('sql', () => {
@@ -6,7 +6,7 @@ describe('sql', () => {
     const fn = convertDataFormatDeclarationToCreateTableSql
 
     test('test 1 - user', () => {
-      const sql = fn(entities.dataFormats.user.declaration)
+      const sql = fn(tsPgOrm.dataFormats.user.declaration)
       expect(sql).toBe(`create table if not exists public."user"
 (
   id serial not null primary key,
@@ -21,10 +21,10 @@ alter table if exists public."user"
 
     test('test 1 - recipe', () => {
       const sql = fn(
-        entities.dataFormats.recipe.declaration,
+        tsPgOrm.dataFormats.recipe.declaration,
         [
-          entities.relations['user.id <-->> recipe.createdByUserId'],
-          entities.relations['image.id <-->> recipe.imageId'],
+          tsPgOrm.relations['user.id <-->> recipe.createdByUserId'],
+          tsPgOrm.relations['image.id <-->> recipe.imageId'],
         ],
       )
       expect(sql).toBe(`create table if not exists public."recipe"
@@ -49,7 +49,7 @@ alter table if exists public."recipe"
     })
 
     test('test 1 - user address', () => {
-      const sql = fn(entities.dataFormats.userAddress.declaration, [entities.relations['user.id <--> userAddress.userId']])
+      const sql = fn(tsPgOrm.dataFormats.userAddress.declaration, [tsPgOrm.relations['user.id <--> userAddress.userId']])
       expect(sql).toBe(`create table if not exists public."user_address"
 (
   user_id integer unique,
@@ -68,7 +68,7 @@ alter table if exists public."user_address"
     })
 
     test('test 1 - user group', () => {
-      const sql = fn(entities.dataFormats.userGroup.declaration)
+      const sql = fn(tsPgOrm.dataFormats.userGroup.declaration)
       expect(sql).toBe(`create table if not exists public."user_group"
 (
   id serial not null primary key,

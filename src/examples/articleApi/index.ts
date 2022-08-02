@@ -1,13 +1,13 @@
 // ------------------------------------------------------------------
 // This file creates a basic single-endpoint API which demonstrates
-// how stores and types created from Entities can be used to easily
-// create robust and fully type-safe controller logic.
+// how stores and types created from a TsPgOrm instance can be used to
+// easily create robust and fully type-safe controller logic.
 // ------------------------------------------------------------------
 
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { createServer, Server, ServerResponse } from 'http'
 import { exit } from 'process'
-import { UserProfilePageData } from './entities'
+import { UserProfilePageData } from './tsPgOrm'
 import { createAndProvisionStores, populateSeedData } from './stores'
 
 const sendSuccessResponse = (res: ServerResponse, server: Server, data: any) => {

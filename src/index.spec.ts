@@ -1,8 +1,8 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { createMockDbService } from './mock/dbService'
-import { entities } from './testData'
+import { tsPgOrm } from './testData'
 
-describe('createEntities', () => {
+describe('createTsPgOrm', () => {
   describe('createStores', () => {
     test('test 1', async () => {
       // -- Arrange
@@ -18,13 +18,17 @@ describe('createEntities', () => {
       })
 
       // -- Act
-      const stores = await entities.sql.createAndProvisionStores(db, [
-        'user',
-        'userGroup',
-        'article',
-        'recipe',
-        'userAddress',
-      ], true)
+      const stores = await tsPgOrm.sql.createStores({
+        db,
+        provisionOrder: [
+          'user',
+          'userGroup',
+          'article',
+          'recipe',
+          'userAddress',
+        ],
+        unprovisionStores: true,
+      })
 
       // -- Assert
       expect(stores.user).toBeDefined()

@@ -1,6 +1,6 @@
 // ------------------------------------------------------------------
 // This file defines the data formats of the app. These are loaded
-// to create Entities in ./entities.ts
+// to create a TsPgOrm instance in ./tsPgOrm.ts
 // ------------------------------------------------------------------
 
 import { createDataFormatDeclaration } from '../../dataFormat'

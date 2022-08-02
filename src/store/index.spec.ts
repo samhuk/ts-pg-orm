@@ -1,28 +1,12 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { SortingDirection } from '@samhuk/data-query/dist/sorting/types'
-import { createDbStore } from '.'
+import { createStore } from '.'
 import { createMockDbService } from '../mock/dbService'
-import { entities } from '../testData'
-
-const a = { foo: 1, bar: 2 }
-
-const b = { foo: 3, bar: 4 }
-
-const c = [a, b]
-
-const d = {
-  a: [
-    a,
-    b,
-    {
-      a: c,
-    },
-  ] as const,
-}
+import { tsPgOrm } from '../testData'
 
 describe('store', () => {
-  describe('createDbStore', () => {
-    const fn = createDbStore
+  describe('createStore', () => {
+    const fn = createStore
 
     test('getSingle', async () => {
       const db = createMockDbService()
@@ -43,7 +27,7 @@ describe('store', () => {
         { file_name: 'fizz' },
         { id: 1, name: 'foo' },
       ])
-      const store = fn(db, entities, 'user')
+      const store = fn(db, tsPgOrm, 'user')
       const result = await store.getSingle({
         fields: ['name'],
         relations: {
@@ -127,7 +111,7 @@ where "recipe".created_by_user_id = $1 limit 1` })
     test('updateSingle', async () => {
       const db = createMockDbService()
 
-      const store = fn(db, entities, 'user')
+      const store = fn(db, tsPgOrm, 'user')
 
       const result = await store.updateSingle({
         filter: { field: 'id', op: Operator.EQUALS, val: 1 },

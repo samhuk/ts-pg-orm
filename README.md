@@ -49,19 +49,19 @@ export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
 // { id: number, name: string }
 ```
 
-Load Data Format Declarations and Relations to create Entities:
+Load Data Format Declarations and Relations to create an instance of TsPgOrm:
 
 ```typescript
-import { createEntities } from 'ts-pg-orm'
+import { createTsPgOrm } from 'ts-pg-orm'
 import { RelationType } from 'ts-pg-orm/dist/relations/types'
 
-const ENTITIES = createEntities()
+const ORM = createTsPgOrm()
   .loadDataFormats([
     USER_DFD,
     USER_GROUP_DFD
   ] as const)
   .loadRelations(dfs => [
-    // Create many-to-many relation between user and userGroup entities, linked on id fields.
+    // Create many-to-many relation between user and userGroup, linked on id fields.
     {
       type: RelationType.MANY_TO_MANY,
       fieldRef1: dfs.user.fieldRefs.id,
@@ -76,10 +76,10 @@ Create and provision PostgreSQL entity stores:
 import { DbService } from 'ts-pg-orm/dist/dataFormat/types'
 // Define PostgreSql DB service, with query, queryGetFirstRow, and queryGetRows functions.
 const dbService: DbService = { ... }
-// Create and provision DB stores for entities
-const stores = ENTITIES.sqldb.createAndProvisionStores(dbService, ['user', 'userGroup'])
+// Create and provision DB stores
+const stores = ORM.sqldb.createAndProvisionStores(dbService, ['user', 'userGroup'])
 // Create any join (a.k.a "junction") tables for many-to-many relations, i.e. user_to_user_group
-await ENTITIES.sqldb.createJoinTables(dbService)
+await ORM.sqldb.createJoinTables(dbService)
 ```
 
 Use types and stores throughout your application, all fully type-enforced:
@@ -106,7 +106,7 @@ const user = await stores.user.getSingle({
   },
 })
 // Use type-enforced data format sql information to create bespoke SQL statements
-const sql = ENTITIES.dataFormats.user.sql
+const sql = ORM.dataFormats.user.sql
 // E.g. select name from "user"
 const customUserSql = `select ${sql.columnNames.name} from ${sql.tableName}`
 ```
@@ -117,7 +117,7 @@ Examples can be found within ./src/examples, showing more complete and realistic
 
 ### Article API
 
-This is a simple single-endpoint api that has two entities - "User" and "UserArticle", with a single relation linking them.
+This is a simple single-endpoint api that has two data formats - "User" and "UserArticle", with a single relation linking them.
 
 Run `npm run start-article-api` to build and start the server (don't forget to run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1.
 

@@ -1,22 +1,22 @@
 // ------------------------------------------------------------------
 // This file loads in defined data formats, along with relations, to
-// create Entities and types used throughout the app.
+// create a TsPgOrm instance and types used throughout the app.
 // ------------------------------------------------------------------
 
-import { createEntities } from '../..'
+import { createTsPgOrm } from '../..'
 import { ToRecord } from '../../dataFormat/types'
 import { RelationType } from '../../relations/types'
 import { Store } from '../../store/types'
 import { USER_DFD, USER_ARTICLE_DFD } from './dataFormats'
 
 // ------------------------------------------------------------------
-// Load in data formats and relations to create Entities
+// Load in data formats and relations to create TsPgOrm
 // ------------------------------------------------------------------
 
 /**
- * Article API Entities
+ * Article API TsPgOrm
  */
-export const ENTITIES = createEntities()
+export const ORM = createTsPgOrm()
   .loadDataFormats([
     USER_DFD,
     USER_ARTICLE_DFD,
@@ -32,7 +32,7 @@ export const ENTITIES = createEntities()
   ] as const)
 
 // ------------------------------------------------------------------
-// Create types from ENTITIES
+// Create types from Data Format Declarations.
 // ------------------------------------------------------------------
 
 type UserRecord = ToRecord<typeof USER_DFD>
@@ -40,14 +40,14 @@ type UserArticleRecord = ToRecord<typeof USER_ARTICLE_DFD>
 
 // TODO: This will be improved, not requiring references to the declarations.
 type UserStore = Store<
-  typeof ENTITIES['dataFormatDeclarations'],
-  typeof ENTITIES['relationDeclarations'],
+  typeof ORM['dataFormatDeclarations'],
+  typeof ORM['relationDeclarations'],
   'user'
 >
 
 type UserArticleStore = Store<
-  typeof ENTITIES['dataFormatDeclarations'],
-  typeof ENTITIES['relationDeclarations'],
+  typeof ORM['dataFormatDeclarations'],
+  typeof ORM['relationDeclarations'],
   'userArticle'
 >
 

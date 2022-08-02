@@ -35,7 +35,7 @@ export enum RelationType {
    *
    * Note: Many-to-many relations require a join (a.k.a "junction"/"mapping") table.
    * Use `createJoinTables` to create them once the relations have been loaded into
-   * the entities instance.
+   * the TsPgOrm instance.
    */
   MANY_TO_MANY,
 }

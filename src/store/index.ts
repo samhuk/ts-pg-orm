@@ -1,4 +1,5 @@
 import { createDataFilter } from '@samhuk/data-filter'
+import { DbService } from 'simple-pg-client/dist/types'
 import { createValueList } from '../dataFormat/sql'
 import {
   CreateRecordOptions,
@@ -11,7 +12,7 @@ import {
 import { createInsertReturningSql, createParametersString } from '../helpers/sql'
 import { objectPropsToCamelCase } from '../helpers/string'
 import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
-import { DbService, Entities } from '../types'
+import { TsPgOrm } from '../types'
 import { getMultiple, getSingle } from './get'
 import { Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 
@@ -97,17 +98,17 @@ const getRelevantRelationsForForeignKeys = <
         || (_r.type === RelationType.ONE_TO_ONE && _r.toOneField.formatName === localDataFormatName)
     }) as Relation<T, RelationType.ONE_TO_MANY | RelationType.ONE_TO_ONE>[]
 
-export const createDbStore = <
+export const createStore = <
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   L extends T[number]['name'],
 >(
     db: DbService,
-    entities: Entities<T, K>,
+    tsPgOrm: TsPgOrm<T, K>,
     localDataFormatName: L,
   ): Store<T, K, L> => {
-  const localDataFormat = (entities.dataFormats as any)[localDataFormatName] as DataFormat
-  const foreignKeyRelevantRelations = getRelevantRelationsForForeignKeys(entities.relations, localDataFormatName)
+  const localDataFormat = (tsPgOrm.dataFormats as any)[localDataFormatName] as DataFormat
+  const foreignKeyRelevantRelations = getRelevantRelationsForForeignKeys(tsPgOrm.relations, localDataFormatName)
   const createTableSql = localDataFormat.sql.createCreateTableSql(foreignKeyRelevantRelations)
 
   return {
@@ -115,8 +116,8 @@ export const createDbStore = <
     unprovision: () => db.query(`drop table if exists ${localDataFormat.sql.tableName}`) as Promise<any>,
     create: options => create(db, localDataFormat, options) as any,
     createManual: options => createManual(db, localDataFormat, options) as any,
-    getSingle: options => getSingle(entities as any, db, localDataFormat, options as any) as any,
-    getMultiple: options => getMultiple(entities as any, db, localDataFormat, options as any) as any,
+    getSingle: options => getSingle(tsPgOrm as any, db, localDataFormat, options as any) as any,
+    getMultiple: options => getMultiple(tsPgOrm as any, db, localDataFormat, options as any) as any,
     updateSingle: options => updateSingle(db, localDataFormat, options) as any,
   }
 }

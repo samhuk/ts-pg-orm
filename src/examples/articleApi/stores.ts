@@ -1,12 +1,12 @@
 // ------------------------------------------------------------------
-// This file uses the Entities created in ./entities.ts to create
+// This file uses the TsPgOrm instance created in ./tsPgOrm.ts to create
 // stores. A mock DB client service is used and mock responses are
 // queued to mimick a real database client service.
 // ------------------------------------------------------------------
 
 import { randomUUID } from 'crypto'
 import { MockDbService, createMockDbService } from '../../mock/dbService'
-import { ENTITIES, Stores } from './entities'
+import { ORM, Stores } from './tsPgOrm'
 
 /**
  * Queues the responses that are required for the api later on.
@@ -29,7 +29,7 @@ const queueMockDbServiceResponses = (db: MockDbService) => {
   const newUserArticle: any = {
     id: 1,
     uuid: randomUUID(),
-    title: 'How to create entities',
+    title: 'How to create tsPgOrm',
     body: 'lorum ipsum foo bar fizz buzz',
     created_by_user_id: 1,
     date_created: Date.now(),
@@ -45,17 +45,9 @@ const queueMockDbServiceResponses = (db: MockDbService) => {
 export const createAndProvisionStores = async () => {
   const db = createMockDbService()
   queueMockDbServiceResponses(db)
-  // -- Create stores
-  const userDbStore = await ENTITIES.sql.createStore('user', db)
-  const userArticleDbStore = await ENTITIES.sql.createStore('userArticle', db)
-  // -- Provision stores and join table
-  await userDbStore.provision()
-  await userArticleDbStore.provision()
-
-  return {
-    user: userDbStore,
-    userArticle: userArticleDbStore,
-  }
+  // -- Create and provision stores
+  const stores = await ORM.sql.createStores({ db, provisionOrder: ['user', 'userArticle'] })
+  return stores
 }
 
 /**
@@ -67,7 +59,7 @@ export const populateSeedData = async (stores: Stores) => {
   })
 
   const newUserArticle = await stores.userArticle.create({
-    title: 'How to create entities',
+    title: 'How to create tsPgOrm',
     body: 'lorum ipsum foo bar fizz buzz',
     createdByUserId: newUser.id,
   })

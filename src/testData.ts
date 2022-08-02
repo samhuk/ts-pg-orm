@@ -1,4 +1,4 @@
-import { createEntities } from '.'
+import { createTsPgOrm } from '.'
 import { createDataFormatDeclaration } from './dataFormat'
 import { BASE_ENTITY_FIELDS } from './dataFormat/common'
 import { DataType, DateDataSubType, NumberDataSubType, StringDataSubType } from './dataFormat/types'
@@ -70,7 +70,7 @@ export const d6 = createDataFormatDeclaration({
 
 const dfds = [d1, d2, d3, d4, d5, d6] as const
 
-export const entities = createEntities()
+export const tsPgOrm = createTsPgOrm()
   .loadDataFormats(dfds)
   .loadRelations(dfs => [
     {
@@ -100,7 +100,7 @@ export const entities = createEntities()
     },
   ] as const)
 
-export const entitiesWithNamesProvided = createEntities()
+export const tsPgOrmWithNamesProvided = createTsPgOrm()
   .loadDataFormats(dfds)
   .loadRelations(dfs => [
     {
