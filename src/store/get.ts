@@ -6,7 +6,7 @@ import { toDict } from '../helpers/dict'
 import { objectPropsToCamelCase } from '../helpers/string'
 import { Relation, RelationType } from '../relations/types'
 import { DbService, Entities } from '../types'
-import { AnyGetFunctionOptions } from './types'
+import { AnyGetFunctionOptions } from './types/get'
 
 type RelatedDataPropertyInfo = {
   relatedDataPropertyName: string
@@ -361,8 +361,9 @@ export const getSingle = async (
     transformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
   })
   const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
-  const getRecordSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${whereSql} limit 1`
-  const recordRow = await db.queryGetFirstRow(getRecordSql)
+  const selectSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${whereSql} limit 1`
+
+  const recordRow = await db.queryGetFirstRow(selectSql)
   const record = objectPropsToCamelCase(recordRow)
 
   if (record == null)
@@ -401,9 +402,9 @@ export const getMultiple = async (
     filterTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
     sortingTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
   })?.whereOrderByLimitOffset
-  const getRecordsSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
+  const selectSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
 
-  const recordRows = await db.queryGetRows(getRecordsSql)
+  const recordRows = await db.queryGetRows(selectSql)
   const records = recordRows.map(r => objectPropsToCamelCase(r))
 
   if (records.length === 0)
