@@ -1,3 +1,4 @@
+import { createDataFilter } from '@samhuk/data-filter'
 import { createValueList } from '../dataFormat/sql'
 import {
   CreateRecordOptions,
@@ -7,18 +8,18 @@ import {
   ManualCreateRecordOptions,
   ToRecord,
 } from '../dataFormat/types'
-import { createInsertReturningSql } from '../helpers/sql'
+import { createInsertReturningSql, createParametersString } from '../helpers/sql'
 import { objectPropsToCamelCase } from '../helpers/string'
 import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
 import { DbService, Entities } from '../types'
 import { getMultiple, getSingle } from './get'
-import { Store } from './types'
+import { Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 
-async function add<T extends DataFormatDeclaration>(
+const add = async <T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   options: CreateRecordOptions<T>,
-): Promise<ToRecord<T>> {
+): Promise<ToRecord<T>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.createRecordFieldNames.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
 
@@ -28,17 +29,38 @@ async function add<T extends DataFormatDeclaration>(
   return objectPropsToCamelCase(row)
 }
 
-async function addManual<T extends DataFormatDeclaration>(
+const addManual = async <T extends DataFormatDeclaration>(
   db: DbService,
   df: DataFormat<T>,
   options: ManualCreateRecordOptions<T>,
-): Promise<ToRecord<T>> {
+): Promise<ToRecord<T>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.fieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
   const valueList = fieldNames.map(f => (options as any)[f])
   const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.columnNames[f]))
   const row = await db.queryGetFirstRow(sql, valueList)
   return objectPropsToCamelCase(row)
+}
+
+const updateSingle = async (
+  db: DbService,
+  df: DataFormat,
+  options: UpdateSingleFunctionOptions,
+): Promise<UpdateSingleFunctionResult> => {
+  const fieldNamesToUpdate = Object.keys(options.record)
+  const columnsSql = fieldNamesToUpdate
+    .map(fName => df.sql.columnNames[fName])
+    .join(', ')
+  const parametersSql = createParametersString(fieldNamesToUpdate.length)
+  const whereClause = createDataFilter(options.filter).toSql({
+    transformer: node => ({ left: df.sql.columnNames[node.field] }),
+  })
+  const sql = `${df.sql.updateSqlBase} (${columnsSql}) = (${parametersSql}) where ${whereClause}`
+  const values = fieldNamesToUpdate.map(fName => options.record[fName])
+
+  const result = await db.query(sql, values)
+
+  return result?.rows?.[0]
 }
 
 export const getRelationsRelevantToDataFormat = <
@@ -94,8 +116,7 @@ export const createDbStore = <
     add: options => add(db, localDataFormat, options) as any,
     addManual: options => addManual(db, localDataFormat, options) as any,
     getSingle: options => getSingle(entities as any, db, localDataFormat, options as any) as any,
-    // @ts-ignore
     getMultiple: options => getMultiple(entities as any, db, localDataFormat, options as any) as any,
-    updateSingle: options => undefined, // TODO
+    updateSingle: options => updateSingle(db, localDataFormat, options) as any, // TODO
   }
 }

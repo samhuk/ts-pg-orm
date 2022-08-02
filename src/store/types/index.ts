@@ -125,15 +125,35 @@ export type GetMultipleFunction<
   options: TGetFunctionOptions,
 ) => Promise<GetFunctionResult<T, K, L, 1, TGetFunctionOptions>>
 
-type UpdateSingleFunctionOptions<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
+export type UpdateSingleFunctionOptions<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = T[number],
 > = {
+  /**
+   * The fields to update with their new values.
+   */
   record: Partial<ToRecord<L>>
+  /**
+   * Filter to select the single record to update.
+   */
   filter: DataFilterNodeOrGroup<L['fields'][number]['name']>
+  /**
+   * Determines whether the updated record is returned
+   */
   return?: boolean
 }
+
+export type UpdateSingleFunctionResult<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = T[number],
+  TOptions extends UpdateSingleFunctionOptions<T, K, L> = UpdateSingleFunctionOptions<T, K, L>,
+> = TOptions extends { return: boolean }
+? TOptions['return'] extends true
+  ? ToRecord<L> | null
+  : boolean
+: ToRecord<L> | null
 
 type UpdateSingleFunction<
   T extends DataFormatDeclarations,
@@ -141,11 +161,7 @@ type UpdateSingleFunction<
   L extends T[number],
 > = <TOptions extends UpdateSingleFunctionOptions<T, K, L>>(
   options: TOptions,
-) => TOptions extends { return: boolean }
-  ? TOptions['return'] extends true
-    ? ToRecord<L> | null
-    : boolean
-  : ToRecord<L> | null
+) => UpdateSingleFunctionResult<T, K, L, TOptions>
 
 export type Store<
   T extends DataFormatDeclarations,

@@ -47,7 +47,7 @@ export const mapDict = <T extends any, R extends any>(
   return mapped
 }
 
-export const toDict = <TArrayValue, TDictKeys extends string|number, TDictValue>(
+export const toDict = <TArrayValue = any, TDictKeys extends string|number = string, TDictValue = any>(
   array: TArrayValue[],
   selector: (item: TArrayValue, i: number) => ({ key: TDictKeys, value: TDictValue }),
 ): { [key in TDictKeys]: TDictValue } => {

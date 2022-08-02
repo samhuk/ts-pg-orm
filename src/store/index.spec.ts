@@ -1,3 +1,4 @@
+import { Operator } from '@samhuk/data-filter/dist/types'
 import { SortingDirection } from '@samhuk/data-query/dist/sorting/types'
 import { createDbStore } from '.'
 import { createMockDbService } from '../mock/dbService'
@@ -19,11 +20,11 @@ const d = {
   ] as const,
 }
 
-describe('new', () => {
+describe('store', () => {
   describe('createDbStore', () => {
     const fn = createDbStore
 
-    test('test 1', async () => {
+    test('getSingle', async () => {
       const db = createMockDbService()
       db.queueResponses([
         // The user
@@ -121,6 +122,27 @@ where "recipe".image_id = $1 limit 1` })
 from "recipe"
 join "user" on "user".id = "recipe".created_by_user_id
 where "recipe".created_by_user_id = $1 limit 1` })
+    })
+
+    test('updateSingle', async () => {
+      const db = createMockDbService()
+
+      const store = fn(db, entities, 'user')
+
+      const result = await store.updateSingle({
+        filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+        record: {
+          name: 'NEW USER NAME',
+        },
+      })
+
+      expect(result).toEqual(undefined)
+      expect(db.receivedQueries).toEqual([
+        {
+          parameters: ['NEW USER NAME'],
+          sql: 'update "user" set (name) = ($1) where id = 1',
+        },
+      ])
     })
   })
 })
