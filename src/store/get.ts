@@ -276,9 +276,9 @@ export const get = async (
   const fieldsToSelectFor = options.fields != null
     ? removeDuplicates(options.fields.concat(fieldsRequiredForRelations))
     : dataFormat.fieldNameList
-  const fieldsForRecord = options.fields ?? dataFormat.fieldNameList
+  const fieldsToKeepInRecord = options.fields ?? dataFormat.fieldNameList
   const fieldsOnlyUsedForRelations = options.fields != null
-    ? fieldsToSelectFor.filter(fName => fieldsForRecord.indexOf(fName) === -1)
+    ? fieldsToSelectFor.filter(fName => fieldsToKeepInRecord.indexOf(fName) === -1)
     : []
 
   // Create sql used to select data (record or records) for this node
@@ -297,6 +297,9 @@ export const get = async (
   if (relatedDataPropertyInfo.isForeignPlural) {
     const recordRows = await db.queryGetRows(selectSql, [parentLinkedFieldValue])
     const records = recordRows.map(r => objectPropsToCamelCase(r))
+
+    if (records.length === 0)
+      return []
 
     const relatedDataList = options.relations != null && Object.keys(options.relations).length > 0
       ? await Promise.all(records.map(localRecord => (
@@ -320,6 +323,9 @@ export const get = async (
   const recordRow = await db.queryGetFirstRow(selectSql, [parentLinkedFieldValue])
   const record = objectPropsToCamelCase(recordRow)
 
+  if (record == null)
+    return null
+
   // Get related data of the record for this node
   const relatedDataDict = options.relations != null && Object.keys(options.relations).length > 0
     ? await getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
@@ -341,34 +347,37 @@ export const getSingle = async (
   options: AnyGetFunctionOptions<0>,
 ) => {
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, dataFormat)
-  const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
+  const fieldsRequiredForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
-  const localFieldsMinusThoseForRelations = options.fields ?? dataFormat.fieldNameList
-  const localFields = options.fields != null
-    ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
+  const fieldsToSelectFor = options.fields != null
+    ? removeDuplicates(options.fields.concat(fieldsRequiredForRelations))
     : dataFormat.fieldNameList
-  const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
-  const columnsSql = createColumnsSql(dataFormat, localFields)
+  const fieldsToKeepInRecord = options.fields ?? dataFormat.fieldNameList
+  const fieldsOnlyUsedForRelations = options.fields != null
+    ? fieldsToSelectFor.filter(fName => fieldsToKeepInRecord.indexOf(fName) === -1)
+    : []
+  const columnsSql = createColumnsSql(dataFormat, fieldsToSelectFor)
   const whereClauseSql = createDataFilter(options.filter).toSql({
     transformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
   })
   const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
-  const getLocalRecordSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${whereSql} limit 1`
-  const localRecordRow = await db.queryGetFirstRow(getLocalRecordSql)
-  const localRecord = objectPropsToCamelCase(localRecordRow)
+  const getRecordSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${whereSql} limit 1`
+  const recordRow = await db.queryGetFirstRow(getRecordSql)
+  const record = objectPropsToCamelCase(recordRow)
+
+  if (record == null)
+    return null
 
   const relatedDataDict = options.relations != null && Object.keys(options.relations).length > 0
-    ? await getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, localRecord)
+    ? await getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
     : null
 
-  fieldsToRemove.forEach(fName => delete localRecord[fName])
+  fieldsOnlyUsedForRelations.forEach(fName => delete record[fName])
 
-  const result = {
-    ...localRecord,
+  return {
+    ...record,
     ...relatedDataDict,
   }
-
-  return result
 }
 
 export const getMultiple = async (
@@ -378,35 +387,41 @@ export const getMultiple = async (
   options: AnyGetFunctionOptions<1>,
 ) => {
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(entities, dataFormat)
-  const requiredLocalFieldsForRelations = Object.values(relatedDataPropertyNameToInfoDict)
+  const fieldsRequiredForRelations = Object.values(relatedDataPropertyNameToInfoDict)
     .map(info => info.localFieldRef.fieldName)
-  const localFieldsMinusThoseForRelations = options.fields ?? dataFormat.fieldNameList
-  const localFields = options.fields != null
-    ? removeDuplicates(options.fields.concat(requiredLocalFieldsForRelations))
+  const fieldsToSelectFor = options.fields != null
+    ? removeDuplicates(options.fields.concat(fieldsRequiredForRelations))
     : dataFormat.fieldNameList
-  const fieldsToRemove = localFields.filter(fName => localFieldsMinusThoseForRelations.indexOf(fName) === -1)
-  const columnsSql = createColumnsSql(dataFormat, localFields)
+  const fieldsToKeepInRecord = options.fields ?? dataFormat.fieldNameList
+  const fieldsOnlyUsedForRelations = options.fields != null
+    ? fieldsToSelectFor.filter(fName => fieldsToKeepInRecord.indexOf(fName) === -1)
+    : []
+  const columnsSql = createColumnsSql(dataFormat, fieldsToSelectFor)
   const querySql = createDataQuery(options.query).toSql({
     filterTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
     sortingTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
   })?.whereOrderByLimitOffset
-  const getLocalRecordSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
+  const getRecordsSql = `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
 
-  const localRecordRows = await db.queryGetRows(getLocalRecordSql)
-  const localRecords = localRecordRows.map(r => objectPropsToCamelCase(r))
+  const recordRows = await db.queryGetRows(getRecordsSql)
+  const records = recordRows.map(r => objectPropsToCamelCase(r))
+
+  if (records.length === 0)
+    return []
 
   const relatedDataList = options.relations != null && Object.keys(options.relations).length > 0
-    ? await Promise.all(localRecords.map(localRecord => (
-      getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, localRecord)
+    ? await Promise.all(records.map(record => (
+      getRelatedDataOfRecord(entities, db, options.relations, relatedDataPropertyNameToInfoDict, record)
     )))
     : null
 
-  localRecords.forEach(localRecord => fieldsToRemove.forEach(fName => delete localRecord[fName]))
+  if (fieldsOnlyUsedForRelations.length > 0)
+    records.forEach(record => fieldsOnlyUsedForRelations.forEach(fName => delete record[fName]))
 
   return relatedDataList != null
-    ? localRecords.map((localRecord, i) => ({
+    ? records.map((localRecord, i) => ({
       ...localRecord,
       ...relatedDataList[i],
     }))
-    : localRecords
+    : records
 }
