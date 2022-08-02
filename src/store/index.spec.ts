@@ -132,6 +132,7 @@ where "recipe".created_by_user_id = $1 limit 1` })
       const result = await store.updateSingle({
         filter: { field: 'id', op: Operator.EQUALS, val: 1 },
         record: {
+          id: 3,
           name: 'NEW USER NAME',
         },
       })
@@ -139,8 +140,8 @@ where "recipe".created_by_user_id = $1 limit 1` })
       expect(result).toEqual(undefined)
       expect(db.receivedQueries).toEqual([
         {
-          parameters: ['NEW USER NAME'],
-          sql: 'update "user" set (name) = ($1) where id = 1',
+          parameters: [3, 'NEW USER NAME'],
+          sql: 'update "user" set (id, name) = ($1, $2) where id = 1',
         },
       ])
     })

@@ -168,11 +168,32 @@ export type Store<
   K extends RelationDeclarations<T>,
   L extends T[number]['name'],
 > = {
+  /**
+   * Creates the table for the store.
+   */
   provision: () => Promise<void>
+  /**
+   * Drops the table for the store.
+   */
   unprovision: () => Promise<void>
+  /**
+   * Adds a new record, excluding auto-generated fields.
+   */
   add: (options: CreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
+  /**
+   * Adds a new record, including auto-generated fields.
+   */
   addManual: (options: ManualCreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
+  /**
+   * Retreives a single record, optionally including related data.
+   */
   getSingle: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
+  /**
+   * Retreives multiple records, optionally including related data.
+   */
   getMultiple: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
+  /**
+   * Updates a single record.
+   */
   updateSingle: UpdateSingleFunction<T, K, Extract<T[number], { name: L }>>
 }
