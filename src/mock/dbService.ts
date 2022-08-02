@@ -1,6 +1,6 @@
-import { DbService } from 'simple-pg-client/dist/types'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 
-export type MockDbService = DbService & {
+export type MockDbService = SimplePgClient & {
   queuedResponses: any[]
   queueResponse: (response: any) => void
   queueResponses: (responses: any[]) => void
@@ -22,6 +22,7 @@ export const createMockDbService = (): MockDbService => {
   const queueResponse = (r: any) => instance.queuedResponses.push(r)
 
   return instance = {
+    client: null,
     queuedResponses: [],
     queueResponse,
     queueResponses: responses => responses.forEach(queueResponse),
@@ -30,7 +31,7 @@ export const createMockDbService = (): MockDbService => {
     clearReceivedQueries: () => instance.receivedQueries = [],
 
     query: sendResponse,
-    queryExists: undefined, // TODO
+    queryExists: sendResponse,
     queryGetRows: sendResponse,
     queryGetFirstRow: sendResponse,
   }

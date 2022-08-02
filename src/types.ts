@@ -1,4 +1,4 @@
-import { DbService, SimplePgClient, SimplePgClientOptions } from 'simple-pg-client/dist/types'
+import { SimplePgClient, SimplePgClientOptions } from 'simple-pg-client/dist/types'
 import { DataFormatDeclarations, DataFormatsDict } from './dataFormat/types'
 import { RelationDeclarations, RelationsDict, ExtractRelationNamesOfManyToManyRelations } from './relations/types'
 import { Store } from './store/types'
@@ -49,10 +49,10 @@ export type CreateStoresOptions<
    */
   unprovisionStores?: boolean | (keyof StoresDict<T, K>)[],
   /**
-   * Optional alternative DB service to use, different from the one initially provided
+   * Optional alternative `SimplePgClient` to use, different from the one initially provided
    * to create the TsPgOrm instance.
    */
-  db?: DbService,
+  db?: SimplePgClient,
 }
 
 /**
@@ -63,23 +63,24 @@ export type TsPgOrm<
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
 > = {
   /**
-   * The default DbService to use for all database-related functionality.
-   * This can optionally be overridden in functions like `createStore`
+   * The default `SimplePgClient` that will be used for all database-related
+   * functionality. This can optionally be overridden in functions like `createStore`
    * and `createJoinTables`.
    */
-  db?: DbService
+  db?: SimplePgClient
   /**
-   * Creates an instance of SimplePgClientOptions from the given options, setting
-   * it to the current TsPgOrm options, becoming the default dbService to use for
-   * functions like `createStore` and `createJoinTables`.
+   * Creates an instance of `SimplePgClient` from the given options, setting
+   * it to the current instance of `TsPgOrm`, becoming the default DB client
+   * that is used for database-related functionality, e.g. functions like
+   * `createStore` and `createJoinTables`.
    */
-  initDbService: (options: SimplePgClientOptions) => Promise<SimplePgClient>
+  initDbClient: (options: SimplePgClientOptions) => Promise<SimplePgClient>
   /**
-   * Sets the DB service to use, setting it to the current TsPgOrm options,
-   * becoming the default dbService to use for functions like `createStore`
-   * and `createJoinTables`.
+   * Sets the `SimplePgClient` instance to use, setting it to the current `TsPgOrm`
+   * instance, becoming the default DB client that is used for database-related
+   * functionality, e.g. functions like `createStore` and `createJoinTables`.
    */
-  setDbService: (newDbService: DbService) => void
+  setDbClient: (newDbClient: SimplePgClient) => void
   /**
    * The loaded Data Formats.
    */
@@ -103,19 +104,19 @@ export type TsPgOrm<
     /**
      * Drop a particular join table.
      */
-    dropJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db?: DbService) => Promise<boolean>
+    dropJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db?: SimplePgClient) => Promise<boolean>
     /**
      * Create a particular join table.
      */
-    createJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db?: DbService) => Promise<boolean>
+    createJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db?: SimplePgClient) => Promise<boolean>
     /**
      * Drop all join tables.
      */
-    dropJoinTables: (db?: DbService) => Promise<boolean>
+    dropJoinTables: (db?: SimplePgClient) => Promise<boolean>
     /**
      * Create all join tables.
      */
-    createJoinTables: (db?: DbService) => Promise<boolean>
+    createJoinTables: (db?: SimplePgClient) => Promise<boolean>
     /**
      * Creates then provisions entity DB stores for all loaded data formats and relations, returning a dictionary of stores.
      *

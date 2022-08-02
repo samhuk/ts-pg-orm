@@ -16,7 +16,7 @@ const createStores = async (
 ) => {
   const db = createStoresOptions.db ?? tsPgOrm.db
   if (db == null)
-    throw new Error('No database service provided.')
+    throw new Error('No database client is available to use.')
   const provisionOrder = createStoresOptions.provisionOrder
   const unprovisionStores = createStoresOptions.unprovisionStores
 
@@ -58,12 +58,12 @@ const _createTsPgOrm = <
 
   return tsPgOrm = {
     db: null,
-    initDbService: async options => {
+    initDbClient: async options => {
       const db = await createSimplePgClient(options)
       tsPgOrm.db = db
       return db
     },
-    setDbService: newDbService => tsPgOrm.db = newDbService,
+    setDbClient: newDbClient => tsPgOrm.db = newDbClient,
     dataFormats: dataFormatsDict,
     relations: relationsDict,
     dataFormatDeclarations,

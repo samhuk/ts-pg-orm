@@ -73,7 +73,8 @@ const ORM = createTsPgOrm()
 Create and provision PostgreSQL entity stores:
 
 ```typescript
-await ORM.initDbService({ host: 'localhost', port: 5432, ... })
+// Initialize the ORM instance with a PostgreSQL client (this can alternatively be provided later).
+await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
 // Create and provision DB stores
 const stores = await ORM.sql.createStores({ provisionOrder: ['user', 'userGroup'] })
 // Create any join (a.k.a "junction") tables for many-to-many relations, i.e. user_to_user_group
