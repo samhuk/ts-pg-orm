@@ -34,21 +34,6 @@ export const USER_GROUP_DFD = createDataFormatDeclaration({
 } as const)
 ```
 
-Create types from your Data Format Declarations:
-
-```typescript
-import { ToRecord, CreateRecordOptions } from 'ts-pg-orm/dist/dataFormat/types'
-
-export type UserRecord = ToRecord<typeof USER_DFD>
-// { id: number, name: string }
-
-export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
-// { name: string }
-
-export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
-// { id: number, name: string }
-```
-
 Load Data Format Declarations and Relations to create an instance of TsPgOrm:
 
 ```typescript
@@ -61,7 +46,6 @@ const ORM = createTsPgOrm()
     USER_GROUP_DFD
   ] as const)
   .loadRelations(dfs => [
-    // Create many-to-many relation between user and userGroup, linked on id fields.
     {
       type: RelationType.MANY_TO_MANY,
       fieldRef1: dfs.user.fieldRefs.id,
@@ -73,41 +57,45 @@ const ORM = createTsPgOrm()
 Create and provision PostgreSQL entity stores:
 
 ```typescript
-// Initialize the ORM instance with a PostgreSQL client (this can alternatively be provided later).
 await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
-// Create and provision DB stores
 const stores = await ORM.sql.createStores({ provisionOrder: ['user', 'userGroup'] })
-// Create any join (a.k.a "junction") tables for many-to-many relations, i.e. user_to_user_group
 await ORM.sql.createJoinTables()
 ```
 
-Use types and stores throughout your application, all fully type-enforced:
+Use stores, all fully type-enforced, according to the Data Format Declarations and Relations that were loaded:
 
 ```typescript
 import { Operator } from '@samhuk/data-filter/dist/types'
-// Use types
-const createUserOptions: CreateUserRecordOptions = { name: 'newUser' }
-// Create records
-const user: UserRecord = await stores.user.create(createUserOptions)
-// Get records by data filters and queries, with related data, recursively.
-const user = await stores.user.getSingle({
+const userCreated = await stores.user.create({ name: 'newUser' })
+const userFound = await stores.user.getSingle({
   fields: ['name'],
   filter: { field: 'id', op: Operator.EQUALS, val: 1 },
   relations: {
     userGroups: {
-      query: {
-        page: 1,
-        pageSize: 5,
-        sorting: [{ field: 'name', dir: SortingDirection.DESC }],
-        filter: { field: 'name', op: Operator.NOT_EQUALS, val: null },
-      },
+      query: { ... },
     },
   },
 })
+await stores.user.updateSingle({ 
+  filter: { ... },
+  record: { name: 'newNewUser' }
+})
 // Use type-enforced data format sql information to create bespoke SQL statements
 const sql = ORM.dataFormats.user.sql
-// E.g. select name from "user"
 const customUserSql = `select ${sql.columnNames.name} from ${sql.tableName}`
+```
+
+Create types from your Data Format Declarations, to use throughout your app:
+
+```typescript
+import { ToRecord, CreateRecordOptions } from 'ts-pg-orm/dist/dataFormat/types'
+
+export type UserRecord = ToRecord<typeof USER_DFD>
+// { id: number, name: string }
+export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
+// { name: string }
+export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
+// { id: number, name: string }
 ```
 
 ## Examples
