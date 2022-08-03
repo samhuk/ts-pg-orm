@@ -108,6 +108,10 @@ This is a simple single-endpoint api that has two data formats - "User" and "Use
 
 Run `npm run start-article-api` to build and start the server (don't forget to run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1.
 
+### Real DB Test
+
+This connects to a real PostgreSQL server at (by default) postgres@localhost:5432 and sets up a new database with some tables and relations, and makes a query to retreive a record with some of it's related data.
+
 ## Development
 
 `ts-pg-orm` is currently in an early state of development, primarily being used as a provider of PostgreSQL stores for data formats with simple data types (i.e. string, number, date, jsonb). More PostgreSQL data types or transformations to other SQL databases altogether could be added later as per need or request.

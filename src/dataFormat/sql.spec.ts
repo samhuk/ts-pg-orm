@@ -32,6 +32,7 @@ alter table if exists public."user"
   id serial not null primary key,
   created_by_user_id integer,
   image_id integer,
+  title character varying(250) not null,
   constraint recipe_to_user_created_by_user_id_fkey foreign key (created_by_user_id)
     references public.user (id) match simple
     on update no action

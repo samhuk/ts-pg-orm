@@ -36,6 +36,7 @@ export const d4 = createDataFormatDeclaration({
     { name: 'id', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.SERIAL, enableGetBy: true },
     { name: 'createdByUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
     { name: 'imageId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
+    { name: 'title', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 250 },
   ],
 } as const)
 

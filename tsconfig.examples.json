@@ -1,15 +1,15 @@
 {
   "$schema": "http://json.schemastore.org/tsconfig",
-  "extends": "../tsconfig.json",
+  "extends": "./tsconfig.json",
   "include": [
-    "./examples"
+    "./src/examples/**/*"
   ],
   "compilerOptions": {
     "module": "CommonJS",
     "declaration": false,
     "sourceMap": true,
     "noEmit": false,
-    "outDir": "../build-examples",
+    "outDir": "./build-examples",
     "skipLibCheck": true
   }
 }

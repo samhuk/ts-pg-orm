@@ -109,19 +109,17 @@ const createRelatedDataPropertyNameToInfoDict = (
 }
 
 const createQuerySqlForRelatedData = (
-  localDataFormat: DataFormat,
   foreignDataFormat: DataFormat,
-  localFieldName: string,
   options: AnyGetFunctionOptions<0 | 1>,
   isForeignPlural: boolean,
+  linkedFieldValueWhereFieldName: string,
 ): string => {
-  const localTableName = localDataFormat.sql.tableName
-  const localColumnName = localDataFormat.sql.columnNames[localFieldName]
+  const linkedFieldValueWhereClause = `${linkedFieldValueWhereFieldName} = $1`
 
   if (isForeignPlural) {
     const dataQueryRecord = (options as AnyGetFunctionOptions<1>).query
     if (dataQueryRecord == null)
-      return `where ${localTableName}.${localColumnName} = $1`
+      return `where ${linkedFieldValueWhereClause}`
 
     const dataQuerySqlInfo = createDataQuery(dataQueryRecord).toSql({
       includeWhereWord: false,
@@ -130,99 +128,76 @@ const createQuerySqlForRelatedData = (
     })
     return 'where '.concat([
       dataQuerySqlInfo.where,
-      `${localTableName}.${localColumnName} = $1 ${dataQuerySqlInfo.orderByLimitOffset ?? ''}`,
+      `${linkedFieldValueWhereClause} ${dataQuerySqlInfo.orderByLimitOffset ?? ''}`,
     ].filter(s => s != null && s.length > 0).join(' and ')).trimEnd()
   }
 
   const dataFilterNodeOrGroup = (options as AnyGetFunctionOptions<0>).filter
-  const whereClauseSql = dataFilterNodeOrGroup != null
-    ? createDataFilter(dataFilterNodeOrGroup).toSql({
-      transformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
-    })
-    : null
+  if (dataFilterNodeOrGroup == null)
+    return `where ${linkedFieldValueWhereClause} limit 1`
+
+  const whereClauseSql = createDataFilter(dataFilterNodeOrGroup).toSql({
+    transformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
+  })
   return 'where '.concat([
     whereClauseSql,
-    `${localTableName}.${localColumnName} = $1 limit 1`,
+    `${linkedFieldValueWhereClause} limit 1`,
   ].filter(s => s != null && s.length > 0).join(' and '))
 }
 
-/** E.g.
- * select ... from "user"
- * join "recipe" on "recipe".creator_user_id = "user".id
- * where "user".id = $1
- * ...
- */
-const createSelectSqlForOneToOneOrOneToManyRelation = (
-  localTableName: string,
-  foreignTableName: string,
-  localColumnName: string,
-  foreignColumnName: string,
-  columnsSql: string,
-  querySql: string,
-): string => `select
-${columnsSql}
-from ${localTableName}
-join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${localTableName}.${localColumnName}
-${querySql}`
-
-/** E.g.
- * select ... from "user"
- * join "user_to_user_group" on "user_to_user_group".user_id = "user".id
- * join "user_group" on "user_group".id = "user_to_user_group".user_group_id
- * where "user".id = $1
- */
-const createSelectSqlForManyToManyRelation = (
-  localTableName: string,
-  foreignTableName: string,
-  foreignColumnName: string,
-  localFieldName: string,
-  columnsSql: string,
-  querySql: string,
-  relation: Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>,
-): string => {
-  // E.g. "user_to_user_group"
-  const joinTableName = relation.sql.joinTableName
-  const isFieldRef1Local = relation.fieldRef1.formatName === localFieldName
-  // E.g. "user_id"
-  const localJoinTableColumnName = isFieldRef1Local
-    ? relation.sql.joinTableFieldRef1ColumnName
-    : relation.sql.joinTableFieldRef2ColumnName
-  // E.g. "user_group_id"
-  const foreignJoinTableColumnName = isFieldRef1Local
-    ? relation.sql.joinTableFieldRef2ColumnName
-    : relation.sql.joinTableFieldRef1ColumnName
-
-  return `select
-${columnsSql}
-from ${localTableName}
-join ${joinTableName} on ${joinTableName}.${localJoinTableColumnName} = ${localTableName}.${localFieldName}
-join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${joinTableName}.${foreignJoinTableColumnName}
-${querySql}`
-}
-
 const createSelectSqlForThisNode = (
-  localDataFormat: DataFormat,
   foreignDataFormat: DataFormat,
   relatedDataPropertyInfo: RelatedDataPropertyInfo,
   options: AnyGetFunctionOptions<0 | 1>,
-  localFieldNames: string[],
+  fieldNames: string[],
 ) => {
   const isForeignPlural = relatedDataPropertyInfo.isForeignPlural
-  const localTableName = localDataFormat.sql.tableName
   const foreignTableName = foreignDataFormat.sql.tableName
   const localFieldName = relatedDataPropertyInfo.localFieldRef.fieldName
-  const localColumnName = localDataFormat.sql.columnNames[localFieldName]
   const foreignFieldName = relatedDataPropertyInfo.foreignFieldRef.fieldName
   const foreignColumnName = foreignDataFormat.sql.columnNames[foreignFieldName]
-  const columnsSql = createColumnsSql(foreignDataFormat, localFieldNames)
-  const querySql = createQuerySqlForRelatedData(localDataFormat, foreignDataFormat, localFieldName, options, isForeignPlural)
+  const columnsSql = createColumnsSql(foreignDataFormat, fieldNames)
   const relation = relatedDataPropertyInfo.relation
 
-  if (relation.type === RelationType.ONE_TO_ONE || relation.type === RelationType.ONE_TO_MANY)
-    return createSelectSqlForOneToOneOrOneToManyRelation(localTableName, foreignTableName, localColumnName, foreignColumnName, columnsSql, querySql)
+  if (relation.type === RelationType.ONE_TO_ONE || relation.type === RelationType.ONE_TO_MANY) {
+    const querySql = createQuerySqlForRelatedData(foreignDataFormat, options, isForeignPlural, `${foreignTableName}.${foreignColumnName}`)
 
-  if (relation.type === RelationType.MANY_TO_MANY)
-    return createSelectSqlForManyToManyRelation(localTableName, foreignTableName, localColumnName, localFieldName, columnsSql, querySql, relation)
+    /* E.g.
+     * select ... from "user_address"
+     * where "user_address"."user_id" = $1
+     */
+    return `select
+${columnsSql}
+from ${foreignTableName}
+${querySql}`
+  }
+
+  if (relation.type === RelationType.MANY_TO_MANY) {
+    // E.g. "user_to_user_group"
+    const joinTableName = relation.sql.joinTableName
+    const isFieldRef1Local = relation.fieldRef1.formatName === localFieldName
+    // E.g. "user_id"
+    const localJoinTableColumnName = isFieldRef1Local
+      ? relation.sql.joinTableFieldRef1ColumnName
+      : relation.sql.joinTableFieldRef2ColumnName
+    // E.g. "user_group_id"
+    const foreignJoinTableColumnName = isFieldRef1Local
+      ? relation.sql.joinTableFieldRef2ColumnName
+      : relation.sql.joinTableFieldRef1ColumnName
+
+    const querySql = createQuerySqlForRelatedData(foreignDataFormat, options, isForeignPlural, `${joinTableName}.${localJoinTableColumnName}`)
+
+    /* E.g.
+     * select ... from "user_to_user_group"
+     * join "user_group" on "user_group".id = "user_to_user_group".user_group_id
+     * where "user_to_user_group"."user_id" = $1
+     */
+    return `select
+${columnsSql}
+from ${joinTableName}
+join ${foreignTableName} on ${foreignTableName}.${foreignColumnName} = ${joinTableName}.${foreignJoinTableColumnName}
+${querySql}`
+  }
 
   return null
 }
@@ -316,7 +291,6 @@ export const get = async (
   parentLinkedFieldValue: any,
 ) => {
   // Find parent and this data formats for this node
-  const parentDataFormat = tsPgOrm.dataFormats[relatedDataPropertyInfo.localFieldRef.formatName]
   const dataFormat = tsPgOrm.dataFormats[relatedDataPropertyInfo.foreignFieldRef.formatName]
 
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(tsPgOrm, dataFormat)
@@ -325,7 +299,7 @@ export const get = async (
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)
 
   // Create sql used to select data (record or records) for this node
-  const selectSql = createSelectSqlForThisNode(parentDataFormat, dataFormat, relatedDataPropertyInfo, options, fieldsInfo.fieldsToSelectFor)
+  const selectSql = createSelectSqlForThisNode(dataFormat, relatedDataPropertyInfo, options, fieldsInfo.fieldsToSelectFor)
 
   // If this node is plural, get records, then recursively get the related data for each record
   if (relatedDataPropertyInfo.isForeignPlural) {
@@ -335,6 +309,10 @@ export const get = async (
     if (records.length === 0)
       return []
 
+    /* TODO: There is a huge performance issue here where a separate SQL query is executed
+     * for each row. We need to figure out a way where if we only have to-singular relations,
+     * we can use a join to efficiently get related data for each row.
+     */
     const relatedDataList = options.relations != null && Object.keys(options.relations).length > 0
       ? await Promise.all(records.map(record => (
         getRelatedDataOfRecord(tsPgOrm, db, options.relations, relatedDataPropertyNameToInfoDict, record)

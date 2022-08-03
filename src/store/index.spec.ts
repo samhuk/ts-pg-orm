@@ -15,9 +15,9 @@ describe('store', () => {
         { id: 1, name: 'foo' },
         // The recipes of the user
         [
-          { id: 1, created_by_user_id: 1, image_id: 1 },
-          { id: 2, created_by_user_id: 1, image_id: 2 },
-          { id: 3, created_by_user_id: 1, image_id: 3 },
+          { created_by_user_id: 1, image_id: 1, title: 'recipe 1' },
+          { created_by_user_id: 1, image_id: 2, title: 'recipe 2' },
+          { created_by_user_id: 1, image_id: 3, title: 'recipe 3' },
         ],
         // The image and user of each recipe, interlaced
         { file_name: 'foo' },
@@ -32,7 +32,7 @@ describe('store', () => {
         fields: ['name'],
         relations: {
           recipes: {
-            fields: ['id', 'createdByUserId'],
+            fields: ['title'],
             query: { page: 1, pageSize: 2, sorting: [{ field: 'id', dir: SortingDirection.DESC }] },
             relations: {
               image: {
@@ -48,20 +48,17 @@ describe('store', () => {
         name: 'foo',
         recipes: [
           {
-            id: 1,
-            createdByUserId: 1,
+            title: 'recipe 1',
             image: { fileName: 'foo' },
             user: { id: 1, name: 'foo' },
           },
           {
-            id: 2,
-            createdByUserId: 1,
+            title: 'recipe 2',
             image: { fileName: 'bar' },
             user: { id: 1, name: 'foo' },
           },
           {
-            id: 3,
-            createdByUserId: 1,
+            title: 'recipe 3',
             image: { fileName: 'fizz' },
             user: { id: 1, name: 'foo' },
           },
@@ -72,40 +69,33 @@ describe('store', () => {
         { parameters: undefined, sql: 'select "user"."name", "user"."id" from "user"  limit 1' },
       )
       expect(db.receivedQueries[1]).toEqual({ parameters: [1], sql: `select
-"recipe"."id", "recipe"."created_by_user_id", "recipe"."image_id"
-from "user"
-join "recipe" on "recipe".created_by_user_id = "user".id
-where "user".id = $1 order by id desc limit 2 offset 0` })
+"recipe"."title", "recipe"."created_by_user_id", "recipe"."image_id"
+from "recipe"
+where "recipe".created_by_user_id = $1 order by id desc limit 2 offset 0` })
       expect(db.receivedQueries[2]).toEqual({ parameters: [1], sql: `select
 "image"."file_name", "image"."id", "image"."created_by_user_id"
-from "recipe"
-join "image" on "image".id = "recipe".image_id
-where "recipe".image_id = $1 limit 1` })
+from "image"
+where "image".id = $1 limit 1` })
       expect(db.receivedQueries[3]).toEqual({ parameters: [1], sql: `select
 "user"."id", "user"."name"
-from "recipe"
-join "user" on "user".id = "recipe".created_by_user_id
-where "recipe".created_by_user_id = $1 limit 1` })
+from "user"
+where "user".id = $1 limit 1` })
       expect(db.receivedQueries[4]).toEqual({ parameters: [2], sql: `select
 "image"."file_name", "image"."id", "image"."created_by_user_id"
-from "recipe"
-join "image" on "image".id = "recipe".image_id
-where "recipe".image_id = $1 limit 1` })
+from "image"
+where "image".id = $1 limit 1` })
       expect(db.receivedQueries[5]).toEqual({ parameters: [1], sql: `select
 "user"."id", "user"."name"
-from "recipe"
-join "user" on "user".id = "recipe".created_by_user_id
-where "recipe".created_by_user_id = $1 limit 1` })
+from "user"
+where "user".id = $1 limit 1` })
       expect(db.receivedQueries[6]).toEqual({ parameters: [3], sql: `select
 "image"."file_name", "image"."id", "image"."created_by_user_id"
-from "recipe"
-join "image" on "image".id = "recipe".image_id
-where "recipe".image_id = $1 limit 1` })
+from "image"
+where "image".id = $1 limit 1` })
       expect(db.receivedQueries[7]).toEqual({ parameters: [1], sql: `select
 "user"."id", "user"."name"
-from "recipe"
-join "user" on "user".id = "recipe".created_by_user_id
-where "recipe".created_by_user_id = $1 limit 1` })
+from "user"
+where "user".id = $1 limit 1` })
     })
 
     test('updateSingle', async () => {

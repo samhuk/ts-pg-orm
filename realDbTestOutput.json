@@ -1,0 +1,35 @@
+{
+  "uuid": "ea5e5b8f-a134-46dd-96ac-bbd8cb64d65a",
+  "name": "user 3",
+  "email": "user3@email.com",
+  "dateCreated": "2022-08-03T18:56:42.092Z",
+  "articles": [
+    {
+      "uuid": "46f64c51-8747-4f1a-ae32-f8b05688b9a8",
+      "dateCreated": "2022-08-03T18:56:42.099Z",
+      "title": "I am User 3",
+      "image": {
+        "uuid": "9321c7c9-5ef2-47d7-97da-b859855c6aa2",
+        "dateCreated": "2022-08-03T18:56:42.094Z",
+        "fileName": "user3avatar.png"
+      }
+    }
+  ],
+  "images": [
+    {
+      "uuid": "9f155201-dcdb-40ac-8d80-66c9e36d6956",
+      "dateCreated": "2022-08-03T18:56:42.097Z",
+      "fileName": "funnycat.png"
+    },
+    {
+      "uuid": "eb4c3db9-1aae-41af-a0d8-ee258eac8a40",
+      "dateCreated": "2022-08-03T18:56:42.096Z",
+      "fileName": "funnydog.png"
+    },
+    {
+      "uuid": "9321c7c9-5ef2-47d7-97da-b859855c6aa2",
+      "dateCreated": "2022-08-03T18:56:42.094Z",
+      "fileName": "user3avatar.png"
+    }
+  ]
+}
