@@ -1,7 +1,7 @@
 import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
 import { DbService } from 'simple-pg-client/dist/types'
-import { DataFormat, DataFormatDeclarations, FieldRef } from '../dataFormat/types'
+import { DataFormat, FieldRef } from '../dataFormat/types'
 import { removeDuplicates } from '../helpers/array'
 import { toDict } from '../helpers/dict'
 import { objectPropsToCamelCase } from '../helpers/string'
@@ -123,8 +123,8 @@ const createQuerySqlForRelatedData = (
 
     const dataQuerySqlInfo = createDataQuery(dataQueryRecord).toSql({
       includeWhereWord: false,
-      filterTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
-      sortingTransformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
+      filterTransformer: node => ({ left: `"${foreignDataFormat.sql.columnNames[node.field]}"` }),
+      sortingTransformer: node => ({ left: `"${foreignDataFormat.sql.columnNames[node.field]}"` }),
     })
     return 'where '.concat([
       dataQuerySqlInfo.where,
@@ -137,7 +137,7 @@ const createQuerySqlForRelatedData = (
     return `where ${linkedFieldValueWhereClause} limit 1`
 
   const whereClauseSql = createDataFilter(dataFilterNodeOrGroup).toSql({
-    transformer: node => ({ left: foreignDataFormat.sql.columnNames[node.field] }),
+    transformer: node => ({ left: `"${foreignDataFormat.sql.columnNames[node.field]}"` }),
   })
   return 'where '.concat([
     whereClauseSql,
@@ -160,7 +160,7 @@ const createSelectSqlForThisNode = (
   const relation = relatedDataPropertyInfo.relation
 
   if (relation.type === RelationType.ONE_TO_ONE || relation.type === RelationType.ONE_TO_MANY) {
-    const querySql = createQuerySqlForRelatedData(foreignDataFormat, options, isForeignPlural, `${foreignTableName}.${foreignColumnName}`)
+    const querySql = createQuerySqlForRelatedData(foreignDataFormat, options, isForeignPlural, `${foreignTableName}."${foreignColumnName}"`)
 
     /* E.g.
      * select ... from "user_address"
@@ -185,7 +185,7 @@ ${querySql}`
       ? relation.sql.joinTableFieldRef2ColumnName
       : relation.sql.joinTableFieldRef1ColumnName
 
-    const querySql = createQuerySqlForRelatedData(foreignDataFormat, options, isForeignPlural, `${joinTableName}.${localJoinTableColumnName}`)
+    const querySql = createQuerySqlForRelatedData(foreignDataFormat, options, isForeignPlural, `${joinTableName}."${localJoinTableColumnName}"`)
 
     /* E.g.
      * select ... from "user_to_user_group"
@@ -232,19 +232,19 @@ const createSelectSqlForRootNode = (
   const columnsSql = createColumnsSql(dataFormat, fieldsToSelectFor)
 
   switch (isPlural) {
+    case true: {
+      const querySql = createDataQuery((options as AnyGetFunctionOptions<1>).query).toSql({
+        filterTransformer: node => ({ left: `"${dataFormat.sql.columnNames[node.field]}"` }),
+        sortingTransformer: node => ({ left: `"${dataFormat.sql.columnNames[node.field]}"` }),
+      })?.whereOrderByLimitOffset
+      return `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
+    }
     case false: {
       const whereClauseSql = createDataFilter((options as AnyGetFunctionOptions<0>).filter).toSql({
-        transformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
+        transformer: node => ({ left: `"${dataFormat.sql.columnNames[node.field]}"` }),
       })
       const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
       return `select ${columnsSql} from ${dataFormat.sql.tableName} ${whereSql} limit 1`
-    }
-    case true: {
-      const querySql = createDataQuery((options as AnyGetFunctionOptions<1>).query).toSql({
-        filterTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
-        sortingTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
-      })?.whereOrderByLimitOffset
-      return `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
     }
     default:
       return null
@@ -282,6 +282,15 @@ const getRelatedDataOfRecord = async (
     value: item.relatedData,
   }))
 }
+
+const joinRecordsAndRelatedDataList = (records: any[], relatedDataList: any[]) => (
+  relatedDataList != null
+    ? records.map((record, i) => ({
+      ...record,
+      ...relatedDataList[i],
+    }))
+    : records
+)
 
 export const get = async (
   tsPgOrm: TsPgOrm,
@@ -323,12 +332,7 @@ export const get = async (
     if (fieldsInfo.fieldsOnlyUsedForRelations.length > 0)
       records.forEach(record => fieldsInfo.fieldsOnlyUsedForRelations.forEach(fName => delete record[fName]))
 
-    return relatedDataList != null
-      ? records.map((record, i) => ({
-        ...record,
-        ...relatedDataList[i],
-      }))
-      : records
+    return joinRecordsAndRelatedDataList(records, relatedDataList)
   }
 
   // Else (if node is singular), get record, then recursively get the related data for it
@@ -407,10 +411,5 @@ export const getMultiple = async (
   if (fieldsInfo.fieldsOnlyUsedForRelations.length > 0)
     records.forEach(record => fieldsInfo.fieldsOnlyUsedForRelations.forEach(fName => delete record[fName]))
 
-  return relatedDataList != null
-    ? records.map((record, i) => ({
-      ...record,
-      ...relatedDataList[i],
-    }))
-    : records
+  return joinRecordsAndRelatedDataList(records, relatedDataList)
 }

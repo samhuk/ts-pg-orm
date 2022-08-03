@@ -71,31 +71,31 @@ describe('store', () => {
       expect(db.receivedQueries[1]).toEqual({ parameters: [1], sql: `select
 "recipe"."title", "recipe"."created_by_user_id", "recipe"."image_id"
 from "recipe"
-where "recipe".created_by_user_id = $1 order by id desc limit 2 offset 0` })
+where "recipe"."created_by_user_id" = $1 order by "id" desc limit 2 offset 0` })
       expect(db.receivedQueries[2]).toEqual({ parameters: [1], sql: `select
 "image"."file_name", "image"."id", "image"."created_by_user_id"
 from "image"
-where "image".id = $1 limit 1` })
+where "image"."id" = $1 limit 1` })
       expect(db.receivedQueries[3]).toEqual({ parameters: [1], sql: `select
 "user"."id", "user"."name"
 from "user"
-where "user".id = $1 limit 1` })
+where "user"."id" = $1 limit 1` })
       expect(db.receivedQueries[4]).toEqual({ parameters: [2], sql: `select
 "image"."file_name", "image"."id", "image"."created_by_user_id"
 from "image"
-where "image".id = $1 limit 1` })
+where "image"."id" = $1 limit 1` })
       expect(db.receivedQueries[5]).toEqual({ parameters: [1], sql: `select
 "user"."id", "user"."name"
 from "user"
-where "user".id = $1 limit 1` })
+where "user"."id" = $1 limit 1` })
       expect(db.receivedQueries[6]).toEqual({ parameters: [3], sql: `select
 "image"."file_name", "image"."id", "image"."created_by_user_id"
 from "image"
-where "image".id = $1 limit 1` })
+where "image"."id" = $1 limit 1` })
       expect(db.receivedQueries[7]).toEqual({ parameters: [1], sql: `select
 "user"."id", "user"."name"
 from "user"
-where "user".id = $1 limit 1` })
+where "user"."id" = $1 limit 1` })
     })
 
     test('updateSingle', async () => {
