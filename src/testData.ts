@@ -99,6 +99,11 @@ export const tsPgOrm = createTsPgOrm()
       fromOneField: dfs.user.fieldRefs.id,
       toManyField: dfs.image.fieldRefs.createdByUserId,
     },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: dfs.user.fieldRefs.id,
+      toManyField: dfs.article.fieldRefs.createdByUserId,
+    },
   ] as const)
 
 export const tsPgOrmWithNamesProvided = createTsPgOrm()

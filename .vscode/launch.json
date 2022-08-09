@@ -15,12 +15,23 @@
       "name": "Run Example API",
       "type": "node",
       "request": "launch",
-      "program": "./build-examples/examples/articleApi.js",
+      "program": "./build-examples/examples/article/index.js",
       "args": [
           "--runInBand",
           "--no-cache"
       ],
       "preLaunchTask": "exampleApiDebugPreLaunchTask"
+    },
+    {
+      "name": "Run Real DB Test",
+      "type": "node",
+      "request": "launch",
+      "program": "./build-examples/examples/realDbTest/index.js",
+      "args": [
+          "--runInBand",
+          "--no-cache"
+      ],
+      "preLaunchTask": "realDbTestDebugPreLaunchTask"
     },
   ]
 }

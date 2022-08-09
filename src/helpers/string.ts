@@ -52,3 +52,18 @@ export const objectPropsToSnakeCase = <TInput extends Dict, TOutput extends Dict
 export const capitalize = <T extends string>(s: T): Capitalize<T> => (
   `${s.charAt(0).toUpperCase()}${s.slice(1)}` as Capitalize<T>
 )
+
+export const filterForNotNullAndEmpty = (arr: string[]) => (
+  arr.filter(s => s != null && s.length > 0)
+)
+
+export const joinIfhasEntries = (arr: string[], joinStr: string) => (
+  arr != null && arr.length > 0 ? arr.join(joinStr) : null
+)
+
+export const concatIfNotNullAndEmpty = (prefix: string, suffix: string) => {
+  if (prefix != null && suffix != null)
+    return prefix.concat(suffix)
+
+  return null
+}

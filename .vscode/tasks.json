@@ -20,5 +20,15 @@
         "close": true
       }
     },
+    {
+      "label": "realDbTestDebugPreLaunchTask",
+      "type": "shell",
+      "command": "npm run build-examples",
+      "presentation": {
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "close": true
+      }
+    },
   ]
 }

@@ -1,5 +1,5 @@
 import { createDataFilter } from '@samhuk/data-filter'
-import { DbService } from 'simple-pg-client/dist/types'
+import { DbService, SimplePgClient } from 'simple-pg-client/dist/types'
 import { createValueList } from '../dataFormat/sql'
 import {
   CreateRecordOptions,
@@ -14,6 +14,7 @@ import { objectPropsToCamelCase } from '../helpers/string'
 import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
 import { TsPgOrm } from '../types'
 import { getMultiple, getSingle } from './get'
+import { createQueryPlan } from './get/queryPlan'
 import { Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 
 const create = async <T extends DataFormatDeclaration>(
@@ -103,7 +104,7 @@ export const createStore = <
   K extends RelationDeclarations<T>,
   L extends T[number]['name'],
 >(
-    db: DbService,
+    db: SimplePgClient,
     tsPgOrm: TsPgOrm<T, K>,
     localDataFormatName: L,
   ): Store<T, K, L> => {
@@ -119,5 +120,11 @@ export const createStore = <
     getSingle: options => getSingle(tsPgOrm as any, db, localDataFormat, options as any) as any,
     getMultiple: options => getMultiple(tsPgOrm as any, db, localDataFormat, options as any) as any,
     updateSingle: options => updateSingle(db, localDataFormat, options) as any,
+    getSingleV4: async options => {
+      const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, localDataFormat, false, options as any)
+      // @ts-ignore
+      const result = await queryPlan.execute(db)
+      return result as any
+    },
   }
 }

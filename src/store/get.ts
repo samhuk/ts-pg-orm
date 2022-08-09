@@ -110,14 +110,14 @@ const createRelatedDataPropertyNameToInfoDict = (
 
 const createQuerySqlForRelatedData = (
   foreignDataFormat: DataFormat,
-  options: AnyGetFunctionOptions<0 | 1>,
+  options: AnyGetFunctionOptions,
   isForeignPlural: boolean,
   linkedFieldValueWhereFieldName: string,
 ): string => {
   const linkedFieldValueWhereClause = `${linkedFieldValueWhereFieldName} = $1`
 
   if (isForeignPlural) {
-    const dataQueryRecord = (options as AnyGetFunctionOptions<1>).query
+    const dataQueryRecord = (options as AnyGetFunctionOptions<true>).query
     if (dataQueryRecord == null)
       return `where ${linkedFieldValueWhereClause}`
 
@@ -132,7 +132,7 @@ const createQuerySqlForRelatedData = (
     ].filter(s => s != null && s.length > 0).join(' and ')).trimEnd()
   }
 
-  const dataFilterNodeOrGroup = (options as AnyGetFunctionOptions<0>).filter
+  const dataFilterNodeOrGroup = (options as AnyGetFunctionOptions<false>).filter
   if (dataFilterNodeOrGroup == null)
     return `where ${linkedFieldValueWhereClause} limit 1`
 
@@ -148,7 +148,7 @@ const createQuerySqlForRelatedData = (
 const createSelectSqlForThisNode = (
   foreignDataFormat: DataFormat,
   relatedDataPropertyInfo: RelatedDataPropertyInfo,
-  options: AnyGetFunctionOptions<0 | 1>,
+  options: AnyGetFunctionOptions,
   fieldNames: string[],
 ) => {
   const isForeignPlural = relatedDataPropertyInfo.isForeignPlural
@@ -227,20 +227,20 @@ const createSelectSqlForRootNode = (
   dataFormat: DataFormat,
   fieldsToSelectFor: string[],
   isPlural: boolean,
-  options: AnyGetFunctionOptions<0 | 1>,
+  options: AnyGetFunctionOptions,
 ): string => {
   const columnsSql = createColumnsSql(dataFormat, fieldsToSelectFor)
 
   switch (isPlural) {
     case true: {
-      const querySql = createDataQuery((options as AnyGetFunctionOptions<1>).query).toSql({
+      const querySql = createDataQuery((options as AnyGetFunctionOptions<true>).query).toSql({
         filterTransformer: node => ({ left: `"${dataFormat.sql.columnNames[node.field]}"` }),
         sortingTransformer: node => ({ left: `"${dataFormat.sql.columnNames[node.field]}"` }),
       })?.whereOrderByLimitOffset
-      return `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql}`
+      return `select ${columnsSql} from ${dataFormat.sql.tableName} ${querySql ?? ''}`
     }
     case false: {
-      const whereClauseSql = createDataFilter((options as AnyGetFunctionOptions<0>).filter).toSql({
+      const whereClauseSql = createDataFilter((options as AnyGetFunctionOptions<false>).filter).toSql({
         transformer: node => ({ left: `"${dataFormat.sql.columnNames[node.field]}"` }),
       })
       const whereSql = whereClauseSql != null ? `where ${whereClauseSql}` : ''
@@ -360,7 +360,7 @@ export const getSingle = async (
   tsPgOrm: TsPgOrm,
   db: DbService,
   dataFormat: DataFormat,
-  options: AnyGetFunctionOptions<0>,
+  options: AnyGetFunctionOptions<false>,
 ) => {
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(tsPgOrm, dataFormat)
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)
@@ -389,7 +389,7 @@ export const getMultiple = async (
   tsPgOrm: TsPgOrm,
   db: DbService,
   dataFormat: DataFormat,
-  options: AnyGetFunctionOptions<1>,
+  options: AnyGetFunctionOptions<true>,
 ) => {
   const relatedDataPropertyNameToInfoDict = createRelatedDataPropertyNameToInfoDict(tsPgOrm, dataFormat)
   const fieldsInfo = determineFieldsInfo(dataFormat, relatedDataPropertyNameToInfoDict, options.fields)

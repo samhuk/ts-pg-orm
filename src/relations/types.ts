@@ -111,13 +111,13 @@ export type IsForeignFormatPluralFromRelation<
   // The local data format name
   L extends string
 > = {
-  [RelationType.MANY_TO_MANY]: 1
+  [RelationType.MANY_TO_MANY]: true
   [RelationType.ONE_TO_MANY]: K extends { type: RelationType.ONE_TO_MANY }
     ? K['fromOneField']['formatName'] extends L
-      ? 1
-      : 0
+      ? true
+      : false
     : never
-  [RelationType.ONE_TO_ONE]: 0
+  [RelationType.ONE_TO_ONE]: false
 }[K['type']]
 
 export type ExtractForeignFieldRefFromRelation<

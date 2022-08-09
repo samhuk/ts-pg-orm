@@ -74,4 +74,12 @@ export type Store<
    * Updates a single record.
    */
   updateSingle: UpdateSingleFunction<T, K, Extract<T[number], { name: L }>>
+  /**
+   * Retreives a single record, optionally including related data.
+   *
+   * Uses new V4 query plan architecture.
+   *
+   * WIP.
+   */
+  getSingleV4: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
 }

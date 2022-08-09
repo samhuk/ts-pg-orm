@@ -8,9 +8,9 @@ import { RelatedDataPropertyNameToForeignDataFormatDict } from './relatedDataPro
 import { RelatedDataPropertyNameToRelationDict } from './relatedDataPropNameToRelationDict.ts'
 
 // For depth-limiting
-type Prev = [never, 0, 1, 2]
+type Prev = [never, 0, 1, 2, 3]
 
-export type AnyGetFunctionOptions<TIsPlural extends 0 | 1 = 0> = GetFunctionOptions<
+export type AnyGetFunctionOptions<TIsPlural extends boolean = boolean> = GetFunctionOptions<
   DataFormatDeclarations,
   RelationDeclarations,
   DataFormatDeclaration,
@@ -21,8 +21,8 @@ export type GetFunctionOptions<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
   L extends T[number] = DataFormatDeclaration,
-  TIsPlural extends 0 | 1 = 0,
-  D extends Prev[number] = 2
+  TIsPlural extends boolean = boolean,
+  D extends Prev[number] = 3
 > = [D] extends [never] ? never : (
   {
     /**
@@ -48,7 +48,7 @@ export type GetFunctionOptions<
         >
     }
   } & (
-    TIsPlural extends 1
+    TIsPlural extends true
       /**
        * Query to use to select the records.
        */
@@ -60,9 +60,9 @@ export type GetFunctionOptions<
   )
 )
 
-type ArrayTernary<T, TIsArray extends 0 | 1> = TIsArray extends 0 ? T : T[]
+type ArrayTernary<T, TIsArray extends boolean> = TIsArray extends false ? T : T[]
 
-export type AnyGetFunctionResult<TIsPlural extends 0 | 1 = 0> = GetFunctionResult<
+export type AnyGetFunctionResult<TIsPlural extends boolean = boolean> = GetFunctionResult<
   DataFormatDeclarations,
   RelationDeclarations,
   DataFormatDeclaration,
@@ -74,9 +74,9 @@ export type GetFunctionResult<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
   L extends T[number] = DataFormatDeclaration,
-  TIsPlural extends 0 | 1 = 0,
+  TIsPlural extends boolean = boolean,
   TOptions extends GetFunctionOptions<T, K, L, TIsPlural> = GetFunctionOptions<T, K, L, TIsPlural>,
-  D extends Prev[number] = 2
+  D extends Prev[number] = 3
 > =
   ArrayTernary<
     ExpandRecursively<
@@ -88,7 +88,7 @@ export type GetFunctionResult<
       & (
         TOptions extends { relations: any }
           ? {
-            [TRelatedDataPropertyName in keyof TOptions['relations']]:
+            [TRelatedDataPropertyName in keyof TOptions['relations']]?:
               GetFunctionResult<
                 T,
                 K,
@@ -113,14 +113,14 @@ export type GetSingleFunction<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
   L extends T[number] = DataFormatDeclaration,
-> = <TGetFunctionOptions extends GetFunctionOptions<T, K, L>>(
+> = <TGetFunctionOptions extends GetFunctionOptions<T, K, L, false>>(
   options: TGetFunctionOptions,
-) => Promise<GetFunctionResult<T, K, L, 0, TGetFunctionOptions>>
+) => Promise<GetFunctionResult<T, K, L, false, TGetFunctionOptions>>
 
 export type GetMultipleFunction<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   L extends T[number],
-> = <TGetFunctionOptions extends GetFunctionOptions<T, K, L, 1>>(
+> = <TGetFunctionOptions extends GetFunctionOptions<T, K, L, true>>(
   options: TGetFunctionOptions,
-) => Promise<GetFunctionResult<T, K, L, 1, TGetFunctionOptions>>
+) => Promise<GetFunctionResult<T, K, L, true, TGetFunctionOptions>>
