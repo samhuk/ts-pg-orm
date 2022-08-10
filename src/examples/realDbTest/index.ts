@@ -3,10 +3,8 @@ import { createConsoleLogEventHandlers } from 'simple-pg-client'
 import { createTsPgOrm } from '../..'
 import { createDataFormatDeclaration } from '../../dataFormat'
 import { BASE_ENTITY_FIELDS, COMMON_FIELDS } from '../../dataFormat/common'
-import { StringDataSubType, NumberDataSubType, DataType, ToRecord, CreateRecordOptions } from '../../dataFormat/types'
+import { StringDataSubType, NumberDataSubType, DataType, CreateRecordOptions } from '../../dataFormat/types'
 import { RelationType } from '../../relations/types'
-import { createQueryPlan } from '../../store/get/queryPlan'
-import { QueryPlan } from '../../store/get/types'
 import { StoresDict } from '../../types'
 
 const USER_DFD = createDataFormatDeclaration({
@@ -61,7 +59,7 @@ const USER_GROUP_DFD = createDataFormatDeclaration({
 } as const)
 
 const ORM = createTsPgOrm()
-  .loadDataFormats([USER_DFD, ARTICLE_DFD, IMAGE_DFD, USER_ADDRESS_DFD, USER_GROUP_DFD] as const)
+  .loadDataFormats([USER_DFD, IMAGE_DFD, ARTICLE_DFD, USER_ADDRESS_DFD, USER_GROUP_DFD] as const)
   .loadRelations(dfs => [
     {
       type: RelationType.ONE_TO_MANY,
@@ -117,14 +115,7 @@ const provision = async (): Promise<Stores> => {
     },
   })
 
-  await ORM.sql.dropJoinTables()
-
-  const stores = await ORM.sql.createStores({
-    provisionOrder: ['user', 'image', 'article', 'userAddress', 'userGroup'],
-    unprovisionStores: true,
-  })
-
-  await ORM.sql.createJoinTables()
+  const stores = await ORM.createStores({ unprovisionJoinTables: true, unprovisionStores: true })
 
   return stores
 }

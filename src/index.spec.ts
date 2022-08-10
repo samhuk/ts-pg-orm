@@ -7,10 +7,10 @@ describe('createTsPgOrm', () => {
     test('test 1', async () => {
       // -- Arrange
       const db = createMockDbService()
-      // Unprovisions for 5 entities
-      db.queueResponses([true, true, true, true, true])
-      // Provisions for 5 entities
-      db.queueResponses([true, true, true, true, true])
+      // Unprovisions for 6 entities and 1 join table
+      db.queueResponses([true, true, true, true, true, true, true])
+      // Provisions for 6 entities and 1 join table
+      db.queueResponses([true, true, true, true, true, true, true])
       // Get user response
       db.queueResponse({
         id: 1,
@@ -18,16 +18,10 @@ describe('createTsPgOrm', () => {
       })
 
       // -- Act
-      const stores = await tsPgOrm.sql.createStores({
+      const stores = await tsPgOrm.createStores({
         db,
-        provisionOrder: [
-          'user',
-          'userGroup',
-          'article',
-          'recipe',
-          'userAddress',
-        ],
         unprovisionStores: true,
+        unprovisionJoinTables: true,
       })
 
       // -- Assert

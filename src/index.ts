@@ -11,28 +11,36 @@ import { createStore } from './store'
 import { TsPgOrm, UnloadedTsPgOrm, TsPgOrmWithDataFormats, CreateStoresOptions } from './types'
 
 const createStores = async (
-  createStoresOptions: CreateStoresOptions,
   tsPgOrm: TsPgOrm,
+  options?: CreateStoresOptions,
 ) => {
-  const db = createStoresOptions.db ?? tsPgOrm.db
+  const db = options?.db ?? tsPgOrm.db
   if (db == null)
     throw new Error('No database client is available to use.')
-  const provisionOrder = createStoresOptions.provisionOrder
-  const unprovisionStores = createStoresOptions.unprovisionStores
+
+  const provisionStores = options?.provisionStores as (boolean | string[])
+  const provisionOrder = provisionStores == null || provisionStores === true
+    ? tsPgOrm.dataFormatDeclarations.map(dfd => dfd.name)
+    : provisionStores === false
+      ? []
+      : provisionStores
+
+  const unprovisionStores = options?.unprovisionStores as (boolean | string[])
+  const unprovisionOrder = unprovisionStores == null || unprovisionStores === false
+    ? []
+    : unprovisionStores === true
+      ? provisionOrder.slice(0).reverse() // Shallow copy and then reverse the provision order
+      : unprovisionStores
 
   // Create stores
   const storesDict = toDict(provisionOrder as string[], entityName => ({
     key: entityName,
-    value: createStore(createStoresOptions.db ?? tsPgOrm.db, tsPgOrm, entityName),
-  })) as any
+    value: createStore(db, tsPgOrm, entityName),
+  }))
 
-  const reverseProvisionOrder = provisionOrder.slice(0).reverse()
-
-  const unprovisionOrder = unprovisionStores == null || unprovisionStores === false
-    ? []
-    : unprovisionStores === true
-      ? reverseProvisionOrder
-      : unprovisionStores
+  // Unprovision join tables
+  if (options?.unprovisionJoinTables ?? false)
+    await tsPgOrm.dropJoinTables(db)
 
   // Unprovision stores
   await Promise.all(unprovisionOrder.map(entityName => storesDict[entityName].unprovision()))
@@ -40,7 +48,11 @@ const createStores = async (
   // Provision stores
   await Promise.all(provisionOrder.map(entityName => storesDict[entityName].provision()))
 
-  return storesDict
+  // Provision join tables
+  if (options?.provisionJoinTables ?? true)
+    await tsPgOrm.createJoinTables(db)
+
+  return storesDict as any
 }
 
 const _createTsPgOrm = <
@@ -68,31 +80,29 @@ const _createTsPgOrm = <
     relations: relationsDict,
     dataFormatDeclarations,
     relationDeclarations,
-    sql: {
-      dropJoinTable: (relationName, db) => (db ?? tsPgOrm.db).query(
-        ((relationsDict as any)[relationName] as Relation<T, RelationType.MANY_TO_MANY>).sql.dropJoinTableSql,
-      ).then(() => true),
-      createJoinTable: (relationName, db) => (db ?? tsPgOrm.db).query(
-        ((relationsDict as any)[relationName] as Relation<T, RelationType.MANY_TO_MANY>).sql.createJoinTableSql,
-      ).then(() => true),
-      dropJoinTables: db => {
-        const _db = db ?? tsPgOrm.db
-        return Promise.all(
-          manyToManyRelationsList
-            .map(r => r.sql.dropJoinTableSql)
-            .map(sql => _db.query(sql)),
-        ).then(() => true)
-      },
-      createJoinTables: db => {
-        const _db = db ?? tsPgOrm.db
-        return Promise.all(
-          manyToManyRelationsList
-            .map(r => r.sql.createJoinTableSql)
-            .map(sql => _db.query(sql)),
-        ).then(() => true)
-      },
-      createStores: async _options => createStores(_options as any, tsPgOrm as any),
+    dropJoinTable: (relationName, db) => (db ?? tsPgOrm.db).query(
+      ((relationsDict as any)[relationName] as Relation<T, RelationType.MANY_TO_MANY>).sql.dropJoinTableSql,
+    ).then(() => true),
+    createJoinTable: (relationName, db) => (db ?? tsPgOrm.db).query(
+      ((relationsDict as any)[relationName] as Relation<T, RelationType.MANY_TO_MANY>).sql.createJoinTableSql,
+    ).then(() => true),
+    dropJoinTables: db => {
+      const _db = db ?? tsPgOrm.db
+      return Promise.all(
+        manyToManyRelationsList
+          .map(r => r.sql.dropJoinTableSql)
+          .map(sql => _db.query(sql)),
+      ).then(() => true)
     },
+    createJoinTables: db => {
+      const _db = db ?? tsPgOrm.db
+      return Promise.all(
+        manyToManyRelationsList
+          .map(r => r.sql.createJoinTableSql)
+          .map(sql => _db.query(sql)),
+      ).then(() => true)
+    },
+    createStores: async _options => createStores(tsPgOrm as any, _options as any),
   }
 }
 

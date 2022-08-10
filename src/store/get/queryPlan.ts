@@ -38,7 +38,8 @@ const executeQueryNode = async (
    * proceed with getting child query node data (there will be no linked field values).
    */
   if (rows.length === 0 || queryNode.childQueryNodeLinks.length === 0)
-    return null
+    return results
+
   /* Create a dict that maps linked field name to the unique values for it.
    * We do this since multiple child query node links can use the same linked
    * field values, and we don't want to recompute them multiple times.
@@ -166,9 +167,13 @@ const foldResultsRowIteration = (
 const foldResults = (
   queryNode: QueryNode,
   queryNodeIdToResultsDict: { [queryNodeId: number]: any[] },
-): any[] => (queryNode.rootDataNode.isPlural
-  ? queryNodeIdToResultsDict[queryNode.id]?.map(row => foldResultsRowIteration(queryNode, queryNodeIdToResultsDict, row)) ?? []
-  : foldResultsRowIteration(queryNode, queryNodeIdToResultsDict, queryNodeIdToResultsDict[queryNode.id][0]))
+): any[] => (
+  queryNode.rootDataNode.isPlural
+    ? queryNodeIdToResultsDict[queryNode.id]?.map(row => foldResultsRowIteration(queryNode, queryNodeIdToResultsDict, row)) ?? []
+    : queryNodeIdToResultsDict[queryNode.id][0] != null
+      ? foldResultsRowIteration(queryNode, queryNodeIdToResultsDict, queryNodeIdToResultsDict[queryNode.id][0])
+      : null
+)
 
 const execute = async (
   db: SimplePgClient,

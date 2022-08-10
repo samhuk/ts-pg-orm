@@ -54,15 +54,14 @@ const ORM = createTsPgOrm()
   ] as const)
 ```
 
-Create and provision PostgreSQL entity stores:
+Create and provision stores with PostgreSQL backing:
 
 ```typescript
 await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
-const stores = await ORM.sql.createStores({ provisionOrder: ['user', 'userGroup'] })
-await ORM.sql.createJoinTables()
+const stores = await ORM.createStores()
 ```
 
-Use stores, all fully type-enforced, according to the Data Format Declarations and Relations that were loaded:
+Use stores, all fully type-enforced according to the Data Format Declarations and Relations that were loaded:
 
 ```typescript
 import { Operator } from '@samhuk/data-filter/dist/types'

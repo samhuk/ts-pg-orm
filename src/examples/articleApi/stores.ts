@@ -46,7 +46,7 @@ export const createAndProvisionStores = async () => {
   const db = createMockDbService()
   queueMockDbServiceResponses(db)
   // -- Create and provision stores
-  const stores = await ORM.sql.createStores({ db, provisionOrder: ['user', 'userArticle'] })
+  const stores = await ORM.createStores({ db })
   return stores
 }
 

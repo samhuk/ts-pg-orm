@@ -123,5 +123,127 @@ where "3".created_by_user_id in (1, 2, 3)`,
 
       expect(result).toBeDefined()
     })
+
+    test('modifyRootDataFilter', async () => {
+      const queryPlan = fn(
+        tsPgOrm.relations,
+        tsPgOrm.dataFormats,
+        tsPgOrm.dataFormats.article,
+        false,
+        {
+          fields: ['uuid', 'title', 'dateCreated', 'datePublished'],
+        },
+      )
+
+      const db = createMockDbService()
+      db.queueResponse([
+        {
+          '0.uuid': '123',
+          '0.title': 'Article 1 by User 1',
+          '0.dateCreated': '1970-01-01',
+          '0.datePublished': '1970-01-01',
+        },
+      ])
+
+      let result = await queryPlan.execute(db)
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `select
+"0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
+from "article" "0"
+
+limit 1`,
+      })
+      expect(result).toEqual({
+        uuid: '123',
+        title: 'Article 1 by User 1',
+        dateCreated: '1970-01-01',
+        datePublished: '1970-01-01',
+      })
+
+      db.clearReceivedQueries()
+      db.queueResponse([])
+      queryPlan.modifyRootDataFilter({
+        field: 'dateDeleted',
+        op: Operator.EQUALS,
+        val: null,
+      })
+      result = await queryPlan.execute(db)
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `select
+"0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
+from "article" "0"
+
+where "0".date_deleted is null limit 1`,
+      })
+      expect(result).toBeNull()
+    })
+
+    test('modifyRootDataQuery', async () => {
+      const queryPlan = fn(
+        tsPgOrm.relations,
+        tsPgOrm.dataFormats,
+        tsPgOrm.dataFormats.article,
+        true,
+        {
+          fields: ['uuid', 'title', 'dateCreated', 'datePublished'],
+        },
+      )
+
+      const db = createMockDbService()
+      db.queueResponse([
+        {
+          '0.uuid': '123',
+          '0.title': 'Article 1 by User 1',
+          '0.dateCreated': '1970-01-01',
+          '0.datePublished': '1970-01-01',
+        },
+      ])
+
+      let result = await queryPlan.execute(db)
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `select
+"0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
+from "article" "0"
+
+`,
+      })
+      expect(result).toEqual([
+        {
+          uuid: '123',
+          title: 'Article 1 by User 1',
+          dateCreated: '1970-01-01',
+          datePublished: '1970-01-01',
+        },
+      ])
+
+      db.clearReceivedQueries()
+      db.queueResponse([])
+      queryPlan.modifyRootDataQuery({
+        filter: {
+          field: 'dateDeleted',
+          op: Operator.EQUALS,
+          val: null,
+        },
+        page: 2,
+        pageSize: 50,
+      })
+      result = await queryPlan.execute(db)
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `select
+"0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
+from "article" "0"
+
+where "0".date_deleted is null limit 50 offset 50`,
+      })
+      expect(result).toEqual([])
+    })
   })
 })
