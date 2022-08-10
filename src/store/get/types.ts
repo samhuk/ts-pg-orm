@@ -1,3 +1,5 @@
+import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
+import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat, DataFormatDeclarations, FieldRef } from '../../dataFormat/types'
 import { Relation, RelationDeclarations } from '../../relations/types'
@@ -77,16 +79,28 @@ export type ChildQueryNodeLink = {
   sourceDataNode: DataNode
 }
 
+export type QueryNodeSql<
+  TIsPlural extends boolean = boolean
+> = {
+  sql: string
+  updateLinkedFieldValues: (values: any[]) => void
+} & (TIsPlural extends true ? {
+  modifyRootDataNodeDataQuery: (newDataQuery: DataQueryRecord) => void
+} : {
+  modifyRootDataNodeDataFilter: (newDataFilter: DataFilterNodeOrGroup) => void
+})
+
 export type QueryNode<
   TIsPlural extends boolean = boolean
 > = {
   id: number
+  name: string
   rootDataNode: DataNode<TIsPlural>
   nonRootDataNodes: NonRootDataNodes
   dataNodes: DataNodes
   parentQueryNodeLink: ParentQueryNodeLink
   childQueryNodeLinks: ChildQueryNodeLink[]
-  toSql: (linkedFieldValues: any[]) => string
+  toSql: (linkedFieldValues?: any[]) => QueryNodeSql
 }
 
 export type QueryNodes = { [queryNodeId: number]: QueryNode }
@@ -101,5 +115,10 @@ export type QueryPlan<
   dataNodes: DataNodes
   queryNodes: QueryNodes
   rootQueryNode: QueryNode
+  // compile: () => void
   execute: (db: SimplePgClient) => Promise<GetFunctionResult<T, K, L, TIsPlural, TOptions>>
-}
+} & (TIsPlural extends true ? {
+  modifyRootDataQuery: (newDataQuery: DataQueryRecord<L['fields'][number]['name']>) => void
+} : {
+  modifyRootDataFilter: (newDataFilter: DataFilterNodeOrGroup<L['fields'][number]['name']>) => void
+})

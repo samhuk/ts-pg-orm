@@ -2,7 +2,7 @@ import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
 import { DataType } from '../../dataFormat/types'
 import { filterForNotNullAndEmpty, concatIfNotNullAndEmpty, joinIfhasEntries } from '../../helpers/string'
-import { QueryNode, DataNode } from './types'
+import { QueryNode, DataNode, QueryNodeSql } from './types'
 
 type DataNodeQueryInfo = {
   whereClause?: string
@@ -116,29 +116,82 @@ const createDataNodeQueryInfo = (dataNode: DataNode): DataNodeQueryInfo | null =
     }
 )
 
-const createQuerySqlForRootNode = (queryNode: QueryNode, linkedFieldValues: any[] | null): string => {
-  const rootNodeQueryInfo = createDataNodeQueryInfo(queryNode.rootDataNode)
-
-  return filterForNotNullAndEmpty([
-    concatIfNotNullAndEmpty(
-      'where ',
-      joinIfhasEntries(
-        filterForNotNullAndEmpty([
-          createLinkedFieldWhereClause(queryNode, linkedFieldValues),
-          rootNodeQueryInfo?.whereClause,
-        ]),
-        ' and ',
-      ),
-    ),
-    rootNodeQueryInfo?.orderByLimitOffset,
-  ]).join(' ')
+type RootNodeQuerySqlComponents = {
+  queryInfo: DataNodeQueryInfo
+  linkedFieldWhereClause: string | null
 }
 
-export const queryNodeToSql = (
+const createRootNodeQuerySqlComponents = (
   queryNode: QueryNode,
   linkedFieldValues: any[] | null,
-): string => [
-  createRootSelect(queryNode),
-  createLeftJoinsSql(queryNode),
-  createQuerySqlForRootNode(queryNode, linkedFieldValues),
-].join('\n')
+): RootNodeQuerySqlComponents => ({
+  linkedFieldWhereClause: createLinkedFieldWhereClause(queryNode, linkedFieldValues),
+  queryInfo: createDataNodeQueryInfo(queryNode.rootDataNode),
+})
+
+const assembleQuerySqlComponents = (
+  rootNodeQuerySqlComponents: RootNodeQuerySqlComponents,
+): string => filterForNotNullAndEmpty([
+  concatIfNotNullAndEmpty(
+    'where ',
+    joinIfhasEntries(
+      filterForNotNullAndEmpty([
+        rootNodeQuerySqlComponents.linkedFieldWhereClause,
+        rootNodeQuerySqlComponents.queryInfo?.whereClause,
+      ]),
+      ' and ',
+    ),
+  ),
+  rootNodeQuerySqlComponents.queryInfo?.orderByLimitOffset,
+]).join(' ')
+
+export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
+  queryNode: QueryNode<TIsPlural>,
+  linkedFieldValues: any[] | null,
+): QueryNodeSql<TIsPlural> => {
+  let queryNodeSql: QueryNodeSql
+
+  const rootSelectSql = createRootSelect(queryNode)
+  const leftJoinsSql = createLeftJoinsSql(queryNode)
+  const rootNodeQuerySqlComponents = createRootNodeQuerySqlComponents(queryNode, linkedFieldValues)
+  let rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+
+  const assembleSql = () => [
+    rootSelectSql,
+    leftJoinsSql,
+    rootNodeQuerySql,
+  ].join('\n')
+  const updateSql = () => queryNodeSql.sql = assembleSql()
+
+  return queryNodeSql = {
+    sql: assembleSql(),
+    updateLinkedFieldValues: (newLinkedFieldValues: any[] | null) => {
+      const newLinkedFieldWhereClause = createLinkedFieldWhereClause(queryNode, newLinkedFieldValues)
+      rootNodeQuerySqlComponents.linkedFieldWhereClause = newLinkedFieldWhereClause
+      rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+      updateSql()
+    },
+    modifyRootDataNodeDataFilter: newDataFilter => {
+      if (queryNode.rootDataNode.isPlural)
+        throw new Error('Cannot update root data node data filter, it is plural. Try calling modifyRootDataNodeDataQuery().')
+
+      const _nonPluralRootDataNode = queryNode.rootDataNode as DataNode<false>
+      _nonPluralRootDataNode.options.filter = newDataFilter
+      const newQueryInfo = createDataNodeQueryInfo(_nonPluralRootDataNode)
+      rootNodeQuerySqlComponents.queryInfo = newQueryInfo
+      rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+      updateSql()
+    },
+    modifyRootDataNodeDataQuery: newDataQuery => {
+      if (!queryNode.rootDataNode.isPlural)
+        throw new Error('Cannot update root data node data query, it is non-plural. Try calling modifyRootDataNodeDataFilter().')
+
+      const _pluralRootDataNode = queryNode.rootDataNode as DataNode<true>
+      _pluralRootDataNode.options.query = newDataQuery
+      const newQueryInfo = createDataNodeQueryInfo(_pluralRootDataNode)
+      rootNodeQuerySqlComponents.queryInfo = newQueryInfo
+      rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+      updateSql()
+    },
+  }
+}

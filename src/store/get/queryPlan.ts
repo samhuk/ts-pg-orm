@@ -6,20 +6,31 @@ import { RelationDeclarations, RelationsDict } from '../../relations/types'
 import { GetFunctionOptions } from '../types/get'
 import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
-import { DataNode, QueryNode, QueryNodes, QueryPlan } from './types'
+import { DataNode, QueryNode, QueryNodes, QueryNodeSql, QueryPlan } from './types'
 
 const executeQueryNode = async (
   db: SimplePgClient,
   queryNode: QueryNode,
   results: { [queryNodeId: string]: any[] },
   linkedFieldValues: any[] | null,
+  queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql },
 ): Promise<{ [queryNodeId: number]: any[] }> => {
   /* Create sql for query node, using the linked field values received from
    * the parent query node results.
    */
-  const sql = queryNode.toSql(linkedFieldValues)
+  let queryNodeSql: string
+  const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
+  if (preExistingQueryNodeSql != null) {
+    preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
+    queryNodeSql = preExistingQueryNodeSql.sql
+  }
+  else {
+    const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
+    queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
+    queryNodeSql = queryNodeSqlObj.sql
+  }
   // Execute sql with db service
-  const _rows: any[] = await db.queryGetRows(sql)
+  const _rows: any[] = await db.queryGetRows(queryNodeSql)
   const rows = _rows ?? []
   // Store the results in the state object
   results[queryNode.id] = rows
@@ -48,7 +59,7 @@ const executeQueryNode = async (
    * that correspond to that child query node.
    */
   await Promise.all(queryNode.childQueryNodeLinks.map((link, i) => (
-    executeQueryNode(db, link.childQueryNode, results, linkedFieldToValuesDict[linkIndexToLinkedField[i]])
+    executeQueryNode(db, link.childQueryNode, results, linkedFieldToValuesDict[linkIndexToLinkedField[i]], queryNodeSqlDict)
   )))
   return results
 }
@@ -163,9 +174,10 @@ const execute = async (
   db: SimplePgClient,
   queryNodes: QueryNodes,
   rootQueryNode: QueryNode,
+  queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql },
 ): Promise<any> => {
   // Recursively get the flat rows of data for each query node using db service
-  const queryNodeIdToFlatResultsDict = await executeQueryNode(db, rootQueryNode, {}, null)
+  const queryNodeIdToFlatResultsDict = await executeQueryNode(db, rootQueryNode, {}, null, queryNodeSqlDict)
   // Fold up each query node's data nodes' results
   const queryNodeIdToResultsDict: { [queryNodeId: number]: any[] } = {}
   Object.entries(queryNodeIdToFlatResultsDict).forEach(([queryNodeId, flatResults]) => {
@@ -201,10 +213,40 @@ export const createQueryPlan = <
     queryNode.parentQueryNodeLink == null
   ))
 
+  const queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql } = {}
+
   return {
     dataNodes,
     queryNodes,
     rootQueryNode,
-    execute: async db => execute(db, queryNodes, rootQueryNode),
+    // compile: () => {
+    //   /* Precreate most of the sql for each query node so that during execution, only
+    //    * the sql statements dependant on linked field values need to be updated.
+    //    */
+    //   Object.values(queryNodes).forEach(queryNode => {
+    //     queryNodeSqlDict[queryNode.id] = queryNode.toSql()
+    //   })
+    // },
+    execute: async db => execute(db, queryNodes, rootQueryNode, queryNodeSqlDict),
+    modifyRootDataFilter: newDataFilter => {
+      if (rootQueryNode.rootDataNode.isPlural)
+        throw new Error('Cannot update root data filter, it is plural. Try calling modifyRootDataQuery().')
+
+      const rootQueryNodeSql = queryNodeSqlDict[rootQueryNode.id] as QueryNodeSql<false>
+      if (rootQueryNodeSql != null)
+        rootQueryNodeSql.modifyRootDataNodeDataFilter(newDataFilter)
+      else
+        (rootQueryNode.rootDataNode as DataNode<false>).options.filter = newDataFilter
+    },
+    modifyRootDataQuery: newDataQuery => {
+      if (!rootQueryNode.rootDataNode.isPlural)
+        throw new Error('Cannot update root data query, it is non-plural. Try calling modifyRootDataFilter().')
+
+      const rootQueryNodeSql = queryNodeSqlDict[rootQueryNode.id] as QueryNodeSql<true>
+      if (rootQueryNodeSql != null)
+        rootQueryNodeSql.modifyRootDataNodeDataQuery(newDataQuery)
+      else
+        (rootQueryNode.rootDataNode as DataNode<true>).options.query = newDataQuery
+    },
   }
 }

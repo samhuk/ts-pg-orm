@@ -82,4 +82,13 @@ export type Store<
    * WIP.
    */
   getSingleV4: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
+
+  /**
+   * Retreives multiple record, optionally including related data.
+   *
+   * Uses new V4 query plan architecture.
+   *
+   * WIP.
+   */
+   getMultipleV4: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
 }

@@ -32,9 +32,11 @@ export const toQueryNodes = (dataNodes: DataNodes): QueryNodes => {
   // Create a query node for each root data node
   const queryNodes: QueryNodes = {}
   rootDataNodeIds.forEach((rootDataNodeId, i) => {
+    const rootDataNode = dataNodes[rootDataNodeId]
     const queryNode: QueryNode = {
       id: i,
-      dataNodes: { [rootDataNodeId]: dataNodes[rootDataNodeId] },
+      name: rootDataNode.relatedDataPropName ?? `root (${rootDataNode.dataFormat.name})`,
+      dataNodes: { [rootDataNodeId]: rootDataNode },
       nonRootDataNodes: {},
       rootDataNode: dataNodes[rootDataNodeId],
       parentQueryNodeLink: null,

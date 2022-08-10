@@ -57,5 +57,5 @@ export type Stores = {
 }
 
 export type UserProfilePageData = UserRecord & {
-  articles: UserArticleRecord[]
+  articles?: UserArticleRecord[]
 }

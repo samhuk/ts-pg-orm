@@ -180,12 +180,8 @@ const getResultV3 = (stores: Stores) => (
   })
 )
 
-const createGetResultV4QueryPlan = () => createQueryPlan(
-  ORM.relations,
-  ORM.dataFormats,
-  ORM.dataFormats.user,
-  true,
-  {
+const getResultV4 = (stores: Stores) => (
+  stores.user.getMultipleV4({
     fields: ['uuid', 'name', 'email', 'dateCreated'],
     relations: {
       articles: {
@@ -198,10 +194,8 @@ const createGetResultV4QueryPlan = () => createQueryPlan(
         fields: ['uuid', 'dateCreated', 'fileName'],
       },
     },
-  },
+  })
 )
-
-const getResultV4 = <T extends QueryPlan>(queryPlan: T) => queryPlan.execute(ORM.db)
 
 const timedFn = async <T>(fn: () => Promise<T> | T, taskName: string): Promise<{ dt: number, result: T }> => {
   console.log(`Running ${taskName}...`)
@@ -214,6 +208,20 @@ const timedFn = async <T>(fn: () => Promise<T> | T, taskName: string): Promise<{
   return { dt, result }
 }
 
+const repeatTimedFn = async <T>(
+  fn: () => Promise<T> | T,
+  taskName: string,
+  numTimes: number,
+  dtList: number[],
+  i: number = 0,
+): Promise<void> => {
+  const result = await timedFn(fn, taskName)
+  dtList.push(result.dt)
+
+  if (i < numTimes)
+    await repeatTimedFn(fn, taskName, numTimes, dtList, i + 1)
+}
+
 const init = async () => {
   const stores = await provision()
 
@@ -222,16 +230,20 @@ const init = async () => {
   const resultV3 = await timedFn(() => getResultV3(stores), 'V3 query')
   fs.writeFileSync('./OUTPUT.json', JSON.stringify(resultV3.result, null, 2))
 
-  const queryPlanTimedFnResult = await timedFn(() => createGetResultV4QueryPlan(), 'V4 query plan creation')
+  const resultV4 = await timedFn(() => getResultV4(stores), 'V4 query')
+  fs.writeFileSync('./OUTPUT2.json', JSON.stringify(resultV4.result, null, 2))
 
-  const resultV4 = await timedFn(() => getResultV4(queryPlanTimedFnResult.result), 'V4 query plan execution')
-  fs.writeFileSync('./OUTPUT.json', JSON.stringify(resultV4.result, null, 2))
+  const dtListV3: number[] = []
+  await repeatTimedFn(() => getResultV4(stores), 'V4 query', 10, dtListV3)
+  const avgV3Dt = dtListV3.reduce((acc, dt) => acc + dt, 0) / dtListV3.length
 
-  const v4TotalDt = queryPlanTimedFnResult.dt + resultV4.dt
+  const dtListV4: number[] = []
+  await repeatTimedFn(() => getResultV4(stores), 'V4 query', 10, dtListV4)
+  const avgV4Dt = dtListV4.reduce((acc, dt) => acc + dt, 0) / dtListV4.length
 
-  console.log(`v4 query plan creation dt as part of total dt: ${((queryPlanTimedFnResult.dt / v4TotalDt) * 100).toPrecision(2)}%`)
-
-  console.log(`v3 to v4 speed increase: ${(((resultV3.dt - v4TotalDt) / resultV3.dt) * 100).toPrecision(2)}%`)
+  console.log(`avg v3 dt: ${avgV3Dt.toPrecision(4)} ms`)
+  console.log(`avg v4 dt: ${avgV4Dt.toPrecision(4)} ms`)
+  console.log(`v3 to v4 speed increase: ${(((avgV3Dt - avgV4Dt) / avgV3Dt) * 100).toPrecision(2)}%`)
 
   ORM.db.client.end()
 }

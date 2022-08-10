@@ -126,5 +126,11 @@ export const createStore = <
       const result = await queryPlan.execute(db)
       return result as any
     },
+    getMultipleV4: async options => {
+      const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, localDataFormat, true, options as any)
+      // @ts-ignore
+      const result = await queryPlan.execute(db)
+      return result as any
+    },
   }
 }
