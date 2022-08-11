@@ -63,32 +63,16 @@ export type Store<
    */
   createManual: (options: ManualCreateRecordOptions<Extract<T[number], { name: L }>>) => Promise<ToRecord<Extract<T[number], { name: L }>>>
   /**
-   * Retreives a single record, optionally including related data.
-   */
-  getSingle: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
-  /**
-   * Retreives multiple records, optionally including related data.
-   */
-  getMultiple: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
-  /**
    * Updates a single record.
    */
   updateSingle: UpdateSingleFunction<T, K, Extract<T[number], { name: L }>>
   /**
    * Retreives a single record, optionally including related data.
-   *
-   * Uses new V4 query plan architecture.
-   *
-   * WIP.
    */
-  getSingleV4: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
+  getSingle: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
 
   /**
    * Retreives multiple record, optionally including related data.
-   *
-   * Uses new V4 query plan architecture.
-   *
-   * WIP.
    */
-   getMultipleV4: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
+   getMultiple: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
 }

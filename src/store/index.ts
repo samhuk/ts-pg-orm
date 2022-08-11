@@ -13,7 +13,6 @@ import { createInsertReturningSql, createParametersString } from '../helpers/sql
 import { objectPropsToCamelCase } from '../helpers/string'
 import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
 import { TsPgOrm } from '../types'
-import { getMultiple, getSingle } from './get'
 import { createQueryPlan } from './get/queryPlan'
 import { Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 
@@ -117,16 +116,14 @@ export const createStore = <
     unprovision: () => db.query(`drop table if exists ${localDataFormat.sql.tableName}`) as Promise<any>,
     create: options => create(db, localDataFormat, options) as any,
     createManual: options => createManual(db, localDataFormat, options) as any,
-    getSingle: options => getSingle(tsPgOrm as any, db, localDataFormat, options as any) as any,
-    getMultiple: options => getMultiple(tsPgOrm as any, db, localDataFormat, options as any) as any,
     updateSingle: options => updateSingle(db, localDataFormat, options) as any,
-    getSingleV4: async options => {
+    getSingle: async options => {
       const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, localDataFormat, false, options as any)
       // @ts-ignore
       const result = await queryPlan.execute(db)
       return result as any
     },
-    getMultipleV4: async options => {
+    getMultiple: async options => {
       const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, localDataFormat, true, options as any)
       // @ts-ignore
       const result = await queryPlan.execute(db)
