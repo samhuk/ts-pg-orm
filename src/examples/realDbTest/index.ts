@@ -154,25 +154,8 @@ const addData = async (stores: Stores) => {
   await Promise.all(createUserAddressRecordsOptions.map(stores.userAddress.create))
 }
 
-const getResultV3 = (stores: Stores) => (
+const getResult = (stores: Stores) => (
   stores.user.getMultiple({
-    fields: ['uuid', 'name', 'email', 'dateCreated'],
-    relations: {
-      articles: {
-        fields: ['uuid', 'dateCreated', 'title'],
-        relations: {
-          image: { fields: ['uuid', 'dateCreated', 'fileName'] },
-        },
-      },
-      images: {
-        fields: ['uuid', 'dateCreated', 'fileName'],
-      },
-    },
-  })
-)
-
-const getResultV4 = (stores: Stores) => (
-  stores.user.getMultipleV4({
     fields: ['uuid', 'name', 'email', 'dateCreated'],
     relations: {
       articles: {
@@ -218,23 +201,14 @@ const init = async () => {
 
   await addData(stores)
 
-  const resultV3 = await timedFn(() => getResultV3(stores), 'V3 query')
-  fs.writeFileSync('./OUTPUT.json', JSON.stringify(resultV3.result, null, 2))
+  const result = await timedFn(() => getResult(stores), 'query')
+  fs.writeFileSync('./OUTPUT.json', JSON.stringify(result.result, null, 2))
 
-  const resultV4 = await timedFn(() => getResultV4(stores), 'V4 query')
-  fs.writeFileSync('./OUTPUT2.json', JSON.stringify(resultV4.result, null, 2))
+  const dtList: number[] = []
+  await repeatTimedFn(() => getResult(stores), 'query', 10, dtList)
+  const avgDt = dtList.reduce((acc, dt) => acc + dt, 0) / dtList.length
 
-  const dtListV3: number[] = []
-  await repeatTimedFn(() => getResultV4(stores), 'V4 query', 10, dtListV3)
-  const avgV3Dt = dtListV3.reduce((acc, dt) => acc + dt, 0) / dtListV3.length
-
-  const dtListV4: number[] = []
-  await repeatTimedFn(() => getResultV4(stores), 'V4 query', 10, dtListV4)
-  const avgV4Dt = dtListV4.reduce((acc, dt) => acc + dt, 0) / dtListV4.length
-
-  console.log(`avg v3 dt: ${avgV3Dt.toPrecision(4)} ms`)
-  console.log(`avg v4 dt: ${avgV4Dt.toPrecision(4)} ms`)
-  console.log(`v3 to v4 speed increase: ${(((avgV3Dt - avgV4Dt) / avgV3Dt) * 100).toPrecision(2)}%`)
+  console.log(`avg dt: ${avgDt.toPrecision(4)} ms`)
 
   ORM.db.client.end()
 }
