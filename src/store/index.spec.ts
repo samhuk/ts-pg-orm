@@ -170,6 +170,7 @@ where "user"."id" = $1 limit 1` })
         filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
         relations: {
           user: {
+            fields: ['name'],
             relations: {
               userAddress: { },
               recipes: {
@@ -188,7 +189,6 @@ where "user"."id" = $1 limit 1` })
         recipes: [],
         title: 'Article 1 by User 1',
         user: {
-          id: 1,
           name: 'User 1',
           userAddress: {
             postCode: 'SE1 9U7',

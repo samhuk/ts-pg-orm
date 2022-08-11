@@ -115,10 +115,20 @@ export type QueryPlan<
   dataNodes: DataNodes
   queryNodes: QueryNodes
   rootQueryNode: QueryNode
-  // compile: () => void
+  /**
+   * Executes the query plan, using the given database service `db`, returning the results.
+   */
   execute: (db: SimplePgClient) => Promise<GetFunctionResult<T, K, L, TIsPlural, TOptions>>
 } & (TIsPlural extends true ? {
+  /**
+   * Modifies the data query of the root node of the query plan. This is more efficient than
+   * creating a whole new query plan.
+   */
   modifyRootDataQuery: (newDataQuery: DataQueryRecord<L['fields'][number]['name']>) => void
 } : {
+  /**
+   * Modifies the data filter of the root node of the query plan. This is more efficient than
+   * creating a whole new query plan.
+   */
   modifyRootDataFilter: (newDataFilter: DataFilterNodeOrGroup<L['fields'][number]['name']>) => void
 })

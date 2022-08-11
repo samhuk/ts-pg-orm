@@ -23,8 +23,8 @@
     "build-examples": "tsc -p ./tsconfig.examples.json",
     "run-article-api": "node ./build-examples/examples/articleApi/index.js",
     "run-real-db-test": "node ./build-examples/examples/realDbTest/index.js",
-    "start-article-api": "npm run clean-examples && npm run build-examples && npm run run-article-api",
-    "start-real-db-test": "npm run clean-examples && npm run build-examples && npm run run-real-db-test"
+    "article-api": "npm run clean-examples && npm run build-examples && npm run run-article-api",
+    "real-db-test": "npm run clean-examples && npm run build-examples && npm run run-real-db-test"
   },
   "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",

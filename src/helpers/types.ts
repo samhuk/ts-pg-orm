@@ -117,3 +117,9 @@ export type OmitTyped<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
  * Creates a union of all the values within the given dict type
  */
 export type ValuesUnionFromDict<TDict> = TDict[keyof TDict]
+
+export type ArrayTernary<T, TIsArray extends boolean> = TIsArray extends false ? T : T[]
+
+type IfAny<T, Y, N> = 0 extends (1 & T) ? Y : N
+
+export type IsAny<T> = IfAny<T, true, false>

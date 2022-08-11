@@ -1,4 +1,4 @@
-import { Operator } from '@samhuk/data-filter/dist/types'
+import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { createMockDbService } from '../../mock/dbService'
 import { tsPgOrm } from '../../testData'
 import { createQueryPlan } from './queryPlan'
@@ -7,7 +7,7 @@ describe('queryPlan', () => {
   describe('createQueryPlan', () => {
     const fn = createQueryPlan
 
-    test('test 1', () => {
+    test('basic test', () => {
       const result = fn(
         tsPgOrm.relations,
         tsPgOrm.dataFormats,
@@ -244,6 +244,58 @@ from "article" "0"
 where "0".date_deleted is null limit 50 offset 50`,
       })
       expect(result).toEqual([])
+    })
+
+    test('no fields defined in root node', async () => {
+      const queryPlan = fn(
+        tsPgOrm.relations,
+        tsPgOrm.dataFormats,
+        tsPgOrm.dataFormats.article,
+        false,
+        // "get me the user name of any article"
+        {
+          fields: [],
+          relations: {
+            user: {
+              fields: ['name'],
+            },
+          },
+        },
+      )
+
+      // Narrow down search for an undeleted article with uuid '123'
+      queryPlan.modifyRootDataFilter({
+        logic: DataFilterLogic.AND,
+        nodes: [
+          { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+          { field: 'uuid', op: Operator.EQUALS, val: '123' },
+        ],
+      })
+
+      const db = createMockDbService()
+      db.queueResponse([
+        {
+          '0.createdByUserId': 1,
+          '1.id': 1,
+          '1.name': 'User 1',
+        },
+      ])
+
+      const result = await queryPlan.execute(db)
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `select
+"0".created_by_user_id "0.createdByUserId", "1".name "1.name", "1".id "1.id"
+from "article" "0"
+left join "user" "1" on "1".id = "0".created_by_user_id
+where ("0".date_deleted is null and "0".uuid = '123') limit 1`,
+      })
+      expect(result).toEqual({
+        user: {
+          name: 'User 1',
+        },
+      })
     })
   })
 })

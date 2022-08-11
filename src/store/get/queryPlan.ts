@@ -196,12 +196,26 @@ const execute = async (
   return foldedResults
 }
 
+/**
+ * Creates a query plan from the given data formats, relations, and other options.
+ *
+ * Using the data formats and relations, a query plan transforms the given `options`
+ * into a graph-like data structure - "query nodes" - that define what queries will
+ * need to be made to get the desired data according to those `options`.
+ *
+ * NOTE: The return type of `execute()` does not work correctly when defining `fields`,
+ * `filter`, or `query` on child relations within `options`. It is unknown why, but
+ * likely has something to do with the generics of `createQueryPlan`. Since
+ * `createQueryPlan` isn't really a user-facing function (it is instead wrapped by
+ * `getSingle()` and `getMultiple` of a `TsPgOrm` instance), and the return type of
+ * those functions *do* work correctly, this isn't too much of a concern.
+ */
 export const createQueryPlan = <
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
-  TIsPlural extends boolean,
-  TOptions extends GetFunctionOptions<T, K, L, TIsPlural>,
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = T[number],
+  TIsPlural extends boolean = boolean,
+  TOptions extends GetFunctionOptions<T, K, L, TIsPlural> = GetFunctionOptions<T, K, L, TIsPlural>,
 >(
     relations: RelationsDict<T, K>,
     dataFormats: DataFormatsDict<T>,
@@ -218,20 +232,13 @@ export const createQueryPlan = <
     queryNode.parentQueryNodeLink == null
   ))
 
+  // Memoized sql fragments of each query node. For performance when re-executing the query plan.
   const queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql } = {}
 
   return {
     dataNodes,
     queryNodes,
     rootQueryNode,
-    // compile: () => {
-    //   /* Precreate most of the sql for each query node so that during execution, only
-    //    * the sql statements dependant on linked field values need to be updated.
-    //    */
-    //   Object.values(queryNodes).forEach(queryNode => {
-    //     queryNodeSqlDict[queryNode.id] = queryNode.toSql()
-    //   })
-    // },
     execute: async db => execute(db, queryNodes, rootQueryNode, queryNodeSqlDict),
     modifyRootDataFilter: newDataFilter => {
       if (rootQueryNode.rootDataNode.isPlural)

@@ -105,11 +105,13 @@ Examples can be found within ./src/examples, showing more complete and realistic
 
 This is a simple single-endpoint api that has two data formats - "User" and "UserArticle", with a single relation linking them.
 
-Run `npm run start-article-api` to build and start the server (don't forget to run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1.
+Run `npm run article-api` to build and start the server (don't forget to run `npm i` first if you have not already). Once running, try sending a HTTP GET request to http://localhost:3000/userProfile/1.
 
 ### Real DB Test
 
-This connects to a real PostgreSQL server at (by default) postgres@localhost:5432 and sets up a new database with some tables and relations, and makes a query to retreive a record with some of it's related data.
+This connects to a real PostgreSQL server at (by default) postgres@localhost:5432 and sets up a new ts-pg-orm instance with some sample data formats and relations, making queries to retreive records with related data.
+
+Run `npm run real-db-test` to build and run this.
 
 ## Development
 
