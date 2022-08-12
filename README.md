@@ -113,6 +113,8 @@ This connects to a real PostgreSQL server at (by default) postgres@localhost:543
 
 Run `npm run real-db-test` to build and run this.
 
-## Development
+---
 
-`ts-pg-orm` is currently in an early state of development, primarily being used as a provider of PostgreSQL stores for data formats with simple data types (i.e. string, number, date, jsonb). More PostgreSQL data types or transformations to other SQL databases altogether could be added later as per need or request.
+If you found this package delightful, feel free to buy me a coffee ✨
+
+<a href="https://www.buymeacoffee.com/samhuk" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
