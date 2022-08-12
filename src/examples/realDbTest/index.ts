@@ -1,3 +1,5 @@
+import { Operator } from '@samhuk/data-filter/dist/types'
+import { SortingDirection } from '@samhuk/data-query/dist/sorting/types'
 import * as fs from 'fs'
 import { createConsoleLogEventHandlers } from 'simple-pg-client'
 import { createTsPgOrm } from '../..'
@@ -157,6 +159,10 @@ const addData = async (stores: Stores) => {
 const getResult = (stores: Stores) => (
   stores.user.getMultiple({
     fields: ['uuid', 'name', 'email', 'dateCreated'],
+    query: {
+      filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+      sorting: [{ field: 'dateCreated', dir: SortingDirection.DESC }],
+    },
     relations: {
       articles: {
         fields: ['uuid', 'dateCreated', 'title'],
