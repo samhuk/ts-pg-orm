@@ -142,7 +142,11 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
   const fieldsToKeepInRecord = dataNode.options.fields ?? dataNode.dataFormat.fieldNameList
   const fieldsRequiredForRelations = Object.values(dataNode.children)
     .map(node => node.parentFieldRef.fieldName)
-    .concat(dataNode.fieldRef != null ? [dataNode.fieldRef.fieldName] : [])
+    // If this node has a many-to-many relation to it, then it doesn't need to include it's
+    // field ref (it's side of the relation). Instead, the junction table's columns are used.
+    .concat(dataNode.relation?.type === RelationType.MANY_TO_MANY || dataNode.fieldRef == null
+      ? []
+      : [dataNode.fieldRef.fieldName])
   const fieldsToSelectFor = dataNode.options.fields != null
     ? removeDuplicates(dataNode.options.fields.concat(fieldsRequiredForRelations))
     : dataNode.dataFormat.fieldNameList

@@ -297,5 +297,79 @@ where ("0".date_deleted is null and "0".uuid = '123') limit 1`,
         },
       })
     })
+
+    test('many-to-many', async () => {
+      const queryPlan = fn(
+        tsPgOrm.relations,
+        tsPgOrm.dataFormats,
+        tsPgOrm.dataFormats.user,
+        false,
+        // "get me the user name of any article"
+        {
+          fields: ['name'],
+          relations: {
+            userGroups: {},
+          },
+        },
+      )
+
+      const db = createMockDbService()
+      db.queueResponses([
+        [
+          {
+            '0.id': 1,
+            '0.name': 'User 1',
+          },
+        ],
+        [
+          {
+            '1.id': 1,
+            '1.name': 'User Group 1',
+            'user_to_user_group.user_id': 1,
+            'user_to_user_group.user_group_id': 1,
+          },
+          {
+            '1.id': 2,
+            '1.name': 'User Group 2',
+            'user_to_user_group.user_id': 1,
+            'user_to_user_group.user_group_id': 2,
+          },
+          {
+            '1.id': 3,
+            '1.name': 'User Group 3',
+            'user_to_user_group.user_id': 1,
+            'user_to_user_group.user_group_id': 3,
+          },
+        ],
+      ])
+
+      const result = await queryPlan.execute(db)
+      expect(db.receivedQueries.length).toBe(2)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `select
+"0".name "0.name", "0".id "0.id"
+from "user" "0"
+
+limit 1`,
+      })
+      expect(db.receivedQueries[1]).toEqual({
+        parameters: undefined,
+        sql: `select
+"1".id "1.id", "1".name "1.name", "user_to_user_group".user_id "user_to_user_group.user_id", "user_to_user_group".user_group_id "user_to_user_group.user_group_id"
+from user_to_user_group "user_to_user_group"
+join "user_group" "1" on "1".id = "user_to_user_group".user_group_id
+
+where "user_to_user_group".user_id = 1`,
+      })
+      expect(result).toEqual({
+        name: 'User 1',
+        userGroups: [
+          { id: 1, name: 'User Group 1' },
+          { id: 2, name: 'User Group 2' },
+          { id: 3, name: 'User Group 3' },
+        ],
+      })
+    })
   })
 })

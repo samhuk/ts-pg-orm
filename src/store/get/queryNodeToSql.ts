@@ -2,6 +2,7 @@ import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
 import { DataType } from '../../dataFormat/types'
 import { filterForNotNullAndEmpty, concatIfNotNullAndEmpty, joinIfhasEntries } from '../../helpers/string'
+import { RelationType } from '../../relations/types'
 import { QueryNode, DataNode, QueryNodeSql } from './types'
 
 type DataNodeQueryInfo = {
@@ -13,15 +14,44 @@ const createRootSelect = (queryNode: QueryNode) => {
   const rootDataNode = queryNode.rootDataNode
   const dataNodeList = Object.values(queryNode.dataNodes)
 
-  // E.g. "0".id "0.id", "0".user_id "0.userId", "1".dateCreated, "1.dateCreated", ...
-  const columnsSql = dataNodeList.reduce<string[]>((acc, dataNode) => (
+  const columnSegments = dataNodeList.reduce<string[]>((acc, dataNode) => (
     acc.concat(dataNode.createColumnsSqlSegments())
-  ), []).join(', ')
+  ), [])
+
+  if (rootDataNode.relation?.type === RelationType.MANY_TO_MANY) {
+    // TODO: Extract all this out to the data node's fieldsInfo?
+    // TODO: need a way to uniquely and predictably provide an alias for this
+    const joinTableNameAlias = `${rootDataNode.relation.sql.joinTableName}`
+    const fieldRef1Segment = `"${joinTableNameAlias}".${rootDataNode.relation.sql.joinTableFieldRef1ColumnName} "${joinTableNameAlias}.${rootDataNode.relation.sql.joinTableFieldRef1ColumnName}"`
+    const fieldRef2Segment = `"${joinTableNameAlias}".${rootDataNode.relation.sql.joinTableFieldRef2ColumnName} "${joinTableNameAlias}.${rootDataNode.relation.sql.joinTableFieldRef2ColumnName}"`
+    columnSegments.push(fieldRef1Segment, fieldRef2Segment)
+  }
+
+  // E.g. "0".id "0.id", "0".user_id "0.userId", "1".dateCreated, "1.dateCreated", ...
+  const columnsSql = columnSegments.join(', ')
+
+  let suffix: string
+  if (rootDataNode.relation?.type === RelationType.MANY_TO_MANY) {
+    // TODO: Extract all this out to the relation sql info probably
+    const joinTableNameAlias = `${rootDataNode.relation.sql.joinTableName}`
+    const isFieldRefFieldRef1 = rootDataNode.relation.fieldRef1.formatName === rootDataNode.dataFormat.name
+    const joinTableColumnName = isFieldRefFieldRef1
+      ? rootDataNode.relation.sql.joinTableFieldRef1ColumnName
+      : rootDataNode.relation.sql.joinTableFieldRef2ColumnName
+    /* E.g. from "user_to_user_group" "123"
+     * join "user_group" "1" on "1".id = "123".user_group_id
+     */
+    suffix = `from ${rootDataNode.relation.sql.joinTableName} "${joinTableNameAlias}"
+join ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.fieldName} = "${joinTableNameAlias}".${joinTableColumnName}`
+  }
+  else {
+    suffix = `from ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias}`
+  }
 
   // E.g. select ... from "user" "0"
   return `select
 ${columnsSql}
-from ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias}`
+${suffix}`
 }
 
 /**
@@ -92,19 +122,37 @@ const createLinkedFieldWhereClause = (
   if (rootDataNode.fieldRef == null || linkedFieldValues == null || linkedFieldValues.length === 0)
     return null
 
+  let suffix: string
+  const linkedFieldDataType = rootDataNode.dataFormat.fields[rootDataNode.fieldRef.fieldName].dataType
+
+  // Performance optimization for when there is only one linked field.
+  if (linkedFieldValues.length === 1) {
+    suffix = linkedFieldDataType === DataType.STRING ? ` = '${linkedFieldValues[0]}'` : ` = ${linkedFieldValues[0]}`
+  }
+  else {
+    // E.g. 1, 2, 3, 4
+    const valuesSql = (linkedFieldDataType === DataType.STRING
+      ? linkedFieldValues.map(v => `'${v}'`)
+      : linkedFieldValues
+    ).join(', ')
+    // E.g. "0".creator_user_id in (1, 2, 3)
+    suffix = ` in (${valuesSql})`
+  }
+
+  if (rootDataNode.relation.type === RelationType.MANY_TO_MANY) {
+    // TODO: Extract all this out to the relation sql info probably
+    // TODO: need a way to uniquely and predictably provide an alias for this
+    const joinTableNameAlias = `${rootDataNode.relation.sql.joinTableName}`
+    const isFieldRefFieldRef1 = rootDataNode.relation.fieldRef1.formatName === rootDataNode.dataFormat.name
+    const joinTableColumnName = isFieldRefFieldRef1
+      ? rootDataNode.relation.sql.joinTableFieldRef2ColumnName
+      : rootDataNode.relation.sql.joinTableFieldRef1ColumnName
+    return `"${joinTableNameAlias}".${joinTableColumnName}${suffix}`
+  }
+
   // E.g. "0".creator_user_id
   const linkedFieldColumnSql = rootDataNode.fieldsInfo.fieldToFullyQualifiedColumnName[rootDataNode.fieldRef.fieldName]
-  const linkedFieldDataType = rootDataNode.dataFormat.fields[rootDataNode.fieldRef.fieldName].dataType
-  // Performance optimization for when there is only one linked field.
-  if (linkedFieldValues.length === 1)
-    return `${linkedFieldColumnSql} = ${linkedFieldValues[0]}`
-  // E.g. 1, 2, 3, 4
-  const valuesSql = (linkedFieldDataType === DataType.STRING
-    ? linkedFieldValues.map(v => `'${v}'`)
-    : linkedFieldValues
-  ).join(', ')
-  // E.g. "0".creator_user_id in (1, 2, 3)
-  return `${linkedFieldColumnSql} in (${valuesSql})`
+  return `${linkedFieldColumnSql}${suffix}`
 }
 
 const createDataNodeQueryInfo = (dataNode: DataNode): DataNodeQueryInfo | null => (

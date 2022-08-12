@@ -2,7 +2,7 @@ import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../dataFormat/types'
 import { removeDuplicates } from '../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../helpers/object'
-import { RelationDeclarations, RelationsDict } from '../../relations/types'
+import { RelationDeclarations, RelationsDict, RelationType } from '../../relations/types'
 import { GetFunctionOptions } from '../types/get'
 import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
@@ -83,6 +83,16 @@ const extractDataNodeDataFromRow = (
       result[`$$${fName}`] = row[dataNode.fieldsInfo.fieldToColumnNameAlias[fName]]
     })
   }
+
+  if (dataNode.relation?.type === RelationType.MANY_TO_MANY) {
+    const joinTableNameAlias = `${dataNode.relation.sql.joinTableName}`
+    const isFieldRefFieldRef1 = dataNode.relation.fieldRef1.formatName === dataNode.dataFormat.name
+    const parentJoinTableColumn = isFieldRefFieldRef1
+      ? dataNode.relation.sql.joinTableFieldRef2ColumnName
+      : dataNode.relation.sql.joinTableFieldRef1ColumnName
+    const columnAlias = `${joinTableNameAlias}.${parentJoinTableColumn}`
+    result[`$$${columnAlias}`] = row[columnAlias]
+  }
   return result
 }
 
@@ -144,7 +154,20 @@ const foldResultsRowIteration = (
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const foldedChildQueryNodeResults = foldResults(childQueryNode, queryNodeIdToResultsDict)
       const linkedFieldName = rootDataNodeOfChildQueryNode.parentFieldRef.fieldName
-      const childLinkedFieldName = rootDataNodeOfChildQueryNode.fieldRef.fieldName
+      let childLinkedFieldName: string
+      // TODO: Extract all this out to the relation sql info, probably.
+      if (rootDataNodeOfChildQueryNode.relation.type === RelationType.MANY_TO_MANY) {
+        const joinTableNameAlias = `${rootDataNodeOfChildQueryNode.relation.sql.joinTableName}`
+        const isFieldRefFieldRef1 = rootDataNodeOfChildQueryNode.relation.fieldRef1.formatName === rootDataNodeOfChildQueryNode.dataFormat.name
+        const parentJoinTableColumn = isFieldRefFieldRef1
+          ? rootDataNodeOfChildQueryNode.relation.sql.joinTableFieldRef2ColumnName
+          : rootDataNodeOfChildQueryNode.relation.sql.joinTableFieldRef1ColumnName
+        const columnAlias = `${joinTableNameAlias}.${parentJoinTableColumn}`
+        childLinkedFieldName = `$$${columnAlias}`
+      }
+      else {
+        childLinkedFieldName = rootDataNodeOfChildQueryNode.fieldRef.fieldName
+      }
       row[rootDataNodeOfChildQueryNode.relatedDataPropName] = rootDataNodeOfChildQueryNode.isPlural
         ? foldedChildQueryNodeResults.filter(childRow => {
           const linkedFieldValue = linkedFieldName in row
