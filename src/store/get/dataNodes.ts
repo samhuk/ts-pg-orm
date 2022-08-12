@@ -165,6 +165,25 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
     fieldToFullyQualifiedColumnName[fName] = `${dataNode.tableAlias}.${dataNode.dataFormat.sql.columnNames[fName]}`
   })
 
+  let joinTableAlias: string
+  let joinTableParentFullyQualifiedColumnName: string
+  let joinTableParentColumnNameAlias: string
+  let joinTableFullyQualifiedColumnName: string
+  if (dataNode.relation?.type === RelationType.MANY_TO_MANY) {
+    // TODO: Need a way to provide an alias for this
+    joinTableAlias = `${dataNode.relation.sql.joinTableName}`
+    const isFieldRefFieldRef1 = dataNode.relation.fieldRef1.formatName === dataNode.dataFormat.name
+    const parentJoinTableColumnName = isFieldRefFieldRef1
+      ? dataNode.relation.sql.joinTableFieldRef2ColumnName
+      : dataNode.relation.sql.joinTableFieldRef1ColumnName
+    joinTableParentFullyQualifiedColumnName = `"${joinTableAlias}".${parentJoinTableColumnName}`
+    joinTableParentColumnNameAlias = `${joinTableAlias}.${parentJoinTableColumnName}`
+    const joinTableColumnName = isFieldRefFieldRef1
+      ? dataNode.relation.sql.joinTableFieldRef1ColumnName
+      : dataNode.relation.sql.joinTableFieldRef2ColumnName
+    joinTableFullyQualifiedColumnName = `"${joinTableAlias}".${joinTableColumnName}`
+  }
+
   return {
     fieldsToSelectFor,
     fieldsToKeepInRecord,
@@ -172,6 +191,10 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
     columnNameAliasToField,
     fieldToColumnNameAlias,
     fieldToFullyQualifiedColumnName,
+    joinTableAlias,
+    joinTableParentFullyQualifiedColumnName,
+    joinTableParentColumnNameAlias,
+    joinTableFullyQualifiedColumnName,
   }
 }
 

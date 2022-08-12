@@ -85,12 +85,7 @@ const extractDataNodeDataFromRow = (
   }
 
   if (dataNode.relation?.type === RelationType.MANY_TO_MANY) {
-    const joinTableNameAlias = `${dataNode.relation.sql.joinTableName}`
-    const isFieldRefFieldRef1 = dataNode.relation.fieldRef1.formatName === dataNode.dataFormat.name
-    const parentJoinTableColumn = isFieldRefFieldRef1
-      ? dataNode.relation.sql.joinTableFieldRef2ColumnName
-      : dataNode.relation.sql.joinTableFieldRef1ColumnName
-    const columnAlias = `${joinTableNameAlias}.${parentJoinTableColumn}`
+    const columnAlias = dataNode.fieldsInfo.joinTableParentColumnNameAlias
     result[`$$${columnAlias}`] = row[columnAlias]
   }
   return result
@@ -155,19 +150,11 @@ const foldResultsRowIteration = (
       const foldedChildQueryNodeResults = foldResults(childQueryNode, queryNodeIdToResultsDict)
       const linkedFieldName = rootDataNodeOfChildQueryNode.parentFieldRef.fieldName
       let childLinkedFieldName: string
-      // TODO: Extract all this out to the relation sql info, probably.
-      if (rootDataNodeOfChildQueryNode.relation.type === RelationType.MANY_TO_MANY) {
-        const joinTableNameAlias = `${rootDataNodeOfChildQueryNode.relation.sql.joinTableName}`
-        const isFieldRefFieldRef1 = rootDataNodeOfChildQueryNode.relation.fieldRef1.formatName === rootDataNodeOfChildQueryNode.dataFormat.name
-        const parentJoinTableColumn = isFieldRefFieldRef1
-          ? rootDataNodeOfChildQueryNode.relation.sql.joinTableFieldRef2ColumnName
-          : rootDataNodeOfChildQueryNode.relation.sql.joinTableFieldRef1ColumnName
-        const columnAlias = `${joinTableNameAlias}.${parentJoinTableColumn}`
-        childLinkedFieldName = `$$${columnAlias}`
-      }
-      else {
+      if (rootDataNodeOfChildQueryNode.relation.type === RelationType.MANY_TO_MANY)
+        childLinkedFieldName = `$$${rootDataNodeOfChildQueryNode.fieldsInfo.joinTableParentColumnNameAlias}`
+      else
         childLinkedFieldName = rootDataNodeOfChildQueryNode.fieldRef.fieldName
-      }
+      // Filter for child values that join to this row
       row[rootDataNodeOfChildQueryNode.relatedDataPropName] = rootDataNodeOfChildQueryNode.isPlural
         ? foldedChildQueryNodeResults.filter(childRow => {
           const linkedFieldValue = linkedFieldName in row

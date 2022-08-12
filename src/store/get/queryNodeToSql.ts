@@ -19,11 +19,8 @@ const createRootSelect = (queryNode: QueryNode) => {
   ), [])
 
   if (rootDataNode.relation?.type === RelationType.MANY_TO_MANY) {
-    // TODO: Extract all this out to the data node's fieldsInfo?
-    // TODO: need a way to uniquely and predictably provide an alias for this
-    const joinTableNameAlias = `${rootDataNode.relation.sql.joinTableName}`
-    const fieldRef1Segment = `"${joinTableNameAlias}".${rootDataNode.relation.sql.joinTableFieldRef1ColumnName} "${joinTableNameAlias}.${rootDataNode.relation.sql.joinTableFieldRef1ColumnName}"`
-    const fieldRef2Segment = `"${joinTableNameAlias}".${rootDataNode.relation.sql.joinTableFieldRef2ColumnName} "${joinTableNameAlias}.${rootDataNode.relation.sql.joinTableFieldRef2ColumnName}"`
+    const fieldRef1Segment = `"${rootDataNode.fieldsInfo.joinTableAlias}".${rootDataNode.relation.sql.joinTableFieldRef1ColumnName} "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNode.relation.sql.joinTableFieldRef1ColumnName}"`
+    const fieldRef2Segment = `"${rootDataNode.fieldsInfo.joinTableAlias}".${rootDataNode.relation.sql.joinTableFieldRef2ColumnName} "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNode.relation.sql.joinTableFieldRef2ColumnName}"`
     columnSegments.push(fieldRef1Segment, fieldRef2Segment)
   }
 
@@ -32,17 +29,12 @@ const createRootSelect = (queryNode: QueryNode) => {
 
   let suffix: string
   if (rootDataNode.relation?.type === RelationType.MANY_TO_MANY) {
-    // TODO: Extract all this out to the relation sql info probably
-    const joinTableNameAlias = `${rootDataNode.relation.sql.joinTableName}`
-    const isFieldRefFieldRef1 = rootDataNode.relation.fieldRef1.formatName === rootDataNode.dataFormat.name
-    const joinTableColumnName = isFieldRefFieldRef1
-      ? rootDataNode.relation.sql.joinTableFieldRef1ColumnName
-      : rootDataNode.relation.sql.joinTableFieldRef2ColumnName
+    const joinTableFullyQualifiedColumnName = rootDataNode.fieldsInfo.joinTableFullyQualifiedColumnName
     /* E.g. from "user_to_user_group" "123"
      * join "user_group" "1" on "1".id = "123".user_group_id
      */
-    suffix = `from ${rootDataNode.relation.sql.joinTableName} "${joinTableNameAlias}"
-join ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.fieldName} = "${joinTableNameAlias}".${joinTableColumnName}`
+    suffix = `from ${rootDataNode.relation.sql.joinTableName} "${rootDataNode.fieldsInfo.joinTableAlias}"
+join ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.fieldName} = ${joinTableFullyQualifiedColumnName}`
   }
   else {
     suffix = `from ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias}`

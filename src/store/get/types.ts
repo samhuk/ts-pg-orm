@@ -43,6 +43,13 @@ export type FieldsInfo = {
    * E.g. `user_id` => `"0".user_id`
    */
   fieldToFullyQualifiedColumnName: { [fieldName: string]: string }
+  /**
+   * Join table info
+   */
+  joinTableAlias?: string
+  joinTableParentColumnNameAlias?: string
+  joinTableParentFullyQualifiedColumnName?: string
+  joinTableFullyQualifiedColumnName?: string
 }
 
 export type DataNode<
