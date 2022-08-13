@@ -118,4 +118,5 @@ Run `npm run real-db-test` to build and run this.
 
 If you found this package delightful, feel free to buy me a coffee ✨
 
-<a href="https://www.buymeacoffee.com/samhuk" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="max-width: 200px" ></a>
+<div style="height: 60px !important; width: 210px !important;">
+<a href="https://www.buymeacoffee.com/samhuk" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee"></a></div>
