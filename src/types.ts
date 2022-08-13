@@ -1,4 +1,4 @@
-import { SimplePgClient, SimplePgClientOptions } from 'simple-pg-client/dist/types'
+import { SimplePgClient, SimplePgClientFromClientOptions, SimplePgClientOptions } from 'simple-pg-client/dist/types'
 import { DataFormatDeclarations, DataFormatsDict } from './dataFormat/types'
 import { RelationDeclarations, RelationsDict, ExtractRelationNamesOfManyToManyRelations } from './relations/types'
 import { Store } from './store/types'
@@ -90,10 +90,10 @@ export type TsPgOrm<
    */
   db?: SimplePgClient
   /**
-   * Creates an instance of `SimplePgClient` from the given options, setting
-   * it to the current instance of `TsPgOrm`, becoming the default DB client
-   * that is used for database-related functionality, e.g. functions like
-   * `createStore` and `createJoinTables`.
+   * Creates an instance of `SimplePgClient` from the given `SimplePgClientOptions`,
+   * setting it to the current instance of `TsPgOrm`, becoming the default DB client
+   * that is used for database-related functionality, e.g. functions like `createStore`
+   * and `createJoinTables`.
    */
   initDbClient: (options: SimplePgClientOptions) => Promise<SimplePgClient>
   /**
@@ -102,6 +102,19 @@ export type TsPgOrm<
    * functionality, e.g. functions like `createStore` and `createJoinTables`.
    */
   setDbClient: (newDbClient: SimplePgClient) => void
+  /**
+   * Creates an instance of `SimplePgClient` from the given `SimplePgClientFromClientOptions`,
+   * setting it to the current instance of `TsPgOrm`, becoming the default DB client
+   * that is used for database-related functionality, e.g. functions like `createStore`
+   * and `createJoinTables`.
+   *
+   * This is an alternative to `setDbClient`, where the `Client` instance (from `pg`) can
+   * be directly provided, instead of `SimplePgClientOptions`.
+   *
+   * This is useful for if you already have a connected and ready-to-use `Client` instance
+   * available to give to `TsPgOrm`.
+   */
+  setDbClientByClient: (newDbClient: SimplePgClientFromClientOptions) => void
   /**
    * The loaded Data Formats.
    */

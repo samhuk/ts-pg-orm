@@ -1,4 +1,4 @@
-import { createSimplePgClient } from 'simple-pg-client'
+import { createSimplePgClient, createSimplePgClientFromClient } from 'simple-pg-client'
 import { createDataFormat } from './dataFormat'
 import {
   DataFormatDeclarations,
@@ -76,6 +76,10 @@ const _createTsPgOrm = <
       return db
     },
     setDbClient: newDbClient => tsPgOrm.db = newDbClient,
+    setDbClientByClient: options => {
+      const newDbClient = createSimplePgClientFromClient(options)
+      tsPgOrm.setDbClient(newDbClient)
+    },
     dataFormats: dataFormatsDict,
     relations: relationsDict,
     dataFormatDeclarations,
