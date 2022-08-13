@@ -4,9 +4,11 @@
 ![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 [![npm version](https://badge.fury.io/js/ts-pg-orm.svg)](https://badge.fury.io/js/ts-pg-orm)
 
-Typescript PostgreSQL ORM.
+Delightful Typescript PostgreSQL ORM.
 
 A package for creating data formats, relations, and postgresql data stores with full Typescript enforcement.
+
+[Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started)
 
 ## Usage
 
