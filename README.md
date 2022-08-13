@@ -8,6 +8,8 @@ Delightful Typescript PostgreSQL ORM.
 
 A package for creating data formats, relations, and postgresql data stores with full Typescript enforcement.
 
+[Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started)
+
 ## Usage
 
 Define your Data Format Declarations:
