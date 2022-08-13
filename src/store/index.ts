@@ -52,15 +52,27 @@ const updateSingle = async (
 ): Promise<UpdateSingleFunctionResult> => {
   const fieldNamesToUpdate = Object.keys(options.record)
     .filter(fName => df.sql.columnNames[fName] != null)
+  if (fieldNamesToUpdate.length === 0)
+    return null
+
   const columnNamesToUpdate = fieldNamesToUpdate
     .map(fName => df.sql.columnNames[fName])
-  const columnsSql = columnNamesToUpdate.join(', ')
-  const parametersSql = createParametersString(fieldNamesToUpdate.length)
+
   const whereClause = createDataFilter(options.filter).toSql({
     transformer: node => ({ left: df.sql.columnNames[node.field] }),
   })
   const returnRecord = options.return ?? false
-  const sql = `${df.sql.updateSqlBase} (${columnsSql}) = (${parametersSql}) where ${whereClause} returning ${returnRecord ? '*' : '1'}`
+  const suffix = `where ${whereClause} returning ${returnRecord ? '*' : '1'}`
+  let columnsAndValuesSql: string
+  if (fieldNamesToUpdate.length > 1) {
+    const columnsSql = columnNamesToUpdate.join(', ')
+    const parametersSql = createParametersString(fieldNamesToUpdate.length)
+    columnsAndValuesSql = `(${columnsSql}) = (${parametersSql})`
+  }
+  else {
+    columnsAndValuesSql = `${columnNamesToUpdate[0]} = $1`
+  }
+  const sql = `${df.sql.updateSqlBase} ${columnsAndValuesSql} ${suffix}`
   const values = fieldNamesToUpdate.map(fName => options.record[fName])
 
   const row = await db.queryGetFirstRow(sql, values)

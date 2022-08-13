@@ -216,6 +216,17 @@ const init = async () => {
 
   console.log(`avg dt: ${avgDt.toPrecision(4)} ms`)
 
+  await stores.article.updateSingle({
+    record: { title: 'UDPATED TITLE' },
+    filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+    return: true,
+  })
+
+  await stores.article.deleteSingle({
+    filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+    return: true,
+  })
+
   ORM.db.client.end()
 }
 

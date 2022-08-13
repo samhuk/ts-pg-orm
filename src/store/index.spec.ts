@@ -183,6 +183,28 @@ describe('store', () => {
           },
         ])
       })
+
+      test('single field', async () => {
+        const db = createMockDbService()
+        db.queueResponse([1])
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.updateSingle({
+          filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+          record: {
+            name: 'NEW USER NAME',
+          },
+        })
+
+        expect(result).toEqual(true)
+        expect(db.receivedQueries).toEqual([
+          {
+            parameters: ['NEW USER NAME'],
+            sql: 'update "user" set name = $1 where id = 1 returning 1',
+          },
+        ])
+      })
     })
 
     describe('deleteSingle', () => {
