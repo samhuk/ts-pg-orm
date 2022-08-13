@@ -8,28 +8,6 @@ describe('store', () => {
   describe('createStore', () => {
     const fn = createStore
 
-    test('updateSingle', async () => {
-      const db = createMockDbService()
-
-      const store = fn(db, tsPgOrm, 'user')
-
-      const result = await store.updateSingle({
-        filter: { field: 'id', op: Operator.EQUALS, val: 1 },
-        record: {
-          id: 3,
-          name: 'NEW USER NAME',
-        },
-      })
-
-      expect(result).toEqual(undefined)
-      expect(db.receivedQueries).toEqual([
-        {
-          parameters: [3, 'NEW USER NAME'],
-          sql: 'update "user" set (id, name) = ($1, $2) where id = 1',
-        },
-      ])
-    })
-
     describe('getSingle', () => {
       test('basic test', async () => {
         const db = createMockDbService()
@@ -182,16 +160,35 @@ describe('store', () => {
       })
     })
 
+    describe('updateSingle', () => {
+      test('basic test', async () => {
+        const db = createMockDbService()
+        db.queueResponse([1])
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.updateSingle({
+          filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+          record: {
+            id: 3,
+            name: 'NEW USER NAME',
+          },
+        })
+
+        expect(result).toEqual(true)
+        expect(db.receivedQueries).toEqual([
+          {
+            parameters: [3, 'NEW USER NAME'],
+            sql: 'update "user" set (id, name) = ($1, $2) where id = 1 returning 1',
+          },
+        ])
+      })
+    })
+
     describe('deleteSingle', () => {
       test('basic test', async () => {
         const db = createMockDbService()
-        db.queueResponse({
-          command: '',
-          fields: [],
-          oid: 1,
-          rowCount: 1,
-          rows: [],
-        })
+        db.queueResponse([1])
 
         const store = fn(db, tsPgOrm, 'article')
         const result = await store.deleteSingle({
@@ -201,7 +198,7 @@ describe('store', () => {
         expect(db.receivedQueries.length).toBe(1)
         expect(db.receivedQueries[0]).toEqual({
           parameters: undefined,
-          sql: 'delete from "article" where date_deleted is null limit 1',
+          sql: 'delete from "article" where date_deleted is null returning 1',
         })
 
         expect(result).toEqual(true)

@@ -51,19 +51,20 @@ const updateSingle = async (
   options: UpdateSingleFunctionOptions,
 ): Promise<UpdateSingleFunctionResult> => {
   const fieldNamesToUpdate = Object.keys(options.record)
-  const columnsSql = fieldNamesToUpdate
+    .filter(fName => df.sql.columnNames[fName] != null)
+  const columnNamesToUpdate = fieldNamesToUpdate
     .map(fName => df.sql.columnNames[fName])
-    .join(', ')
+  const columnsSql = columnNamesToUpdate.join(', ')
   const parametersSql = createParametersString(fieldNamesToUpdate.length)
   const whereClause = createDataFilter(options.filter).toSql({
     transformer: node => ({ left: df.sql.columnNames[node.field] }),
   })
-  const sql = `${df.sql.updateSqlBase} (${columnsSql}) = (${parametersSql}) where ${whereClause}`
+  const returnRecord = options.return ?? false
+  const sql = `${df.sql.updateSqlBase} (${columnsSql}) = (${parametersSql}) where ${whereClause} returning ${returnRecord ? '*' : '1'}`
   const values = fieldNamesToUpdate.map(fName => options.record[fName])
 
-  const result = await db.query(sql, values)
-
-  return result?.rows?.[0]
+  const row = await db.queryGetFirstRow(sql, values)
+  return (returnRecord ? objectPropsToCamelCase(row) : row != null) as any
 }
 
 const deleteSingle = async (
@@ -75,11 +76,11 @@ const deleteSingle = async (
   const whereClause = createDataFilter(options.filter).toSql({
     transformer: node => ({ left: df.sql.columnNames[node.field] }),
   })
-  const sql = `${rootSql} where ${whereClause} limit 1`
+  const returnRecord = options.return ?? false
+  const sql = `${rootSql} where ${whereClause} returning ${returnRecord ? '*' : '1'}`
 
-  const result = await db.query(sql)
-
-  return result.rowCount === 1
+  const row = await db.queryGetFirstRow(sql)
+  return (returnRecord ? objectPropsToCamelCase(row) : row != null) as any
 }
 
 export const getRelationsRelevantToDataFormat = <
