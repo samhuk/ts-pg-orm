@@ -32,24 +32,25 @@ export const createManyToManyJoinTableSql = (r: RelationDeclaration<DataFormatDe
   const fkeyName2 = `${tableName}_${columnName2}_fkey`
 
   return (
-    `CREATE TABLE IF NOT EXISTS public.${tableName}
+    `create table if not exists public.${tableName}
 (
-    id SERIAL PRIMARY KEY,
-    ${columnName1} integer NOT NULL,
-    ${columnName2} integer NOT NULL,
-    CONSTRAINT ${fkeyName1} FOREIGN KEY (${columnName1})
-        REFERENCES public.${tableName1} (${fieldName1}) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT ${fkeyName2} FOREIGN KEY (${columnName2})
-        REFERENCES public.${tableName2} (${fieldName2}) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    id serial primary key,
+    ${columnName1} integer not null,
+    ${columnName2} integer not null,
+    ${(r.includeDateCreated ?? false) ? 'date_created not null default CURRENT_TIMESTAMP,' : ''}
+    constraint ${fkeyName1} foreign key (${columnName1})
+        references public.${tableName1} (${fieldName1}) match simple
+        ${(r.fieldRef1OnUpdateNoAction ?? true) ? 'on update no action' : ''}
+        ${(r.fieldRef1OnDeleteNoAction ?? true) ? 'on delete no action' : ''},
+    contraint ${fkeyName2} foreign key (${columnName2})
+        references public.${tableName2} (${fieldName2}) match simple
+        ${(r.fieldRef2OnUpdateNoAction ?? true) ? 'on update no action' : ''}
+        ${(r.fieldRef2OnDeleteNoAction ?? true) ? 'on delete no action' : ''}
 )
 
-TABLESPACE pg_default;
+tablespace pg_default;
 
-ALTER TABLE IF EXISTS public.${tableName}
+alter table if exists public.${tableName}
     OWNER to postgres;`
   )
 }
