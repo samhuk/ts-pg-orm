@@ -12,12 +12,10 @@ describe('createTsPgOrm', () => {
       // Provisions for 6 entities and 1 join table
       db.queueResponses([true, true, true, true, true, true, true])
       // Get user response
-      db.queueResponse([
-        {
-          '0.id': 1,
-          '0.name': 'user 1',
-        },
-      ])
+      db.queueResponse({
+        id: 1,
+        name: 'user 1',
+      })
 
       // -- Act
       const stores = await tsPgOrm.createStores({
