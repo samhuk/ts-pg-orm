@@ -597,7 +597,7 @@ export type DataFormatSqlInfo<T extends DataFormatDeclaration> = {
    */
   updateSqlBase: string
   /**
-   * The "`update {quoted table name} set date_deleted = CURRENT_TIMESTAMP`" sql
+   * The "`delete from {quoted table name}`" sql
    */
   deleteSqlBase: string
 }

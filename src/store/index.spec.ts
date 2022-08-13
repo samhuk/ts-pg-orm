@@ -181,5 +181,31 @@ describe('store', () => {
         ])
       })
     })
+
+    describe('deleteSingle', () => {
+      test('basic test', async () => {
+        const db = createMockDbService()
+        db.queueResponse({
+          command: '',
+          fields: [],
+          oid: 1,
+          rowCount: 1,
+          rows: [],
+        })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.deleteSingle({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: 'delete from "article" where date_deleted is null limit 1',
+        })
+
+        expect(result).toEqual(true)
+      })
+    })
   })
 })

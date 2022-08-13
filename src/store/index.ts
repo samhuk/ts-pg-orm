@@ -15,7 +15,7 @@ import { objectPropsToCamelCase } from '../helpers/string'
 import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
 import { TsPgOrm } from '../types'
 import { createQueryPlan } from './get/queryPlan'
-import { Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
+import { DeleteSingleFunctionOptions, DeleteSingleFunctionResult, Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 import { AnyGetFunctionOptions } from './types/get'
 
 const create = async <T extends DataFormatDeclaration>(
@@ -64,6 +64,22 @@ const updateSingle = async (
   const result = await db.query(sql, values)
 
   return result?.rows?.[0]
+}
+
+const deleteSingle = async (
+  db: DbService,
+  df: DataFormat,
+  options: DeleteSingleFunctionOptions,
+): Promise<DeleteSingleFunctionResult> => {
+  const rootSql = df.sql.deleteSqlBase
+  const whereClause = createDataFilter(options.filter).toSql({
+    transformer: node => ({ left: df.sql.columnNames[node.field] }),
+  })
+  const sql = `${rootSql} where ${whereClause} limit 1`
+
+  const result = await db.query(sql)
+
+  return result.rowCount === 1
 }
 
 export const getRelationsRelevantToDataFormat = <
@@ -186,6 +202,7 @@ export const createStore = <
     create: options => create(db, localDataFormat, options) as any,
     createManual: options => createManual(db, localDataFormat, options) as any,
     updateSingle: options => updateSingle(db, localDataFormat, options) as any,
+    deleteSingle: options => deleteSingle(db, localDataFormat, options) as any,
     getSingle: async options => {
       // Performance optimization for query with no relations.
       if (options.relations == null || Object.keys(options.relations).length === 0) {

@@ -99,7 +99,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     columnNameList,
     selectSqlBase: createSelectSqlBase(dataFormatDeclaration, columnNamesDict),
     updateSqlBase: `update ${tableName} set`,
-    deleteSqlBase: `update ${tableName} set date_deleted = CURRENT_TIMESTAMP`,
+    deleteSqlBase: `delete from ${tableName}`,
     fieldSubSetSelectSqlBases,
   }
 

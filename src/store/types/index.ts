@@ -41,6 +41,31 @@ type UpdateSingleFunction<
   options: TOptions,
 ) => UpdateSingleFunctionResult<T, K, L, TOptions>
 
+export type DeleteSingleFunctionOptions<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = T[number],
+> = {
+  /**
+   * Filter to select the single record to update.
+   */
+  filter: DataFilterNodeOrGroup<L['fields'][number]['name']>
+}
+
+export type DeleteSingleFunctionResult<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = T[number],
+> = boolean
+
+type DeleteSingleFunction<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number],
+> = <TOptions extends DeleteSingleFunctionOptions<T, K, L>>(
+  options: TOptions,
+) => DeleteSingleFunctionResult<T, K, L>
+
 export type Store<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
@@ -67,12 +92,15 @@ export type Store<
    */
   updateSingle: UpdateSingleFunction<T, K, Extract<T[number], { name: L }>>
   /**
+   * Deletes a single record.
+   */
+  deleteSingle: DeleteSingleFunction<T, K, Extract<T[number], { name: L }>>
+  /**
    * Retreives a single record, optionally including related data.
    */
   getSingle: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
-
   /**
-   * Retreives multiple record, optionally including related data.
+   * Retreives multiple records, optionally including related data.
    */
-   getMultiple: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
+  getMultiple: GetMultipleFunction<T, K, Extract<T[number], { name: L }>>
 }
