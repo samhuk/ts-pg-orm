@@ -124,11 +124,11 @@ const createLinkedFieldWhereClause = (
   else {
     // E.g. 1, 2, 3, 4
     const valuesSql = (linkedFieldDataType === DataType.STRING
-      ? linkedFieldValues.map(v => `'${v}'`)
-      : linkedFieldValues
-    ).join(', ')
-    // E.g. "0".creator_user_id in (1, 2, 3)
-    suffix = ` in (${valuesSql})`
+      ? linkedFieldValues.map(v => `('${v}')`)
+      : linkedFieldValues.map(v => `(${v})`)
+    ).join(',')
+    // E.g. = any (values (1),(2),(3))
+    suffix = ` = any (values ${valuesSql})`
   }
 
   if (rootDataNode.relation.type === RelationType.MANY_TO_MANY) {

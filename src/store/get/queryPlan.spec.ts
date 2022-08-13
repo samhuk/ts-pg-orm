@@ -118,7 +118,7 @@ where "0".date_deleted is null limit 1`,
 "3".id "3.id", "3".created_by_user_id "3.createdByUserId", "3".image_id "3.imageId", "3".title "3.title", "4".id "4.id", "4".file_name "4.fileName", "4".created_by_user_id "4.createdByUserId"
 from "recipe" "3"
 left join "image" "4" on "4".id = "3".image_id
-where "3".created_by_user_id in (1, 2, 3)`,
+where "3".created_by_user_id = any (values (1),(2),(3))`,
       })
 
       expect(result).toBeDefined()
