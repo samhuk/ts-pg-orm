@@ -56,6 +56,11 @@ const createStores = async (
   return storesAndJoinTableStoresDict as any
 }
 
+export const filterForManyToManyRelations = (
+  relationsDict: RelationsDict,
+) => Object.values(relationsDict)
+  .filter(r => (r as Relation).type === RelationType.MANY_TO_MANY) as Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>[]
+
 const _createTsPgOrm = <
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>
@@ -66,8 +71,7 @@ const _createTsPgOrm = <
     relationDeclarations: K,
   ): TsPgOrm<T, K> => {
   let tsPgOrm: TsPgOrm<T, K>
-  const manyToManyRelationsList = Object.values(relationsDict)
-    .filter(r => (r as Relation<T>).type === RelationType.MANY_TO_MANY) as Relation<T, RelationType.MANY_TO_MANY>[]
+  const manyToManyRelationsList = filterForManyToManyRelations(relationsDict)
 
   return tsPgOrm = {
     db: null,
@@ -85,7 +89,7 @@ const _createTsPgOrm = <
     relations: relationsDict,
     dataFormatDeclarations,
     relationDeclarations,
-    createStores: async _options => createStores(tsPgOrm as any, manyToManyRelationsList as any, _options as any),
+    createStores: async _options => createStores(tsPgOrm as any, manyToManyRelationsList, _options as any),
   }
 }
 

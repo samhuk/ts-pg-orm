@@ -21,7 +21,7 @@ const createCreateLinkFunction = <T extends DataFormatDeclarations, K extends Re
   const fieldRef1Field = fieldRef1DataFormat.fields[relation.fieldRef1.fieldName]
   const fieldRef2Field = fieldRef2DataFormat.fields[relation.fieldRef2.fieldName]
   const fieldRef1JoinTableFieldName = `${fieldRef1DataFormat.name}${capitalize(fieldRef1Field.name)}`
-  const fieldRef2JoinTableFieldName = `${fieldRef1DataFormat.name}${capitalize(fieldRef2Field.name)}`
+  const fieldRef2JoinTableFieldName = `${fieldRef2DataFormat.name}${capitalize(fieldRef2Field.name)}`
   const sql = `insert into ${relation.sql.joinTableName}
 set (${relation.sql.joinTableFieldRef1ColumnName}, ${relation.sql.joinTableFieldRef2ColumnName})
 = ($1, $1) returning *`
