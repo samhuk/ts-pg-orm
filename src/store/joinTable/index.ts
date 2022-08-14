@@ -8,29 +8,71 @@ import {
   JoinTableStoresDict,
   _CreateJoinTableRecordOptions,
   _CreateLinkFunction,
+  _CreateLinksFunction,
   _DeleteLinkByIdFunction,
 } from './types'
 
-const createCreateLinkFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
+const createCreateLinkFieldsInfo = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
   dataFormats: DataFormatsDict<T>,
   relation: K,
-  db: SimplePgClient,
-): _CreateLinkFunction<T, K> => {
+) => {
   const fieldRef1DataFormat = (dataFormats as any)[relation.fieldRef1.formatName] as DataFormat
   const fieldRef2DataFormat = (dataFormats as any)[relation.fieldRef2.formatName] as DataFormat
   const fieldRef1Field = fieldRef1DataFormat.fields[relation.fieldRef1.fieldName]
   const fieldRef2Field = fieldRef2DataFormat.fields[relation.fieldRef2.fieldName]
   const fieldRef1JoinTableFieldName = `${fieldRef1DataFormat.name}${capitalize(fieldRef1Field.name)}`
   const fieldRef2JoinTableFieldName = `${fieldRef2DataFormat.name}${capitalize(fieldRef2Field.name)}`
-  const sql = `insert into ${relation.sql.joinTableName}
+
+  return {
+    fieldRef1JoinTableFieldName,
+    fieldRef2JoinTableFieldName,
+  }
+}
+
+const createCreateLinkFieldSql = (
+  relation: Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>,
+  i: number = 1,
+): string => `insert into ${relation.sql.joinTableName}
 set (${relation.sql.joinTableFieldRef1ColumnName}, ${relation.sql.joinTableFieldRef2ColumnName})
-= ($1, $1) returning *`
+= ($${i}, $${i + 1}) returning *`
+
+const createCreateLinkFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
+  dataFormats: DataFormatsDict<T>,
+  relation: K,
+  db: SimplePgClient,
+): _CreateLinkFunction<T, K> => {
+  const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
+  const sql = createCreateLinkFieldSql(relation)
 
   return async (options: _CreateJoinTableRecordOptions<T, K>) => {
-    const fieldRef1FieldValue = (options as any)[fieldRef1JoinTableFieldName]
-    const fieldRef2FieldValue = (options as any)[fieldRef2JoinTableFieldName]
+    const fieldRef1FieldValue = (options as any)[fieldsInfo.fieldRef1JoinTableFieldName]
+    const fieldRef2FieldValue = (options as any)[fieldsInfo.fieldRef2JoinTableFieldName]
     const row = await db.queryGetFirstRow(sql, [fieldRef1FieldValue, fieldRef2FieldValue])
     return objectPropsToCamelCase(row)
+  }
+}
+
+const createCreateLinksFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
+  dataFormats: DataFormatsDict<T>,
+  relation: K,
+  db: SimplePgClient,
+): _CreateLinksFunction<T, K> => {
+  const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
+
+  return async (options: _CreateJoinTableRecordOptions<T, K>[]) => {
+    const sqlLines: string[] = []
+    for (let i = 1; i < options.length * 2; i += 2)
+      sqlLines.push(createCreateLinkFieldSql(relation, i))
+
+    const sql = sqlLines.join(';\n')
+    const fieldRef1FieldValues = options.map(createRecordOptions => (createRecordOptions as any)[fieldsInfo.fieldRef1JoinTableFieldName])
+    const fieldRef2FieldValues = options.map(createRecordOptions => (createRecordOptions as any)[fieldsInfo.fieldRef2JoinTableFieldName])
+
+    const parameters: any[] = []
+    for (let i = 0; i < options.length; i += 1)
+      parameters.push(fieldRef1FieldValues[i], fieldRef2FieldValues[i])
+
+    await db.query(sql, parameters)
   }
 }
 
@@ -54,12 +96,14 @@ const createJoinTableStore = <T extends DataFormatDeclarations>(
   db: SimplePgClient,
 ): JoinTableStore => {
   const createLink = createCreateLinkFunction(dataFormats, relation, db)
+  const createLinks = createCreateLinksFunction(dataFormats, relation, db)
   const deleteLink = createDeleteLinkbyIdFunction(relation, db)
 
   return {
     provision: () => db.query(relation.sql.createJoinTableSql).then(() => true as any),
     unprovision: () => db.query(relation.sql.dropJoinTableSql).then(() => true as any),
     createlink: options => createLink(options as any),
+    createLinks: options => createLinks(options as any),
     deleteLinkById: options => deleteLink(options),
   }
 }

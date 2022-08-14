@@ -60,6 +60,27 @@ export type _CreateLinkFunction<
   Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>
 >
 
+type CreateLinksFunction<
+  T extends DataFormatDeclarations,
+  TFieldRef1DataFormat extends T[number],
+  TFieldRef2DataFormat extends T[number],
+  TFieldRef1Field extends T[number]['fields'][number],
+  TFieldRef2Field extends T[number]['fields'][number]
+> = (options: CreateJoinTableRecordOptions<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>[]) => (
+  Promise<void>
+)
+
+export type _CreateLinksFunction<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
+> = CreateLinksFunction<
+  T,
+  Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>,
+  Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>
+>
+
 export type DeleteLinkByIdFunctionOptions = {
   id: number
   return?: boolean
@@ -111,6 +132,7 @@ export type _JoinTableStore<
   provision: () => Promise<void>
   unprovision: () => Promise<void>
   createlink: CreateLinkFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
+  createLinks: CreateLinksFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
   deleteLinkById: DeleteLinkByIdFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
 }
 

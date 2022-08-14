@@ -32,7 +32,40 @@ describe('joinTable', () => {
         parameters: [2, 3],
         sql: `insert into user_to_user_group
 set (user_id, user_group_id)
-= ($1, $1) returning *`,
+= ($1, $2) returning *`,
+      })
+    })
+  })
+
+  describe('createLinks', () => {
+    test('basic test', async () => {
+      const db = createMockDbService()
+      const manyToManyRelationsList = filterForManyToManyRelations(tsPgOrm.relations)
+      const joinStoresDict = createJoinTableStoresDict<
+        typeof tsPgOrm['dataFormatDeclarations'],
+        typeof tsPgOrm['relationDeclarations']
+      >(tsPgOrm.dataFormats, manyToManyRelationsList as any, db)
+
+      db.queueResponse(true)
+
+      await joinStoresDict['user.id <<-->> userGroup.id'].createLinks([
+        { userId: 2, userGroupId: 3 },
+        { userId: 3, userGroupId: 4 },
+        { userId: 4, userGroupId: 5 },
+      ])
+
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: [2, 3, 3, 4, 4, 5],
+        sql: `insert into user_to_user_group
+set (user_id, user_group_id)
+= ($1, $2) returning *;
+insert into user_to_user_group
+set (user_id, user_group_id)
+= ($3, $4) returning *;
+insert into user_to_user_group
+set (user_id, user_group_id)
+= ($5, $6) returning *`,
       })
     })
   })
