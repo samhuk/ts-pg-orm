@@ -117,7 +117,7 @@ const provision = async (): Promise<Stores> => {
     },
   })
 
-  const stores = await ORM.createStores({ unprovisionJoinTables: true, unprovisionStores: true })
+  const stores = await ORM.createStores({ unprovisionStores: true })
 
   return stores
 }

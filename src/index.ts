@@ -8,19 +8,34 @@ import { toDict } from './helpers/dict'
 import { createRelationName, createRelation } from './relations'
 import { Relation, RelationDeclarations, RelationsDict, RelationType } from './relations/types'
 import { createStore } from './store'
+import { createJoinTableStoresDict } from './store/joinTable'
 import { TsPgOrm, UnloadedTsPgOrm, TsPgOrmWithDataFormats, CreateStoresOptions } from './types'
 
 const createStores = async (
   tsPgOrm: TsPgOrm,
+  manyToManyRelationsList: Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>[],
   options?: CreateStoresOptions,
 ) => {
   const db = options?.db ?? tsPgOrm.db
   if (db == null)
     throw new Error('No database client is available to use.')
 
+  const dataFormatNames = tsPgOrm.dataFormatDeclarations.map(dfd => dfd.name)
+
+  // Create stores
+  const storesDict = toDict(dataFormatNames, entityName => ({
+    key: entityName,
+    value: createStore(db, tsPgOrm, entityName),
+  }))
+
+  const joinTableStoresDict = createJoinTableStoresDict(tsPgOrm.dataFormats, manyToManyRelationsList, db)
+  const joinTableStoreNames = Object.keys(joinTableStoresDict)
+
+  const storesAndJoinTableStoresDict = { ...storesDict, ...joinTableStoresDict }
+
   const provisionStores = options?.provisionStores as (boolean | string[])
   const provisionOrder = provisionStores == null || provisionStores === true
-    ? tsPgOrm.dataFormatDeclarations.map(dfd => dfd.name)
+    ? dataFormatNames.concat(joinTableStoreNames)
     : provisionStores === false
       ? []
       : provisionStores
@@ -29,30 +44,16 @@ const createStores = async (
   const unprovisionOrder = unprovisionStores == null || unprovisionStores === false
     ? []
     : unprovisionStores === true
-      ? provisionOrder.slice(0).reverse() // Shallow copy and then reverse the provision order
+      ? provisionOrder.slice(0).reverse()
       : unprovisionStores
 
-  // Create stores
-  const storesDict = toDict(provisionOrder as string[], entityName => ({
-    key: entityName,
-    value: createStore(db, tsPgOrm, entityName),
-  }))
-
-  // Unprovision join tables
-  if (options?.unprovisionJoinTables ?? false)
-    await tsPgOrm.dropJoinTables(db)
-
   // Unprovision stores
-  await Promise.all(unprovisionOrder.map(entityName => storesDict[entityName].unprovision()))
+  await Promise.all(unprovisionOrder.map(storeName => (storesAndJoinTableStoresDict as any)[storeName].unprovision()))
 
   // Provision stores
-  await Promise.all(provisionOrder.map(entityName => storesDict[entityName].provision()))
+  await Promise.all(provisionOrder.map(storeName => (storesAndJoinTableStoresDict as any)[storeName].provision()))
 
-  // Provision join tables
-  if (options?.provisionJoinTables ?? true)
-    await tsPgOrm.createJoinTables(db)
-
-  return storesDict as any
+  return storesAndJoinTableStoresDict as any
 }
 
 const _createTsPgOrm = <
@@ -84,29 +85,7 @@ const _createTsPgOrm = <
     relations: relationsDict,
     dataFormatDeclarations,
     relationDeclarations,
-    dropJoinTable: (relationName, db) => (db ?? tsPgOrm.db).query(
-      ((relationsDict as any)[relationName] as Relation<T, RelationType.MANY_TO_MANY>).sql.dropJoinTableSql,
-    ).then(() => true),
-    createJoinTable: (relationName, db) => (db ?? tsPgOrm.db).query(
-      ((relationsDict as any)[relationName] as Relation<T, RelationType.MANY_TO_MANY>).sql.createJoinTableSql,
-    ).then(() => true),
-    dropJoinTables: db => {
-      const _db = db ?? tsPgOrm.db
-      return Promise.all(
-        manyToManyRelationsList
-          .map(r => r.sql.dropJoinTableSql)
-          .map(sql => _db.query(sql)),
-      ).then(() => true)
-    },
-    createJoinTables: db => {
-      const _db = db ?? tsPgOrm.db
-      return Promise.all(
-        manyToManyRelationsList
-          .map(r => r.sql.createJoinTableSql)
-          .map(sql => _db.query(sql)),
-      ).then(() => true)
-    },
-    createStores: async _options => createStores(tsPgOrm as any, _options as any),
+    createStores: async _options => createStores(tsPgOrm as any, manyToManyRelationsList as any, _options as any),
   }
 }
 
@@ -126,7 +105,11 @@ export const createTsPgOrm = (): UnloadedTsPgOrm => ({
       ): TsPgOrm<T, K> => {
         const relationsDict = {} as RelationsDict<T, K>
         const relationDeclarations = relationDeclarationsCreator(dataFormatsDict)
-        relationDeclarations.forEach(d => (relationsDict as any)[createRelationName(d)] = createRelation(d))
+        relationDeclarations.forEach(d => {
+          const relationName = createRelationName(d)
+          const _relationsDict = relationsDict as any
+          _relationsDict[relationName] = createRelation(d, relationName)
+        })
 
         return _createTsPgOrm(dataFormatsDict, relationsDict, dataFormatDeclarations, relationDeclarations)
       },

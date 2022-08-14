@@ -114,6 +114,11 @@ type MutableRelationDeclaration<
      * @default true
      */
     fieldRef2OnDeleteNoAction?: boolean
+    /**
+     * Alternative name to use for the store that will represent the underlying join (a.k.a. "junction")
+     * table.
+     */
+    joinTableStoreName?: string
   },
 }, K>
 
@@ -230,7 +235,7 @@ export type Relation<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationType = RelationType,
   L extends RelationDeclaration<T, K> = RelationDeclaration<T, K>
-> = L & RelationSqlProperties<K>
+> = L & RelationSqlProperties<K> & { relationName: ToRelationName<L> }
 
 export type RelationsDict<
   T extends DataFormatDeclarations = DataFormatDeclarations,
@@ -247,9 +252,6 @@ export type RelationsList<T extends DataFormatDeclarations, K extends RelationDe
   // @ts-ignore
   [K1 in keyof K & `${bigint}`]: K[K1] extends RelationDeclaration<T> ? Relation<T, K[K1]['type'], K[K1]> : never
 }
-
-export type ExtractRelationNamesOfManyToManyRelations<T extends RelationDeclarations> =
-  ToRelationName<Extract<T[number], { type: RelationType.MANY_TO_MANY }>>
 
 /**
  * Extracts the relations that are relevant to the given data format declaration name.
@@ -306,6 +308,11 @@ export type ExtractRelevantRelationsWithManyToManyFieldRef1<T extends string, K 
 export type ExtractRelevantRelationsWithManyToManyFieldRef2<T extends string, K extends RelationDeclarations> =
   Extract<ExtractRelevantRelations<T, K>, { type: RelationType.MANY_TO_MANY, fieldRef2: { formatName: T } }>
 
+export type ExtractManyToManyRelations<T extends RelationDeclarations> =
+  Extract<T[number], { type: RelationType.MANY_TO_MANY }>
+
+export type ExtractRelationNamesOfManyToManyRelations<T extends RelationDeclarations> =
+  ToRelationName<ExtractManyToManyRelations<T>>
 // --
 
 export type ExtractRelevantRelationNamesWithOneToOneFromOne<T extends string, K extends RelationDeclarations> =

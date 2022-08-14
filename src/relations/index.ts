@@ -37,21 +37,20 @@ export const createRelation = <
   T extends DataFormatDeclarations,
   K extends RelationType,
   L extends RelationDeclaration<T, K>,
->(d: L, options?: { enablePostgreSql?: boolean }): Relation<T, K, L> => {
-  const enableSql = (options?.enablePostgreSql ?? true)
-
+>(d: L, relationName: ToRelationName<L>): Relation<T, K, L> => {
   if (d.type === RelationType.MANY_TO_MANY) {
     const _d = d as RelationDeclaration<T, RelationType.MANY_TO_MANY>
     const joinTableName = createManyToManyJoinTableName(_d)
     const relation: Relation<T, RelationType.MANY_TO_MANY, RelationDeclaration<T, RelationType.MANY_TO_MANY>> = {
       ..._d,
-      sql: enableSql ? {
+      sql: {
         createJoinTableSql: createManyToManyJoinTableSql(_d),
         joinTableName,
         joinTableFieldRef1ColumnName: createManyToManyJoinTableFieldRefColumnName(_d.fieldRef1),
         joinTableFieldRef2ColumnName: createManyToManyJoinTableFieldRefColumnName(_d.fieldRef2),
         dropJoinTableSql: `drop table if exists ${joinTableName};`,
-      } : null,
+      },
+      relationName: relationName as any,
     }
     // @ts-ignore
     return relation
@@ -61,9 +60,10 @@ export const createRelation = <
     const _d = d as RelationDeclaration<T, RelationType.ONE_TO_MANY>
     const relation: Relation<T, RelationType.ONE_TO_MANY, RelationDeclaration<T, RelationType.ONE_TO_MANY>> = {
       ..._d,
-      sql: enableSql ? {
+      sql: {
         foreignKeySql: createOneToManyForeignKeySql(_d),
-      } : null,
+      },
+      relationName: relationName as any,
     }
     // @ts-ignore
     return relation
@@ -73,9 +73,10 @@ export const createRelation = <
     const _d = d as RelationDeclaration<T, RelationType.ONE_TO_ONE>
     const relation: Relation<T, RelationType.ONE_TO_ONE, RelationDeclaration<T, RelationType.ONE_TO_ONE>> = {
       ..._d,
-      sql: enableSql ? {
+      sql: {
         foreignKeySql: createOneToOneForeignKeySql(_d),
-      } : null,
+      },
+      relationName: relationName as any,
     }
     // @ts-ignore
     return relation

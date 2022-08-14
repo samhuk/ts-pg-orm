@@ -1,6 +1,7 @@
 import { SimplePgClient, SimplePgClientFromClientOptions, SimplePgClientOptions } from 'simple-pg-client/dist/types'
 import { DataFormatDeclarations, DataFormatsDict } from './dataFormat/types'
 import { RelationDeclarations, RelationsDict, ExtractRelationNamesOfManyToManyRelations } from './relations/types'
+import { JoinTableStoresDict } from './store/joinTable/types'
 import { Store } from './store/types'
 
 export type UnloadedTsPgOrm = {
@@ -31,6 +32,11 @@ export type StoresDict<
   [TName in keyof DataFormatsDict<T>]: Store<T, K, (TName & string)>
 }
 
+export type StoresAndJoinTableStoresDict<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+> = StoresDict<T, K> & JoinTableStoresDict<T, K>
+
 export type CreateStoresOptions<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
@@ -47,7 +53,7 @@ export type CreateStoresOptions<
    *
    * Default: `true`
    */
-  provisionStores?: boolean | (keyof StoresDict<T, K>)[]
+  provisionStores?: boolean | (keyof StoresAndJoinTableStoresDict<T, K>)[]
   /**
    * `true` to first unprovision entity stores (i.e. drop tables) before provisioning.
    *
@@ -56,19 +62,7 @@ export type CreateStoresOptions<
    *
    * Default: `false`
    */
-  unprovisionStores?: boolean | (keyof StoresDict<T, K>)[]
-  /**
-   * Determines whether join tables for many-to-many relations are first unprovisioned.
-   *
-   * Default: `true`
-   */
-  provisionJoinTables?: boolean
-  /**
-   * Determines whether join tables for many-to-many relations are first unprovisioned.
-   *
-   * Default: `false`
-   */
-  unprovisionJoinTables?: boolean
+  unprovisionStores?: boolean | (keyof StoresAndJoinTableStoresDict<T, K>)[]
   /**
    * Optional alternative `SimplePgClient` to use, different from the one initially provided
    * to create the TsPgOrm instance.
@@ -132,27 +126,11 @@ export type TsPgOrm<
    */
   relationDeclarations: K
   /**
-   * Drop a particular join table.
-   */
-  dropJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db?: SimplePgClient) => Promise<boolean>
-  /**
-  * Create a particular join table.
-  */
-  createJoinTable: (relationName: ExtractRelationNamesOfManyToManyRelations<K>, db?: SimplePgClient) => Promise<boolean>
-  /**
-  * Drop all join tables.
-  */
-  dropJoinTables: (db?: SimplePgClient) => Promise<boolean>
-  /**
-  * Create all join tables.
-  */
-  createJoinTables: (db?: SimplePgClient) => Promise<boolean>
-  /**
-  * Creates then provisions entity DB stores for all loaded data formats and relations,
-  * returning a dictionary of stores.
+  * Creates then provisions stores for all loaded data formats and relations, returning
+  * a dictionary of stores.
   *
   * Optionally, tables can be first unprovisioned (i.e. `drop table`) before provisioning,
   * however, warning: this will wipe all data in existing tables.
   */
-  createStores: (options?: CreateStoresOptions<T, K>) => Promise<StoresDict<T, K>>
+  createStores: (options?: CreateStoresOptions<T, K>) => Promise<StoresAndJoinTableStoresDict<T, K>>
 }
