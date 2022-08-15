@@ -4,7 +4,7 @@ import { createMockDbService } from '../../mock/dbService'
 import { tsPgOrm } from '../../testData'
 
 describe('joinTable', () => {
-  describe('createLink', () => {
+  describe('create', () => {
     test('basic test', async () => {
       const db = createMockDbService()
       const manyToManyRelationsList = filterForManyToManyRelations(tsPgOrm.relations)
@@ -19,7 +19,7 @@ describe('joinTable', () => {
         user_group_id: 3,
       })
 
-      const newJoinTableRecord = await joinStoresDict['user.id <<-->> userGroup.id'].createlink({ userId: 2, userGroupId: 3 })
+      const newJoinTableRecord = await joinStoresDict['user.id <<-->> userGroup.id'].create({ userId: 2, userGroupId: 3 })
 
       expect(newJoinTableRecord).toEqual({
         id: 1,
@@ -37,7 +37,7 @@ values ($1, $2) returning *`,
     })
   })
 
-  describe('createLinks', () => {
+  describe('createMultiple', () => {
     test('basic test', async () => {
       const db = createMockDbService()
       const manyToManyRelationsList = filterForManyToManyRelations(tsPgOrm.relations)
@@ -48,7 +48,7 @@ values ($1, $2) returning *`,
 
       db.queueResponse(true)
 
-      await joinStoresDict['user.id <<-->> userGroup.id'].createLinks([
+      await joinStoresDict['user.id <<-->> userGroup.id'].createMultiple([
         { userId: 2, userGroupId: 3 },
         { userId: 3, userGroupId: 4 },
         { userId: 4, userGroupId: 5 },
@@ -70,7 +70,7 @@ values ($5, $6) returning *`,
     })
   })
 
-  describe('deleteLinkById', () => {
+  describe('deleteById', () => {
     test('basic test', async () => {
       const db = createMockDbService()
       const manyToManyRelationsList = filterForManyToManyRelations(tsPgOrm.relations)
@@ -85,7 +85,7 @@ values ($5, $6) returning *`,
         user_group_id: 3,
       })
 
-      const newJoinTableRecord = await joinStoresDict['user.id <<-->> userGroup.id'].deleteLinkById({ id: 2, return: true })
+      const newJoinTableRecord = await joinStoresDict['user.id <<-->> userGroup.id'].deleteById({ id: 2, return: true })
 
       expect(newJoinTableRecord).toEqual({
         id: 1,

@@ -91,6 +91,7 @@ const ORM = createTsPgOrm()
       type: RelationType.MANY_TO_MANY,
       fieldRef1: dfs.user.fieldRefs.id,
       fieldRef2: dfs.userGroup.fieldRefs.id,
+      includeDateCreated: true,
     },
   ] as const)
 
@@ -179,7 +180,7 @@ const addData = async (stores: Stores) => {
     { userId: 2, userGroupId: 2 },
     { userId: 3, userGroupId: 3 },
   ]
-  await Promise.all(createUserToUserGroupLinkOptions.map(stores['user.id <<-->> userGroup.id'].createlink))
+  await Promise.all(createUserToUserGroupLinkOptions.map(stores['user.id <<-->> userGroup.id'].create))
 }
 
 const getResult = (stores: Stores) => (

@@ -1,5 +1,5 @@
 import { DataFormatDeclarations, DataFormatFieldToRecordPropertyValue } from '../../dataFormat/types'
-import { OmitTyped } from '../../helpers/types'
+import { ExpandRecursively } from '../../helpers/types'
 import {
   ExtractRelationNamesOfManyToManyRelations,
   Relation,
@@ -9,7 +9,7 @@ import {
   RelationType,
 } from '../../relations/types'
 
-type JoinTableRecord<
+type JoinTableRecordLinkedFields<
   T extends DataFormatDeclarations,
   TFieldRef1DataFormat extends T[number],
   TFieldRef2DataFormat extends T[number],
@@ -19,7 +19,26 @@ type JoinTableRecord<
   [fieldRef1FieldName in `${TFieldRef1DataFormat['name']}${Capitalize<TFieldRef1Field['name']>}`]: DataFormatFieldToRecordPropertyValue<TFieldRef1Field>
 } & {
   [fieldRef2FieldName in `${TFieldRef2DataFormat['name']}${Capitalize<TFieldRef2Field['name']>}`]: DataFormatFieldToRecordPropertyValue<TFieldRef2Field>
-} & { id: number } // TODO: Do we need to make this configurable?
+}
+
+type JoinTableRecord<
+  T extends DataFormatDeclarations,
+  TFieldRef1DataFormat extends T[number],
+  TFieldRef2DataFormat extends T[number],
+  TFieldRef1Field extends T[number]['fields'][number],
+  TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>
+> = ExpandRecursively<
+  JoinTableRecordLinkedFields<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
+  & {
+    id: number // TODO: Do we need to make this configurable?
+  }
+  & (TRelation extends { includeDateCreated: boolean }
+    ? TRelation['includeDateCreated'] extends true
+      ? { dateCreated: string }
+      : {}
+    : {})
+>
 
 type CreateJoinTableRecordOptions<
   T extends DataFormatDeclarations,
@@ -27,7 +46,7 @@ type CreateJoinTableRecordOptions<
   TFieldRef2DataFormat extends T[number],
   TFieldRef1Field extends T[number]['fields'][number],
   TFieldRef2Field extends T[number]['fields'][number],
-> = OmitTyped<JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>, 'id'>
+> = JoinTableRecordLinkedFields<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
 
 export type _CreateJoinTableRecordOptions<
   T extends DataFormatDeclarations = DataFormatDeclarations,
@@ -39,14 +58,16 @@ export type _CreateJoinTableRecordOptions<
   Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
   Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>
 >
+
 type CreateLinkFunction<
   T extends DataFormatDeclarations,
   TFieldRef1DataFormat extends T[number],
   TFieldRef2DataFormat extends T[number],
   TFieldRef1Field extends T[number]['fields'][number],
   TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
 > = (options: CreateJoinTableRecordOptions<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>) => (
-  Promise<JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>>
+  Promise<JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>>
 )
 
 export type _CreateLinkFunction<
@@ -57,7 +78,8 @@ export type _CreateLinkFunction<
   Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>,
   Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>,
   Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
-  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>
+  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>,
+  TRelation
 >
 
 type CreateLinksFunction<
@@ -92,10 +114,11 @@ type DeleteLinkByIdFunctionResult<
   TFieldRef2DataFormat extends T[number],
   TFieldRef1Field extends T[number]['fields'][number],
   TFieldRef2Field extends T[number]['fields'][number],
-  TOptions extends DeleteLinkByIdFunctionOptions
+  TOptions extends DeleteLinkByIdFunctionOptions,
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>
 > = TOptions extends { return: boolean }
   ? TOptions['return'] extends true
-    ? JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field> | null
+    ? JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation> | null
     : boolean
   : boolean
 
@@ -105,10 +128,11 @@ type DeleteLinkByIdFunction<
   TFieldRef2DataFormat extends T[number],
   TFieldRef1Field extends T[number]['fields'][number],
   TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>
 > = <TOptions extends DeleteLinkByIdFunctionOptions = DeleteLinkByIdFunctionOptions>(
   options: TOptions
 ) => Promise<
-  DeleteLinkByIdFunctionResult<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TOptions>
+  DeleteLinkByIdFunctionResult<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TOptions, TRelation>
 >
 
 export type _DeleteLinkByIdFunction<
@@ -128,12 +152,13 @@ export type _JoinTableStore<
   TFieldRef2DataFormat extends T[number],
   TFieldRef1Field extends T[number]['fields'][number],
   TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
 > = {
   provision: () => Promise<void>
   unprovision: () => Promise<void>
-  createlink: CreateLinkFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
-  createLinks: CreateLinksFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
-  deleteLinkById: DeleteLinkByIdFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
+  create: CreateLinkFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
+  createMultiple: CreateLinksFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
+  deleteById: DeleteLinkByIdFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
 }
 
 type AnyManyToManyRelation<T extends DataFormatDeclarations> =
@@ -147,7 +172,8 @@ export type JoinTableStore<
   Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>,
   Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>,
   Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
-  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>
+  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>,
+  TRelation
 >
 
 export type JoinTableStoresDict<

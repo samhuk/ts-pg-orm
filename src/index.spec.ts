@@ -70,7 +70,7 @@ describe('createTsPgOrm', () => {
       })
 
       // -- Act
-      const joinTableRecord = await stores['user.id <<-->> userGroup.id'].createlink({ userGroupId: 2, userId: 3 })
+      const joinTableRecord = await stores['user.id <<-->> userGroup.id'].create({ userGroupId: 2, userId: 3 })
 
       // -- Assert
       expect(joinTableRecord).toEqual({
@@ -80,7 +80,7 @@ describe('createTsPgOrm', () => {
       })
 
       // -- Act
-      const deletedJoinTableRecord = await stores['user.id <<-->> userGroup.id'].deleteLinkById({ id: joinTableRecord.id, return: true })
+      const deletedJoinTableRecord = await stores['user.id <<-->> userGroup.id'].deleteById({ id: joinTableRecord.id, return: true })
 
       // -- Assert
       expect(deletedJoinTableRecord).toEqual({

@@ -37,7 +37,7 @@ export const createManyToManyJoinTableSql = (r: RelationDeclaration<DataFormatDe
     id serial primary key,
     ${columnName1} integer not null,
     ${columnName2} integer not null,
-    ${(r.includeDateCreated ?? false) ? 'date_created not null default CURRENT_TIMESTAMP,' : ''}
+    ${(r.includeDateCreated ?? false) ? 'date_created timestamp with time zone not null default CURRENT_TIMESTAMP,' : ''}
     constraint ${fkeyName1} foreign key (${columnName1})
         references public.${tableName1} (${fieldName1}) match simple
         ${(r.fieldRef1OnUpdateNoAction ?? true) ? 'on update no action' : ''}
