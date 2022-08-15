@@ -31,8 +31,8 @@ describe('joinTable', () => {
       expect(db.receivedQueries[0]).toEqual({
         parameters: [2, 3],
         sql: `insert into user_to_user_group
-set (user_id, user_group_id)
-= ($1, $2) returning *`,
+(user_id, user_group_id)
+values ($1, $2) returning *`,
       })
     })
   })
