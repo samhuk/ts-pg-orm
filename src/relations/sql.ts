@@ -42,7 +42,7 @@ export const createManyToManyJoinTableSql = (r: RelationDeclaration<DataFormatDe
         references public.${tableName1} (${fieldName1}) match simple
         ${(r.fieldRef1OnUpdateNoAction ?? true) ? 'on update no action' : ''}
         ${(r.fieldRef1OnDeleteNoAction ?? true) ? 'on delete no action' : ''},
-    contraint ${fkeyName2} foreign key (${columnName2})
+    constraint ${fkeyName2} foreign key (${columnName2})
         references public.${tableName2} (${fieldName2}) match simple
         ${(r.fieldRef2OnUpdateNoAction ?? true) ? 'on update no action' : ''}
         ${(r.fieldRef2OnDeleteNoAction ?? true) ? 'on delete no action' : ''}

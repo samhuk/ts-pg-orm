@@ -31,8 +31,8 @@ describe('joinTable', () => {
       expect(db.receivedQueries[0]).toEqual({
         parameters: [2, 3],
         sql: `insert into user_to_user_group
-set (user_id, user_group_id)
-= ($1, $2) returning *`,
+(user_id, user_group_id)
+values ($1, $2) returning *`,
       })
     })
   })
@@ -58,14 +58,14 @@ set (user_id, user_group_id)
       expect(db.receivedQueries[0]).toEqual({
         parameters: [2, 3, 3, 4, 4, 5],
         sql: `insert into user_to_user_group
-set (user_id, user_group_id)
-= ($1, $2) returning *;
+(user_id, user_group_id)
+values ($1, $2) returning *;
 insert into user_to_user_group
-set (user_id, user_group_id)
-= ($3, $4) returning *;
+(user_id, user_group_id)
+values ($3, $4) returning *;
 insert into user_to_user_group
-set (user_id, user_group_id)
-= ($5, $6) returning *`,
+(user_id, user_group_id)
+values ($5, $6) returning *`,
       })
     })
   })

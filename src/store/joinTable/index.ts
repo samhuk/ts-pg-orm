@@ -33,8 +33,8 @@ const createCreateLinkFieldSql = (
   relation: Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>,
   i: number = 1,
 ): string => `insert into ${relation.sql.joinTableName}
-set (${relation.sql.joinTableFieldRef1ColumnName}, ${relation.sql.joinTableFieldRef2ColumnName})
-= ($${i}, $${i + 1}) returning *`
+(${relation.sql.joinTableFieldRef1ColumnName}, ${relation.sql.joinTableFieldRef2ColumnName})
+values ($${i}, $${i + 1}) returning *`
 
 const createCreateLinkFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
   dataFormats: DataFormatsDict<T>,
