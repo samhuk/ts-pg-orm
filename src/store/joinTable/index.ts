@@ -102,9 +102,9 @@ const createJoinTableStore = <T extends DataFormatDeclarations>(
   return {
     provision: () => db.query(relation.sql.createJoinTableSql).then(() => true as any),
     unprovision: () => db.query(relation.sql.dropJoinTableSql).then(() => true as any),
-    createlink: options => createLink(options as any),
-    createLinks: options => createLinks(options as any),
-    deleteLinkById: options => deleteLink(options),
+    create: options => createLink(options as any) as any,
+    createMultiple: options => createLinks(options as any),
+    deleteById: options => deleteLink(options) as any,
   }
 }
 
