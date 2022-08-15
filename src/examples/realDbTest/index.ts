@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-console */
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { SortingDirection } from '@samhuk/data-query/dist/sorting/types'
 import * as fs from 'fs'
+import path from 'path'
 import { createConsoleLogEventHandlers } from 'simple-pg-client'
 import { createTsPgOrm } from '../..'
 import { createDataFormatDeclaration } from '../../dataFormat'
 import { BASE_ENTITY_FIELDS, COMMON_FIELDS } from '../../dataFormat/common'
 import { StringDataSubType, NumberDataSubType, DataType, CreateRecordOptions } from '../../dataFormat/types'
 import { RelationType } from '../../relations/types'
-import { StoresDict } from '../../types'
+import { _CreateJoinTableRecordOptions } from '../../store/joinTable/types'
+import { StoresAndJoinTableStoresDict } from '../../types'
 
 const USER_DFD = createDataFormatDeclaration({
   name: 'user',
@@ -90,7 +94,7 @@ const ORM = createTsPgOrm()
     },
   ] as const)
 
-type Stores = StoresDict<typeof ORM['dataFormatDeclarations'], typeof ORM['relationDeclarations']>
+type Stores = StoresAndJoinTableStoresDict<typeof ORM['dataFormatDeclarations'], typeof ORM['relationDeclarations']>
 
 type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
 
@@ -99,6 +103,13 @@ type CreateImageRecordOptions = CreateRecordOptions<typeof IMAGE_DFD>
 type CreateArticleRecordOptions = CreateRecordOptions<typeof ARTICLE_DFD>
 
 type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADDRESS_DFD>
+
+type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DFD>
+
+type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
+  typeof ORM['dataFormatDeclarations'],
+  typeof ORM['relations']['user.id <<-->> userGroup.id']
+>
 
 const provision = async (): Promise<Stores> => {
   await ORM.initDbClient({
@@ -111,9 +122,9 @@ const provision = async (): Promise<Stores> => {
     extensions: ['uuid-ossp'],
     events: {
       ...createConsoleLogEventHandlers(),
-      // TODO: These can cause a lot of console noise if enabled
-      // onQuery: (q, m, sql, p) => console.log(m, p),
-      // onQueryError: (q, m, sql, p) => console.log(m),
+      // TODO: This can cause a lot of console noise if enabled
+      onQuery: (q, m, sql, p) => console.log(m, p),
+      onQueryError: (q, m, sql, p) => console.log(m),
     },
   })
 
@@ -149,11 +160,26 @@ const addData = async (stores: Stores) => {
 
   // Add user addresses
   const createUserAddressRecordsOptions: CreateUserAddressRecordOptions[] = [
-    { userId: 1, city: 'London', country: 'UK', postCode: 'SE11 119', streetAddress: '5 FooStreet Lane' },
-    { userId: 2, city: 'Madrid', country: 'Spain', postCode: 'BON BON', streetAddress: '6 FooStreet Lane' },
-    { userId: 3, city: 'Paris', country: 'France', postCode: 'SUI SUI', streetAddress: '7 FooStreet Lane' },
+    { userId: 1, city: 'London', country: 'UK', postCode: 'SE11 119', streetAddress: '1 FooStreet Lane' },
+    { userId: 2, city: 'Madrid', country: 'Spain', postCode: 'BON BON', streetAddress: '2 FooStreet Lane' },
+    { userId: 3, city: 'Paris', country: 'France', postCode: 'SUI SUI', streetAddress: '3 FooStreet Lane' },
   ]
   await Promise.all(createUserAddressRecordsOptions.map(stores.userAddress.create))
+
+  // Add user groups
+  const createUserGroupRecordsOptions: CreateUserGroupRecordOptions[] = [
+    { name: 'User group 1' },
+    { name: 'User group 2' },
+    { name: 'User group 3' },
+  ]
+  await Promise.all(createUserGroupRecordsOptions.map(stores.userGroup.create))
+
+  const createUserToUserGroupLinkOptions: CreateUserToUserGroupLinkOptions[] = [
+    { userId: 1, userGroupId: 1 },
+    { userId: 2, userGroupId: 2 },
+    { userId: 3, userGroupId: 3 },
+  ]
+  await Promise.all(createUserToUserGroupLinkOptions.map(stores['user.id <<-->> userGroup.id'].createlink))
 }
 
 const getResult = (stores: Stores) => (
@@ -207,8 +233,18 @@ const init = async () => {
 
   await addData(stores)
 
-  const result = await timedFn(() => getResult(stores), 'query')
-  fs.writeFileSync('./OUTPUT.json', JSON.stringify(result.result, null, 2))
+  const outputDir = './src/examples/realDbTest/output'
+  if (!fs.existsSync(outputDir))
+    fs.mkdirSync(outputDir)
+
+  const result1 = await timedFn(() => getResult(stores), 'query')
+  fs.writeFileSync(path.resolve(outputDir, 'articles-query.json'), JSON.stringify(result1.result, null, 2))
+
+  const result2 = await timedFn(() => stores.user.getMultiple({
+    fields: [],
+    relations: { userGroups: {} },
+  }), 'query')
+  fs.writeFileSync(path.resolve(outputDir, 'user-user-groups-query.json'), JSON.stringify(result2.result, null, 2))
 
   const dtList: number[] = []
   await repeatTimedFn(() => getResult(stores), 'query', 10, dtList)
