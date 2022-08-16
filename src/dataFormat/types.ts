@@ -1,6 +1,7 @@
 import { DeepReadonly, Mutable, ExpandOneLevel, PickAny, DeepReadonlyOrMutable } from '../helpers/types'
 import { Relation, RelationType } from '../relations/types'
 import { COMMON_FIELDS } from './common'
+import { FieldValidationOptionsListDict } from './validation/types'
 
 export enum DataType {
   /**
@@ -364,6 +365,8 @@ export type MutableDataFormatDeclaration<T extends readonly DataFormatField[] = 
    * to retreive data with a sub-set of fields of the data format.
    */
   fieldSubSets?: FieldSubSet<T>[]
+} & {
+  validations?: FieldValidationOptionsListDict<T>
 }
 
 export type DataFormatDeclaration = DeepReadonly<MutableDataFormatDeclaration>

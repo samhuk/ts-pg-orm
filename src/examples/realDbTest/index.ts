@@ -9,6 +9,7 @@ import { createTsPgOrm } from '../..'
 import { createDataFormatDeclaration } from '../../dataFormat'
 import { BASE_ENTITY_FIELDS, COMMON_FIELDS } from '../../dataFormat/common'
 import { StringDataSubType, NumberDataSubType, DataType, CreateRecordOptions } from '../../dataFormat/types'
+import { FieldValidationType } from '../../dataFormat/validation/types'
 import { RelationType } from '../../relations/types'
 import { _CreateJoinTableRecordOptions } from '../../store/joinTable/types'
 import { StoresAndJoinTableStoresDict } from '../../types'
@@ -21,6 +22,12 @@ const USER_DFD = createDataFormatDeclaration({
     { name: 'email', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 100 },
     { name: 'passwordHash', dataType: DataType.STRING, dataSubType: StringDataSubType.FIXED_LENGTH, length: 64 },
   ],
+  validations: {
+    d: [ // TODO: This should be asserted!
+      { type: FieldValidationType.MAX_LEN, maxLength: 100 },
+      { type: FieldValidationType.MIN_LEN, minLength: 4 },
+    ],
+  },
 } as const)
 
 const ARTICLE_DFD = createDataFormatDeclaration({
