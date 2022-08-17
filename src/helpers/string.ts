@@ -1,4 +1,4 @@
-import { Dict } from './types'
+import { DefaultPluralize, Dict } from './types'
 
 /**
  * @example
@@ -51,6 +51,10 @@ export const objectPropsToSnakeCase = <TInput extends Dict, TOutput extends Dict
 
 export const capitalize = <T extends string>(s: T): Capitalize<T> => (
   `${s.charAt(0).toUpperCase()}${s.slice(1)}` as Capitalize<T>
+)
+
+export const defaultPluralize = <T extends string>(s: T): DefaultPluralize<T> => (
+  `${s}s`
 )
 
 export const filterForNotNullAndEmpty = (arr: string[]) => (

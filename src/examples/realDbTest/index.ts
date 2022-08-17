@@ -8,7 +8,7 @@ import { createConsoleLogEventHandlers } from 'simple-pg-client'
 import { createTsPgOrm } from '../..'
 import { createDataFormatDeclaration } from '../../dataFormat'
 import { BASE_ENTITY_FIELDS, COMMON_FIELDS } from '../../dataFormat/common'
-import { StringDataSubType, NumberDataSubType, DataType, CreateRecordOptions } from '../../dataFormat/types'
+import { StringDataSubType, NumberDataSubType, DataType, CreateRecordOptions, ToRecord } from '../../dataFormat/types'
 import { RelationType } from '../../relations/types'
 import { _CreateJoinTableRecordOptions } from '../../store/joinTable/types'
 import { StoresAndJoinTableStoresDict } from '../../types'
@@ -96,6 +96,8 @@ const ORM = createTsPgOrm()
   ] as const)
 
 type Stores = StoresAndJoinTableStoresDict<typeof ORM['dataFormatDeclarations'], typeof ORM['relationDeclarations']>
+
+type UserRecord = ToRecord<typeof USER_DFD>
 
 type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
 

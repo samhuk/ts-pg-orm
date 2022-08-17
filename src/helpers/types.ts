@@ -50,6 +50,8 @@ export type TypeDependantBaseIntersection<
   [K in TType]: { [k in TTypePropertyName]: K } & TMap[K]
 }[TType] & { [k in TTypePropertyName]: TSpecificEnumType }
 
+export type DefaultPluralize<T extends string> = `${T}s`
+
 /**
  * Removes all of the `readonly` status of all the properties within `T`.
  */
