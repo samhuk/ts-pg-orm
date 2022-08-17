@@ -137,6 +137,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
       })
       return record
     },
+    validateCreateOptions: options =>
   }
 }
 

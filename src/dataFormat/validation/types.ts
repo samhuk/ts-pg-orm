@@ -1,6 +1,5 @@
 import { ExpandRecursively, ReadonlyOrMutable, TypeDependantBaseIntersection } from '../../helpers/types'
-import { tsPgOrm } from '../../testData'
-import { DataFormatField, DataType } from '../types'
+import { CreateRecordOptions, DataFormatDeclaration, DataFormatField, DataType, ToRecord } from '../types'
 
 export enum FieldValidationType {
   DEF = 'DEF',
@@ -12,6 +11,21 @@ export enum FieldValidationType {
   MAX_VAL = 'MAX_VAL',
   MIN_VAL = 'MIN_VAL',
   ALPHANUM = 'ALPHANUM',
+}
+
+/**
+ * Map of field validation type to the prop name for it
+ */
+export type FieldValidationTypeToOptionsMap = {
+  [FieldValidationType.DEF]: {},
+  [FieldValidationType.NOT_EMPTY]: {},
+  [FieldValidationType.MIN_LEN]: { minLength: number },
+  [FieldValidationType.MAX_LEN]: { maxLength?: number },
+  [FieldValidationType.POS]: {},
+  [FieldValidationType.NEG]: {},
+  [FieldValidationType.MAX_VAL]: { maxValue: number },
+  [FieldValidationType.MIN_VAL]: { minValue: number },
+  [FieldValidationType.ALPHANUM]: {},
 }
 
 /**
@@ -61,29 +75,37 @@ export type FieldValidationOptionsList<
   TDataType extends DataType = DataType
 > = FieldValidationOptions<DataTypeToFieldValidationType[TDataType]>[]
 
-type T0 = FieldValidationOptionsList<typeof tsPgOrm['dataFormats']['user']['fields']['name']['dataType']>
-
-const a: T0 = [
-  {
-    type: FieldValidationType.MAX_LEN,
-    maxLength: 50,
-  },
-]
-
 export type FieldValidationOptionsListDict<
   T extends ReadonlyOrMutable<DataFormatField[]>
 > = { [TFieldName in T[number]['name']]?:
   FieldValidationOptionsList<Extract<T[number], { name: TFieldName }>['dataType']>
 }
 
-type T1 = FieldValidationOptionsListDict<typeof tsPgOrm['dataFormats']['user']['declaration']['fields']>
+export type FieldValidationResultBase<TSuccess extends boolean = boolean> = {
+  success: TSuccess
+} & (TSuccess extends true ? { error: string } : { })
 
-const a: T1 = {
-
+export type FieldValidationResult<
+  T extends DataFormatDeclaration = DataFormatDeclaration,
+  TIncludedFieldNames extends T['fields'][number]['name'] = T['fields'][number]['name'],
+  TFieldName extends TIncludedFieldNames = TIncludedFieldNames,
+  TSuccess extends boolean = boolean
+> = FieldValidationResultBase<TSuccess> & {
+  fieldName: TFieldName
+  type: DataTypeToFieldValidationType[Extract<T['fields'][number], { name: TFieldName }>['dataType']]
+  // @ts-ignore
+  value: Pick<ToRecord<T>, TIncludedFieldNames>[TFieldName]
+  success: TSuccess
 }
 
-export type FieldValidationResult = {
-  fieldName: string
-  type: FieldValidationType
-  value: any
+export type ValidateCreateOptionsFieldValidationResult<
+  T extends DataFormatDeclaration = DataFormatDeclaration,
+  TFieldName extends keyof CreateRecordOptions<T> = keyof CreateRecordOptions<T>,
+> = FieldValidationResult<T, keyof CreateRecordOptions<T>, TFieldName>
+
+export type ValidateCreateOptionsResult<
+  T extends DataFormatDeclaration = DataFormatDeclaration
+> = {
+  list: ValidateCreateOptionsFieldValidationResult<T>[]
+  dict: { [TFieldName in keyof CreateRecordOptions<T>]: ValidateCreateOptionsFieldValidationResult<T, TFieldName>[] }
 }
