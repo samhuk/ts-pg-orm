@@ -5,10 +5,9 @@ import { DataFormat, DataFormatOptions } from './types'
 import { FieldRefs } from './types/fieldRef'
 
 export const createDataFormat = <
-  TDataFormatOptions extends DataFormatOptions
->(
-    options: TDataFormatOptions,
-  ): DataFormat<TDataFormatOptions> => {
+  TName extends string,
+  TDataFormatOptions extends DataFormatOptions<TName>
+>(options: TDataFormatOptions): DataFormat<TDataFormatOptions> => {
   // Names
   const capitalizedName = capitalize<typeof options['name']>(options.name)
   const pluralizedName = options.pluralizedName ?? defaultPluralize(options.name)
@@ -56,5 +55,14 @@ export const createDataFormat = <
     // @ts-ignore
     fieldRefs,
     validations: [],
+    sqlRowToRecord: row => {
+      const record: any = {}
+      Object.entries(row).forEach(([colName, value]) => {
+        const fName = colNameToFieldName[colName]
+        if (fName != null)
+          record[fName] = value
+      })
+      return record
+    },
   }
 }

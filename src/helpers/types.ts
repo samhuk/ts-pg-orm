@@ -125,3 +125,9 @@ export type ArrayTernary<T, TIsArray extends boolean> = TIsArray extends false ?
 type IfAny<T, Y, N> = 0 extends (1 & T) ? Y : N
 
 export type IsAny<T> = IfAny<T, true, false>
+
+export type NamedItemListToDict<T extends Readonly<{ name: string }[]>> = {
+  [TIndex in keyof T & `${bigint}` as
+    T[TIndex] extends { name: infer TName } ? (TName & string) : never
+  ]: T[TIndex]
+}

@@ -308,30 +308,9 @@ export type ExtractRelevantRelationsWithManyToManyFieldRef1<T extends string, K 
 export type ExtractRelevantRelationsWithManyToManyFieldRef2<T extends string, K extends RelationDeclarations> =
   Extract<ExtractRelevantRelations<T, K>, { type: RelationType.MANY_TO_MANY, fieldRef2: { formatName: T } }>
 
+// --
 export type ExtractManyToManyRelations<T extends RelationDeclarations> =
   Extract<T[number], { type: RelationType.MANY_TO_MANY }>
 
 export type ExtractRelationNamesOfManyToManyRelations<T extends RelationDeclarations> =
   ToRelationName<ExtractManyToManyRelations<T>>
-// --
-
-export type ExtractRelevantRelationNamesWithOneToOneFromOne<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelationsWithOneToOneFromOne<T, K>>
-
-export type ExtractRelevantRelationNamesWithOneToOneToOne<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelationsWithOneToOneToOne<T, K>>
-
-export type ExtractRelevantRelationNamesWithOneToManyFromOne<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelationsWithOneToManyFromOne<T, K>>
-
-export type ExtractRelevantRelationNamesWithOneToManyToMany<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelationsWithOneToManyToMany<T, K>>
-
-export type ExtractRelevantRelationNamesWithManyToManyFieldRef1<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelationsWithManyToManyFieldRef1<T, K>>
-
-export type ExtractRelevantRelationNamesWithManyToManyFieldRef2<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelationsWithManyToManyFieldRef2<T, K>>
-
-export type ExtractRelevantRelationNames<T extends string, K extends RelationDeclarations> =
-  ToRelationName<ExtractRelevantRelations<T, K>>

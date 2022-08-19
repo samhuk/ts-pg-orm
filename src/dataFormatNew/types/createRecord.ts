@@ -2,7 +2,6 @@ import { COMMON_FIELDS } from '../../dataFormat/common'
 import { PickAny } from '../../helpers/types'
 import { DataType, NumberType, StringType } from '../field/dataType'
 import { Fields } from '../field/types'
-import { USER_DF } from '../testData'
 import { FieldsToRecord } from './record'
 
 /**

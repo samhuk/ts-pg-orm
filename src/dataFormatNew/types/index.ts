@@ -1,4 +1,4 @@
-import { DefaultPluralize, ExpandOneLevel } from '../../helpers/types'
+import { DefaultPluralize, ExpandOneLevel, NamedItemListToDict } from '../../helpers/types'
 import { FieldOptionsDict, Fields } from '../field/types'
 import { FieldsToCreateRecordOptions, FieldsToManualCreateRecordOptions } from './createRecord'
 import { FieldRefs } from './fieldRef'
@@ -15,29 +15,58 @@ export type DataFormatOptions<
     validations?: (keyof TFields)[] // TODO: Implement proper types for this
 }
 
-export type DataFormat<
+type _DataFormat<
+  TName extends string = string,
+  TFields extends Fields = Fields,
   TOptions extends DataFormatOptions = DataFormatOptions,
-  TFieldValidations extends (keyof TOptions['fields'])[] = []
+  TFieldNames extends keyof TOptions['fields'] = keyof TOptions['fields'],
+  TFieldValidations extends (keyof TOptions['fields'])[] = (keyof TOptions['fields'])[]
 > = {
-  name: TOptions['name']
-  capitalizedName: Capitalize<TOptions['name']>
+  name: TName
+  capitalizedName: Capitalize<TName>
   pluralizedName: TOptions extends { pluralizedName: string }
     ? TOptions['pluralizedName']
-    : DefaultPluralize<TOptions['name']>
-  capitalizedPluralizedName: Capitalize<DefaultPluralize<TOptions['name']>>
-  fields: Fields<TOptions['fields']>
-  fieldNameList: keyof TOptions['fields']
+    : DefaultPluralize<TName>
+  capitalizedPluralizedName: Capitalize<DefaultPluralize<TName>>
+  fields: TFields
+  fieldNameList: TFieldNames
   fieldRefs: FieldRefs<TOptions>
-  colNames: { [k in keyof TOptions['fields']]: string }
+  colNames: { [k in TFieldNames]: string }
+  createRecordFieldNameList: keyof FieldsToCreateRecordOptions<TFields>
   colNameList: string[]
   tableName: TOptions extends { tableName: string } ? TOptions['tableName'] : string
   createCreateTableSql: () => string
   dropTableSql: string
   validations: TFieldValidations
-  colNameToFieldName: { [colName: string]: keyof TOptions['fields'] }
-  defineValidations: <TNewFieldValidations extends (keyof TOptions['fields'])[]>(
+  colNameToFieldName: { [colName: string]: TFieldNames }
+  defineValidations: <TNewFieldValidations extends (TFieldNames)[]>(
     validations: TNewFieldValidations,
-  ) => DataFormat<TOptions, TNewFieldValidations>
+  ) => _DataFormat<TName, TFields, TOptions, TFieldNames, TNewFieldValidations>
+  sqlRowToRecord: <TFields2 extends TFields = TFields>(
+    row: { [colName: string]: any }
+  ) => FieldsToRecord<TFields2>
+}
+
+export type DataFormat<
+  TOptions extends DataFormatOptions = DataFormatOptions,
+  // TODO: Demo
+  TFieldValidations extends (keyof TOptions['fields'])[] = (keyof TOptions['fields'])[]
+> = _DataFormat<
+  TOptions['name'],
+  Fields<TOptions['fields']>,
+  TOptions,
+  keyof TOptions['fields'],
+  TFieldValidations
+>
+
+export type DataFormatList = Readonly<DataFormat[]>
+
+export type DataFormatsFromOptions<
+  TDataFormatList extends DataFormatList = DataFormatList
+> = NamedItemListToDict<TDataFormatList>
+
+export type DataFormats = {
+  [dataFormatName: string]: DataFormat
 }
 
 /**
