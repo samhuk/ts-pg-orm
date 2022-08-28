@@ -8,6 +8,41 @@ import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
 import { DataNode, QueryNode, QueryNodes, QueryNodeSql, QueryPlan } from './types'
 
+const createQueryNodeSql = (
+  queryNode: QueryNode,
+  linkedFieldValues: any[] | null,
+  queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql },
+): string => {
+  const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
+  if (preExistingQueryNodeSql != null) {
+    preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
+    return preExistingQueryNodeSql.sql
+  }
+
+  const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
+  queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
+  return queryNodeSqlObj.sql
+}
+
+const createLinkedFieldToValuesDict = (
+  queryNode: QueryNode,
+  rows: any[],
+): { linkedFieldToValuesDict: { [fieldName: string]: any[] }, linkIndexToLinkedField: string[] } => {
+  const linkedFieldToValuesDict: { [fieldName: string]: any[] } = {}
+  const linkIndexToLinkedField = queryNode.childQueryNodeLinks.map(link => (
+    link.childQueryNode.rootDataNode.parentFieldRef.fieldName
+  ))
+  queryNode.childQueryNodeLinks.forEach((link, i) => {
+    const linkedField = linkIndexToLinkedField[i]
+    // If the linked field values haven't been computed yet, then compute and add them to the dict
+    if (linkedFieldToValuesDict[linkedField] == null) {
+      const linkedFieldColumnSql = `${link.sourceDataNode.id}.${link.sourceDataNode.dataFormat.sql.columnNames[linkedField]}`
+      linkedFieldToValuesDict[linkedField] = removeDuplicates(rows.map(row => row[linkedFieldColumnSql]))
+    }
+  })
+  return { linkedFieldToValuesDict, linkIndexToLinkedField }
+}
+
 const executeQueryNode = async (
   db: SimplePgClient,
   queryNode: QueryNode,
@@ -18,17 +53,7 @@ const executeQueryNode = async (
   /* Create sql for query node, using the linked field values received from
    * the parent query node results.
    */
-  let queryNodeSql: string
-  const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
-  if (preExistingQueryNodeSql != null) {
-    preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
-    queryNodeSql = preExistingQueryNodeSql.sql
-  }
-  else {
-    const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
-    queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
-    queryNodeSql = queryNodeSqlObj.sql
-  }
+  const queryNodeSql = createQueryNodeSql(queryNode, linkedFieldValues, queryNodeSqlDict)
   // Execute sql with db service
   const _rows: any[] = await db.queryGetRows(queryNodeSql)
   const rows = _rows ?? []
@@ -44,18 +69,7 @@ const executeQueryNode = async (
    * We do this since multiple child query node links can use the same linked
    * field values, and we don't want to recompute them multiple times.
    */
-  const linkedFieldToValuesDict: { [fieldName: string]: any[] } = {}
-  const linkIndexToLinkedField = queryNode.childQueryNodeLinks.map(link => (
-    link.childQueryNode.rootDataNode.parentFieldRef.fieldName
-  ))
-  queryNode.childQueryNodeLinks.forEach((link, i) => {
-    const linkedField = linkIndexToLinkedField[i]
-    // If the linked field values haven't been computed yet, then compute and add them to the dict
-    if (linkedFieldToValuesDict[linkedField] == null) {
-      const linkedFieldColumnSql = `${link.sourceDataNode.id}.${link.sourceDataNode.dataFormat.sql.columnNames[linkedField]}`
-      linkedFieldToValuesDict[linkedField] = removeDuplicates(rows.map(row => row[linkedFieldColumnSql]))
-    }
-  })
+  const { linkedFieldToValuesDict, linkIndexToLinkedField } = createLinkedFieldToValuesDict(queryNode, rows)
   /* Iterate through each child query node link, executing it with the linked field values
    * that correspond to that child query node.
    */
@@ -83,7 +97,10 @@ const extractDataNodeDataFromRow = (
       result[`$$${fName}`] = row[dataNode.fieldsInfo.fieldToColumnNameAlias[fName]]
     })
   }
-
+  /* If the relation type is many-to-many to *this* data node, then the join table parent
+   * field values are needed for result folding, but not in the final result, so we designate
+   * them as such with the usual '$$'.
+   */
   if (dataNode.relation?.type === RelationType.MANY_TO_MANY) {
     const columnAlias = dataNode.fieldsInfo.joinTableParentColumnNameAlias
     result[`$$${columnAlias}`] = row[columnAlias]
