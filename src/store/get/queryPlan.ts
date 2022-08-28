@@ -13,17 +13,32 @@ const createQueryNodeSql = (
   linkedFieldValues: any[] | null,
   queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql },
 ): string => {
+  /* Try and find any pre-existing QueryNodeSql for the current node.
+   * If it exists, update the linked field values-dependant part of it
+   * and then return the SQL text.
+   */
   const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
   if (preExistingQueryNodeSql != null) {
     preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
     return preExistingQueryNodeSql.sql
   }
 
+  /* Else (if pre-existing QueryNodeSql does not exist), then convert
+   * the current Query Node to QueryNodeSql, store that on the state dict,
+   * and return the SQL text.
+   */
   const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
   queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
   return queryNodeSqlObj.sql
 }
 
+/**
+ * Creates a dict that maps linked field name to the unique values for it,
+ * for the given Query Node.
+ *
+ * These linked field values will be consumed by child Query Nodes of the given
+ * Query Node, to retrieve the related data.
+ */
 const createLinkedFieldToValuesDict = (
   queryNode: QueryNode,
   rows: any[],
@@ -108,6 +123,39 @@ const extractDataNodeDataFromRow = (
   return result
 }
 
+/**
+ * ### Summary
+ *
+ * Determine if linked field values match. If they don't, then it means that
+ * `linkedFieldColumnAlias` is null when `parentLinkedFieldColumnAlias` isn't,
+ * and so the left join did not yield a defined related data record.
+ *
+ * ### In-depth Explanation:
+ *
+ * We only need to do this because most databases made the very idiotic decision
+ * to make `NULL` mean two things: A literal, *actual* null column value, and the
+ * *lack* of a value when a LEFT JOIN fails to find a linked row.
+ *
+ * So what we need do to work around this is make sure we include columns of
+ * *both* sides of all LEFT JOINS in the SELECT query for a Query Node. Then when
+ * the results come in, if the local side of the LEFT JOIN is not null but the
+ * foreign side of it is, then we know *for sure* that there was no linked row,
+ * (instead of a linked row but has actual null values).
+ *
+ * If databases instead had a unique value for a missing value (i.e. "UNDEFINED"),
+ * then we wouldn't need to do this, and instead we could just check the first
+ * field value of a linked row for if it's missing or not. This is essentially
+ * one of the reasons why languages like Javascript have `undefined`.
+ */
+const determineIfRowWasActuallyFound = (
+  dataNode: DataNode,
+  row: any,
+) => {
+  const parentLinkedFieldColumnAlias = dataNode.parent.fieldsInfo.fieldToColumnNameAlias[dataNode.parentFieldRef.fieldName]
+  const linkedFieldColumnAlias = dataNode.fieldsInfo.fieldToColumnNameAlias[dataNode.fieldRef.fieldName]
+  return row[parentLinkedFieldColumnAlias] === row[linkedFieldColumnAlias]
+}
+
 const rowToDataNodeData = (
   queryNode: QueryNode,
   dataNode: DataNode,
@@ -118,14 +166,7 @@ const rowToDataNodeData = (
    * row was actually found. We do this by comparing linked field values.
    */
   if (dataNode.parent != null && !isRootDataNode) {
-    /* Determine if linked field values match. If they don't, then it means that
-    * `linkedFieldColumnAlias` is null when parentLinkedFieldColumnAlias isn't,
-    * and so the left join did not yield a defined related data record.
-    */
-    const parentLinkedFieldColumnAlias = dataNode.parent.fieldsInfo.fieldToColumnNameAlias[dataNode.parentFieldRef.fieldName]
-    const linkedFieldColumnAlias = dataNode.fieldsInfo.fieldToColumnNameAlias[dataNode.fieldRef.fieldName]
-    const doLinkedValuesMatch = row[parentLinkedFieldColumnAlias] === row[linkedFieldColumnAlias]
-    if (!doLinkedValuesMatch)
+    if (!determineIfRowWasActuallyFound(dataNode, row))
       return null
   }
 

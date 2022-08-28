@@ -13,7 +13,7 @@ export enum RelationType {
    *
    * Foreign field: unique
    */
-  ONE_TO_ONE,
+  ONE_TO_ONE = 'one_to_one',
   /**
    * One item of this format relates to multiple items on another format.
    *
@@ -25,7 +25,7 @@ export enum RelationType {
    *
    * Foreign field: not unique
    */
-  ONE_TO_MANY,
+  ONE_TO_MANY = 'one_to_many',
   /**
    * Multiple items of this format relates to multiple items of another format.
    *
@@ -37,7 +37,7 @@ export enum RelationType {
    * Use `createJoinTables` to create them once the relations have been loaded into
    * the TsPgOrm instance.
    */
-  MANY_TO_MANY,
+  MANY_TO_MANY = 'many_to_many',
 }
 
 type ExtractAvailableFieldRefs<T extends DataFormatDeclarations> = ExpandRecursively<ValuesUnionFromDict<{

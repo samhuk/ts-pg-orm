@@ -6,78 +6,78 @@ export enum DataType {
   /**
    * Any numeric value, i.e. integer, serial, real.
    */
-  NUMBER,
+  NUMBER = 'num',
   /**
    * Any string value, i.e. varying length, fixed length, etc.
    */
-  STRING,
+  STRING = 'str',
   /**
    * Any boolean value
    */
-  BOOLEAN,
+  BOOLEAN = 'bool',
   /**
    * Any epoch value, i.e. time, date, date-time, date-time with timezone.
    */
-  DATE,
+  DATE = 'date',
   /**
    * Any object or array value.
    */
-  JSON
+  JSON = 'json'
 }
 
 export enum NumberDataSubType {
-  INTEGER,
+  INTEGER = 'int',
   /**
    * A serial integer value. This is likely to be for the unique primary key field of the data format.
    */
-  SERIAL,
-  REAL
+  SERIAL = 'ser',
+  REAL = 'real'
 }
 
 export enum StringDataSubType {
   /**
    * A string value that is a UUID V4, i.e. a 36 character randomly-generated string.
    */
-  UUID_V4,
+  UUID_V4 = 'uuidv4',
   /**
    * A fixed-length string.
    */
-  FIXED_LENGTH,
+  FIXED_LENGTH = 'fixed',
   /**
    * A varying-length string.
    */
-  VARYING_LENGTH,
+  VARYING_LENGTH = 'var',
   /**
    * A string that, underlying, is some kind of enumeration.
    */
-  STRING_ENUM,
+  STRING_ENUM = 'enum',
 }
 
 export enum BooleanDataSubType {
-  TRUE_FALSE,
+  TRUE_FALSE = 'truefalse',
 }
 
 export enum DateDataSubType {
-  DATE,
-  TIME,
-  DATE_TIME,
-  DATE_TIME_WITH_TIMEZONE
+  DATE = 'date',
+  TIME = 'time',
+  DATE_TIME = 'datetime',
+  DATE_TIME_WITH_TIMEZONE = 'datetime_timezone'
 }
 
 export enum ThreeStepNumberSize {
-  SMALL,
-  REGULAR,
-  LARGE,
+  SMALL = 'small',
+  REGULAR = 'reg',
+  LARGE = 'large',
 }
 
 export enum TwoStepNumberSize {
-  REGULAR,
-  LARGE,
+  REGULAR = 'reg',
+  LARGE = 'large',
 }
 
 export enum JsonDataSubType {
-  ARRAY,
-  OBJECT
+  ARRAY = 'arr',
+  OBJECT = 'obj'
 }
 
 export type DataTypeToSubType = {
