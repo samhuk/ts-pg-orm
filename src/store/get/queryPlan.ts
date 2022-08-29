@@ -1,6 +1,6 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../dataFormat/types'
-import { removeDuplicates } from '../../helpers/array'
+import { removeDuplicates, removeNullAndUndefinedValues } from '../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../helpers/object'
 import { RelationDeclarations, RelationsDict, RelationType } from '../../relations/types'
 import { GetFunctionOptions } from '../types/get'
@@ -52,7 +52,7 @@ const createLinkedFieldToValuesDict = (
     // If the linked field values haven't been computed yet, then compute and add them to the dict
     if (linkedFieldToValuesDict[linkedField] == null) {
       const linkedFieldColumnSql = `${link.sourceDataNode.id}.${link.sourceDataNode.dataFormat.sql.columnNames[linkedField]}`
-      linkedFieldToValuesDict[linkedField] = removeDuplicates(rows.map(row => row[linkedFieldColumnSql]))
+      linkedFieldToValuesDict[linkedField] = removeDuplicates(removeNullAndUndefinedValues(rows.map(row => row[linkedFieldColumnSql])))
     }
   })
   return { linkedFieldToValuesDict, linkIndexToLinkedField }
@@ -134,7 +134,7 @@ const extractDataNodeDataFromRow = (
  *
  * We only need to do this because most databases made the very idiotic decision
  * to make `NULL` mean two things: A literal, *actual* null column value, and the
- * *lack* of a value when a LEFT JOIN fails to find a linked row.
+ * *lack* (being missing) of a value when a LEFT JOIN fails to find a linked row.
  *
  * So what we need do to work around this is make sure we include columns of
  * *both* sides of all LEFT JOINS in the SELECT query for a Query Node. Then when
@@ -146,6 +146,14 @@ const extractDataNodeDataFromRow = (
  * then we wouldn't need to do this, and instead we could just check the first
  * field value of a linked row for if it's missing or not. This is essentially
  * one of the reasons why languages like Javascript have `undefined`.
+ *
+ * Now, with PostgreSQL being a relational database, we really *shouldn't* be
+ * ever getting into this scenario where, say, a recipe has "creator_user_id"
+ * 5, and there isn't actually a user with id 5. That relation would be enforced
+ * by foreign keys created by ts-pg-orm's Data Format to-sql system. But we still
+ * need to control for this, as perhaps in the future, ts-pg-orm will allow
+ * relations that aren't *actually* enforced by foreign keys, i.e. a recipe
+ * can have whatever "creator_user_id" value it wants.
  */
 const determineIfRowWasActuallyFound = (
   dataNode: DataNode,

@@ -3,7 +3,8 @@ import { createDataQuery } from '@samhuk/data-query'
 import { DataType } from '../../dataFormat/types'
 import { filterForNotNullAndEmpty, concatIfNotNullAndEmpty, joinIfhasEntries } from '../../helpers/string'
 import { RelationType } from '../../relations/types'
-import { QueryNode, DataNode, QueryNodeSql } from './types'
+import { AnyGetFunctionOptions } from '../types/get'
+import { QueryNode, DataNode, QueryNodeSql, QueryNodeToSqlStrategy } from './types'
 
 type DataNodeQueryInfo = {
   whereClause?: string
@@ -161,6 +162,10 @@ type RootNodeQuerySqlComponents = {
   linkedFieldWhereClause: string | null
 }
 
+type RootNodeQuerySql = RootNodeQuerySqlComponents & {
+  toSql: () => string
+}
+
 const createRootNodeQuerySqlComponents = (
   queryNode: QueryNode,
   linkedFieldValues: any[] | null,
@@ -185,30 +190,49 @@ const assembleQuerySqlComponents = (
   rootNodeQuerySqlComponents.queryInfo?.orderByLimitOffset,
 ]).join(' ')
 
+const createRootNodeQuerySql = (
+  queryNode: QueryNode,
+  linkedFieldValues: any[] | null,
+): RootNodeQuerySql => {
+  let instance: RootNodeQuerySql
+  const components = createRootNodeQuerySqlComponents(queryNode, linkedFieldValues)
+  return instance = {
+    ...components,
+    toSql: () => assembleQuerySqlComponents(instance),
+  }
+}
+
+const determineSqlStrategy = (queryNode: QueryNode) => {
+  const pageSize = (queryNode.rootDataNode.options as AnyGetFunctionOptions<true>).query?.pageSize
+  const isRowRangeConstrained = pageSize != null && pageSize > 0
+  return isRowRangeConstrained ? QueryNodeToSqlStrategy.MULTIPLE_QUERY_WITH_UNION_ALL : QueryNodeToSqlStrategy.SINGLE_QUERY
+}
+
+const assembleSql = (rootSelectAndLeftJoinsSqlText: string, rootNodeQuerySql: string) => [
+  rootSelectAndLeftJoinsSqlText,
+  rootNodeQuerySql,
+].join('\n')
+
 export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
   queryNode: QueryNode<TIsPlural>,
   linkedFieldValues: any[] | null,
 ): QueryNodeSql<TIsPlural> => {
   let queryNodeSql: QueryNodeSql
 
-  const rootSelectSql = createRootSelect(queryNode)
-  const leftJoinsSql = createLeftJoinsSql(queryNode)
-  const rootNodeQuerySqlComponents = createRootNodeQuerySqlComponents(queryNode, linkedFieldValues)
-  let rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+  const rootSelectAndLeftJoinsSqlText = filterForNotNullAndEmpty([createRootSelect(queryNode), createLeftJoinsSql(queryNode)]).join('\n')
 
-  const assembleSql = () => [
-    rootSelectSql,
-    leftJoinsSql,
-    rootNodeQuerySql,
-  ].join('\n')
-  const updateSql = () => queryNodeSql.sql = assembleSql()
+  //  TODO: Use the strat
+  const strat = determineSqlStrategy(queryNode)
+  const rootNodeQuerySql = createRootNodeQuerySql(queryNode, linkedFieldValues)
+  let rootNodeQuerySqlSql = rootNodeQuerySql.toSql()
+
+  const updateSql = () => queryNodeSql.sql = assembleSql(rootSelectAndLeftJoinsSqlText, rootNodeQuerySqlSql)
 
   return queryNodeSql = {
-    sql: assembleSql(),
+    sql: assembleSql(rootSelectAndLeftJoinsSqlText, rootNodeQuerySqlSql),
     updateLinkedFieldValues: (newLinkedFieldValues: any[] | null) => {
-      const newLinkedFieldWhereClause = createLinkedFieldWhereClause(queryNode, newLinkedFieldValues)
-      rootNodeQuerySqlComponents.linkedFieldWhereClause = newLinkedFieldWhereClause
-      rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+      rootNodeQuerySql.linkedFieldWhereClause = createLinkedFieldWhereClause(queryNode, newLinkedFieldValues)
+      rootNodeQuerySqlSql = rootNodeQuerySql.toSql()
       updateSql()
     },
     modifyRootDataNodeDataFilter: newDataFilter => {
@@ -217,9 +241,8 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
 
       const _nonPluralRootDataNode = queryNode.rootDataNode as DataNode<false>
       _nonPluralRootDataNode.options.filter = newDataFilter
-      const newQueryInfo = createDataNodeQueryInfo(_nonPluralRootDataNode)
-      rootNodeQuerySqlComponents.queryInfo = newQueryInfo
-      rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+      rootNodeQuerySql.queryInfo = createDataNodeQueryInfo(_nonPluralRootDataNode)
+      rootNodeQuerySqlSql = rootNodeQuerySql.toSql()
       updateSql()
     },
     modifyRootDataNodeDataQuery: newDataQuery => {
@@ -228,9 +251,8 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
 
       const _pluralRootDataNode = queryNode.rootDataNode as DataNode<true>
       _pluralRootDataNode.options.query = newDataQuery
-      const newQueryInfo = createDataNodeQueryInfo(_pluralRootDataNode)
-      rootNodeQuerySqlComponents.queryInfo = newQueryInfo
-      rootNodeQuerySql = assembleQuerySqlComponents(rootNodeQuerySqlComponents)
+      rootNodeQuerySql.queryInfo = createDataNodeQueryInfo(_pluralRootDataNode)
+      rootNodeQuerySqlSql = rootNodeQuerySql.toSql()
       updateSql()
     },
   }

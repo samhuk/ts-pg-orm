@@ -183,6 +183,11 @@ export type QueryNodeSql<
   modifyRootDataNodeDataFilter: (newDataFilter: DataFilterNodeOrGroup) => void
 })
 
+export enum QueryNodeToSqlStrategy {
+  SINGLE_QUERY,
+  MULTIPLE_QUERY_WITH_UNION_ALL
+}
+
 /**
  * A Query Node represents a single SQL query that is ran. Query nodes are composed of
  * a directed acyclical graph of Data Nodes, with one of them as a root Data Node and

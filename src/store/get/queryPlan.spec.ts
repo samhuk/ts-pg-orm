@@ -152,7 +152,6 @@ where "3".created_by_user_id = any (values (1),(2),(3))`,
         sql: `select
 "0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
 from "article" "0"
-
 limit 1`,
       })
       expect(result).toEqual({
@@ -176,7 +175,6 @@ limit 1`,
         sql: `select
 "0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
 from "article" "0"
-
 where "0".date_deleted is null limit 1`,
       })
       expect(result).toBeNull()
@@ -210,7 +208,6 @@ where "0".date_deleted is null limit 1`,
         sql: `select
 "0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
 from "article" "0"
-
 `,
       })
       expect(result).toEqual([
@@ -240,7 +237,6 @@ from "article" "0"
         sql: `select
 "0".uuid "0.uuid", "0".title "0.title", "0".date_created "0.dateCreated", "0".date_published "0.datePublished"
 from "article" "0"
-
 where "0".date_deleted is null limit 50 offset 50`,
       })
       expect(result).toEqual([])
@@ -350,7 +346,6 @@ where ("0".date_deleted is null and "0".uuid = '123') limit 1`,
         sql: `select
 "0".name "0.name", "0".id "0.id"
 from "user" "0"
-
 limit 1`,
       })
       expect(db.receivedQueries[1]).toEqual({
@@ -359,7 +354,6 @@ limit 1`,
 "1".id "1.id", "1".name "1.name", "user_to_user_group".user_id "user_to_user_group.user_id", "user_to_user_group".user_group_id "user_to_user_group.user_group_id"
 from user_to_user_group "user_to_user_group"
 join "user_group" "1" on "1".id = "user_to_user_group".user_group_id
-
 where "user_to_user_group".user_id = 1`,
       })
       expect(result).toEqual({
