@@ -57,7 +57,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
   })) as FieldRefsDict<T>
   // Create field name to field dict. Using "as" here since we *will* make it a FieldsDict just below. We promise.
   const fields: FieldsDict = { } as FieldsDict
-  // TODO: Although f.name is always (obviously) going to be a key in "dfd.fields", TS doesn't see it...
+  // TODO: Although f.name is always (obviously) going to be a key in FieldsDict, TS doesn't see it...
   // @ts-ignore
   dataFormatDeclaration.fields.forEach(f => fields[f.name] = f)
 
