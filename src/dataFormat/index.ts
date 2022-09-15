@@ -131,9 +131,8 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
         if (fname === COMMON_FIELDS.dateDeleted.name)
           return
 
-        // TODO: Although fname is always going to be a key in "fields", TS doesn't see it.
-        // @ts-ignore
-        record[fname] = createSampleData(fields[fname])
+        // Although fname is always going to be a key in "fields", TS doesn't see it.
+        (record as any)[fname] = createSampleData(fields[fname])
       })
       return record
     },

@@ -89,7 +89,7 @@ export type FieldsInfo = {
    */
   fieldToFullyQualifiedColumnName: { [fieldName: string]: string }
   /**
-   * Join table info
+   * Unquoted join table name
    */
   joinTableAlias?: string
   joinTableParentColumnNameAlias?: string
@@ -134,10 +134,18 @@ export type DataNode<
    */
   tableAlias: string
   /**
-   * Creates a list of the column sql segments, e.g. `"0".id`, `"0".name`, ` "0".email`
+   * Unquoted alias for the table of this data node, i.e. `0`.
+   */
+  unquotedTableAlias: string
+  /**
+   * Creates a list of the column sql segments, e.g. `"0".id "0.id"`, `"0".name "0.name"`, ` "0".email "0.email"`
    */
   createColumnsSqlSegments: () => string[]
 }
+
+export type PluralDataNode = DataNode<true>
+
+export type NonPluralDataNode = DataNode<false>
 
 export type DataNodes = { [dataNodeId: number]: DataNode }
 
@@ -182,11 +190,6 @@ export type QueryNodeSql<
    */
   modifyRootDataNodeDataFilter: (newDataFilter: DataFilterNodeOrGroup) => void
 })
-
-export enum QueryNodeToSqlStrategy {
-  SINGLE_QUERY,
-  MULTIPLE_QUERY_WITH_UNION_ALL
-}
 
 /**
  * A Query Node represents a single SQL query that is ran. Query nodes are composed of

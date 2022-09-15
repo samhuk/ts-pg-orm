@@ -3,7 +3,7 @@ import { removeDuplicates } from '../../helpers/array'
 import { toDict } from '../../helpers/dict'
 import { RelationsDict, RelationType, Relation, RelationDeclarations } from '../../relations/types'
 import { AnyGetFunctionOptions, GetFunctionOptions } from '../types/get'
-import { RelatedDataInfoDict, DataNodes, UnresolvedDataNodes, FieldsInfo, DataNode } from './types'
+import { RelatedDataInfoDict, DataNodes, UnresolvedDataNodes, FieldsInfo, DataNode, PluralDataNode, NonPluralDataNode } from './types'
 
 /**
  * Determines all of the related data properties of the given `dataFormat`
@@ -176,12 +176,12 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
     const parentJoinTableColumnName = isFieldRefFieldRef1
       ? dataNode.relation.sql.joinTableFieldRef2ColumnName
       : dataNode.relation.sql.joinTableFieldRef1ColumnName
-    joinTableParentFullyQualifiedColumnName = `"${joinTableAlias}".${parentJoinTableColumnName}`
+    joinTableParentFullyQualifiedColumnName = `"${joinTableAlias}"."${parentJoinTableColumnName}"`
     joinTableParentColumnNameAlias = `${joinTableAlias}.${parentJoinTableColumnName}`
     const joinTableColumnName = isFieldRefFieldRef1
       ? dataNode.relation.sql.joinTableFieldRef1ColumnName
       : dataNode.relation.sql.joinTableFieldRef2ColumnName
-    joinTableFullyQualifiedColumnName = `"${joinTableAlias}".${joinTableColumnName}`
+    joinTableFullyQualifiedColumnName = `"${joinTableAlias}"."${joinTableColumnName}"`
   }
 
   return {
@@ -211,6 +211,7 @@ const resolveDataNodes = (unresolvedDataNodes: UnresolvedDataNodes): DataNodes =
       relatedDataPropName: node.relatedDataPropName,
       relation: node.relation,
       tableAlias: `"${node.id}"`,
+      unquotedTableAlias: node.id.toString(),
       createColumnsSqlSegments: () => dataNode.fieldsInfo.fieldsToSelectFor.map(fName => (
         `${dataNode.fieldsInfo.fieldToFullyQualifiedColumnName[fName]} "${dataNode.fieldsInfo.fieldToColumnNameAlias[fName]}"`
       )),
@@ -260,8 +261,8 @@ export const toDataNodes = <
     unresolvedDataNodes,
     { id: 0 },
   )
-  /* Resolve each data node in the dict, which means, amongst some other changes, means
-   * to convert all of the child and parent data node id links into references to other
+  /* Resolve each data node in the dict, which means, amongst some other changes,
+   * converting all of the child and parent data node id links into references to other
    * data nodes. This will make things much easier later on in the query plan framework,
    * such as making it so that we don't have to carry around the whole data nodes dict
    * all the time (because each resovled data node will have direct references to
@@ -269,3 +270,5 @@ export const toDataNodes = <
    */
   return resolveDataNodes(unresolvedDataNodes)
 }
+
+export const isDataNodePlural = (dataNode: PluralDataNode | NonPluralDataNode): dataNode is PluralDataNode => dataNode.isPlural
