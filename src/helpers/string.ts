@@ -53,14 +53,24 @@ export const capitalize = <T extends string>(s: T): Capitalize<T> => (
   `${s.charAt(0).toUpperCase()}${s.slice(1)}` as Capitalize<T>
 )
 
+/**
+ * Removes null, undefined, and empty strings from `arr`.
+ */
 export const filterForNotNullAndEmpty = (arr: string[]) => (
   arr.filter(s => s != null && s.length > 0)
 )
 
+/**
+ * Concatenates the list of strings - `arr`, if and only if `arr` is defined and has
+ * at least one entry.
+ */
 export const joinIfhasEntries = (arr: string[], joinStr: string) => (
   arr != null && arr.length > 0 ? arr.join(joinStr) : null
 )
 
+/**
+ * Concatenates `prefix` and `suffix` together if and only if both of them are defined.
+ */
 export const concatIfNotNullAndEmpty = (prefix: string, suffix: string) => {
   if (prefix != null && suffix != null)
     return prefix.concat(suffix)

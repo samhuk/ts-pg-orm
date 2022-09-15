@@ -1,12 +1,62 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../dataFormat/types'
-import { removeDuplicates } from '../../helpers/array'
+import { removeDuplicates, removeNullAndUndefinedValues } from '../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../helpers/object'
 import { RelationDeclarations, RelationsDict, RelationType } from '../../relations/types'
 import { GetFunctionOptions } from '../types/get'
 import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
 import { DataNode, QueryNode, QueryNodes, QueryNodeSql, QueryPlan } from './types'
+
+const createQueryNodeSql = (
+  queryNode: QueryNode,
+  linkedFieldValues: any[] | null,
+  queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql },
+): string => {
+  /* Try and find any pre-existing QueryNodeSql for the current node.
+   * If it exists, update the linked field values-dependant part of it
+   * and then return the SQL text.
+   */
+  const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
+  if (preExistingQueryNodeSql != null) {
+    preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
+    return preExistingQueryNodeSql.sql
+  }
+
+  /* Else (if pre-existing QueryNodeSql does not exist), then convert
+   * the current Query Node to QueryNodeSql, store that on the state dict,
+   * and return the SQL text.
+   */
+  const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
+  queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
+  return queryNodeSqlObj.sql
+}
+
+/**
+ * Creates a dict that maps linked field name to the unique values for it,
+ * for the given Query Node.
+ *
+ * These linked field values will be consumed by child Query Nodes of the given
+ * Query Node, to retrieve the related data.
+ */
+const createLinkedFieldToValuesDict = (
+  queryNode: QueryNode,
+  rows: any[],
+): { linkedFieldToValuesDict: { [fieldName: string]: any[] }, linkIndexToLinkedField: string[] } => {
+  const linkedFieldToValuesDict: { [fieldName: string]: any[] } = {}
+  const linkIndexToLinkedField = queryNode.childQueryNodeLinks.map(link => (
+    link.childQueryNode.rootDataNode.parentFieldRef.fieldName
+  ))
+  queryNode.childQueryNodeLinks.forEach((link, i) => {
+    const linkedField = linkIndexToLinkedField[i]
+    // If the linked field values haven't been computed yet, then compute and add them to the dict
+    if (linkedFieldToValuesDict[linkedField] == null) {
+      const linkedFieldColumnSql = `${link.sourceDataNode.id}.${link.sourceDataNode.dataFormat.sql.columnNames[linkedField]}`
+      linkedFieldToValuesDict[linkedField] = removeDuplicates(removeNullAndUndefinedValues(rows.map(row => row[linkedFieldColumnSql])))
+    }
+  })
+  return { linkedFieldToValuesDict, linkIndexToLinkedField }
+}
 
 const executeQueryNode = async (
   db: SimplePgClient,
@@ -18,17 +68,7 @@ const executeQueryNode = async (
   /* Create sql for query node, using the linked field values received from
    * the parent query node results.
    */
-  let queryNodeSql: string
-  const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
-  if (preExistingQueryNodeSql != null) {
-    preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
-    queryNodeSql = preExistingQueryNodeSql.sql
-  }
-  else {
-    const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
-    queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
-    queryNodeSql = queryNodeSqlObj.sql
-  }
+  const queryNodeSql = createQueryNodeSql(queryNode, linkedFieldValues, queryNodeSqlDict)
   // Execute sql with db service
   const _rows: any[] = await db.queryGetRows(queryNodeSql)
   const rows = _rows ?? []
@@ -44,18 +84,7 @@ const executeQueryNode = async (
    * We do this since multiple child query node links can use the same linked
    * field values, and we don't want to recompute them multiple times.
    */
-  const linkedFieldToValuesDict: { [fieldName: string]: any[] } = {}
-  const linkIndexToLinkedField = queryNode.childQueryNodeLinks.map(link => (
-    link.childQueryNode.rootDataNode.parentFieldRef.fieldName
-  ))
-  queryNode.childQueryNodeLinks.forEach((link, i) => {
-    const linkedField = linkIndexToLinkedField[i]
-    // If the linked field values haven't been computed yet, then compute and add them to the dict
-    if (linkedFieldToValuesDict[linkedField] == null) {
-      const linkedFieldColumnSql = `${link.sourceDataNode.id}.${link.sourceDataNode.dataFormat.sql.columnNames[linkedField]}`
-      linkedFieldToValuesDict[linkedField] = removeDuplicates(rows.map(row => row[linkedFieldColumnSql]))
-    }
-  })
+  const { linkedFieldToValuesDict, linkIndexToLinkedField } = createLinkedFieldToValuesDict(queryNode, rows)
   /* Iterate through each child query node link, executing it with the linked field values
    * that correspond to that child query node.
    */
@@ -83,12 +112,56 @@ const extractDataNodeDataFromRow = (
       result[`$$${fName}`] = row[dataNode.fieldsInfo.fieldToColumnNameAlias[fName]]
     })
   }
-
+  /* If the relation type is many-to-many to *this* data node, then the join table parent
+   * field values are needed for result folding, but not in the final result, so we designate
+   * them as such with the usual '$$'.
+   */
   if (dataNode.relation?.type === RelationType.MANY_TO_MANY) {
     const columnAlias = dataNode.fieldsInfo.joinTableParentColumnNameAlias
     result[`$$${columnAlias}`] = row[columnAlias]
   }
   return result
+}
+
+/**
+ * ### Summary
+ *
+ * Determine if linked field values match. If they don't, then it means that
+ * `linkedFieldColumnAlias` is null when `parentLinkedFieldColumnAlias` isn't,
+ * and so the left join did not yield a defined related data record.
+ *
+ * ### In-depth Explanation:
+ *
+ * We only need to do this because most databases made the very idiotic decision
+ * to make `NULL` mean two things: A literal, *actual* null column value, and the
+ * *lack* (being missing) of a value when a LEFT JOIN fails to find a linked row.
+ *
+ * So what we need do to work around this is make sure we include columns of
+ * *both* sides of all LEFT JOINS in the SELECT query for a Query Node. Then when
+ * the results come in, if the local side of the LEFT JOIN is not null but the
+ * foreign side of it is, then we know *for sure* that there was no linked row,
+ * (instead of a linked row but has actual null values).
+ *
+ * If databases instead had a unique value for a missing value (i.e. "UNDEFINED"),
+ * then we wouldn't need to do this, and instead we could just check the first
+ * field value of a linked row for if it's missing or not. This is essentially
+ * one of the reasons why languages like Javascript have `undefined`.
+ *
+ * Now, with PostgreSQL being a relational database, we really *shouldn't* be
+ * ever getting into this scenario where, say, a recipe has "creator_user_id"
+ * 5, and there isn't actually a user with id 5. That relation would be enforced
+ * by foreign keys created by ts-pg-orm's Data Format to-sql system. But we still
+ * need to control for this, as perhaps in the future, ts-pg-orm will allow
+ * relations that aren't *actually* enforced by foreign keys, i.e. a recipe
+ * can have whatever "creator_user_id" value it wants.
+ */
+const determineIfRowWasActuallyFound = (
+  dataNode: DataNode,
+  row: any,
+) => {
+  const parentLinkedFieldColumnAlias = dataNode.parent.fieldsInfo.fieldToColumnNameAlias[dataNode.parentFieldRef.fieldName]
+  const linkedFieldColumnAlias = dataNode.fieldsInfo.fieldToColumnNameAlias[dataNode.fieldRef.fieldName]
+  return row[parentLinkedFieldColumnAlias] === row[linkedFieldColumnAlias]
 }
 
 const rowToDataNodeData = (
@@ -101,14 +174,7 @@ const rowToDataNodeData = (
    * row was actually found. We do this by comparing linked field values.
    */
   if (dataNode.parent != null && !isRootDataNode) {
-    /* Determine if linked field values match. If they don't, then it means that
-    * `linkedFieldColumnAlias` is null when parentLinkedFieldColumnAlias isn't,
-    * and so the left join did not yield a defined related data record.
-    */
-    const parentLinkedFieldColumnAlias = dataNode.parent.fieldsInfo.fieldToColumnNameAlias[dataNode.parentFieldRef.fieldName]
-    const linkedFieldColumnAlias = dataNode.fieldsInfo.fieldToColumnNameAlias[dataNode.fieldRef.fieldName]
-    const doLinkedValuesMatch = row[parentLinkedFieldColumnAlias] === row[linkedFieldColumnAlias]
-    if (!doLinkedValuesMatch)
+    if (!determineIfRowWasActuallyFound(dataNode, row))
       return null
   }
 

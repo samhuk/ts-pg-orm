@@ -247,6 +247,19 @@ const init = async () => {
   }), 'query')
   fs.writeFileSync(path.resolve(outputDir, 'user-user-groups-query.json'), JSON.stringify(result2.result, null, 2))
 
+  const result3 = await timedFn(() => stores.user.getMultiple({
+    fields: [],
+    relations: {
+      userGroups: {
+        query: {
+          page: 1,
+          pageSize: 1,
+        },
+      },
+    },
+  }), 'query')
+  fs.writeFileSync(path.resolve(outputDir, 'user-user-groups-query-range-constraint.json'), JSON.stringify(result3.result, null, 2))
+
   const dtList: number[] = []
   await repeatTimedFn(() => getResult(stores), 'query', 10, dtList)
   const avgDt = dtList.reduce((acc, dt) => acc + dt, 0) / dtList.length
