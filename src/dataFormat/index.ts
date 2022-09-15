@@ -114,7 +114,7 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     name: dataFormatDeclaration.name,
     capitalizedName: capitalize(dataFormatDeclaration.name) as any,
     pluralizedName,
-    capitalizedPluralizedName: capitalize(pluralizedName),
+    capitalizedPluralizedName: capitalize(pluralizedName) as any,
     declaration: dataFormatDeclaration,
     fields,
     fieldNames: fieldNamesDict,
