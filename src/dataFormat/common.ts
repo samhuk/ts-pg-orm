@@ -25,8 +25,6 @@ export const COMMON_FIELDS = createCommonFields({
     dataType: DataType.NUMBER,
     dataSubType: NumberDataSubType.SERIAL,
     size: ThreeStepNumberSize.REGULAR,
-    enableGetBy: true,
-    enableDeleteBy: true,
   },
   /**
    * "uuid" auto-generated (by default) uuid v4 string field
@@ -36,8 +34,6 @@ export const COMMON_FIELDS = createCommonFields({
     displayName: 'UUID',
     dataType: DataType.STRING,
     dataSubType: StringDataSubType.UUID_V4,
-    enableGetBy: true,
-    enableDeleteBy: true,
   },
   /**
    * "dateCreated" auto-generated (by default) date-time field that defaults to current timestamp
