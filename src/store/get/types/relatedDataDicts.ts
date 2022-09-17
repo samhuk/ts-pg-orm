@@ -1,4 +1,4 @@
-import { DataFormatDeclarations, ToRecord } from '../../dataFormat/types'
+import { DataFormatDeclarations, ToRecord } from '../../../dataFormat/types'
 import {
   RelationDeclarations,
   ExtractForeignFormatNameFromRelation,
@@ -9,7 +9,7 @@ import {
   ExtractRelevantRelationsWithOneToManyToMany,
   ExtractRelevantRelationsWithManyToManyFieldRef1,
   ExtractRelevantRelationsWithManyToManyFieldRef2,
-} from '../../relations/types'
+} from '../../../relations/types'
 import {
   ManyToManyFieldRef1Name,
   ManyToManyFieldRef2Name,

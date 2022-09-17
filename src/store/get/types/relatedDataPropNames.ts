@@ -1,5 +1,5 @@
-import { DataFormat, DataFormatDeclarations } from '../../dataFormat/types'
-import { RelationDeclaration, RelationType } from '../../relations/types'
+import { DataFormat, DataFormatDeclarations } from '../../../dataFormat/types'
+import { RelationDeclaration, RelationType } from '../../../relations/types'
 
 export type OneToOneFromOneName<
   T extends DataFormatDeclarations,

@@ -1,9 +1,9 @@
 import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { DataFormat, DataFormatDeclarations, FieldRef } from '../../dataFormat/types'
-import { Relation, RelationDeclarations } from '../../relations/types'
-import { AnyGetFunctionOptions, GetFunctionOptions, GetFunctionResult } from '../types/get'
+import { DataFormat, DataFormatDeclarations, FieldRef } from '../../../dataFormat/types'
+import { Relation, RelationDeclarations } from '../../../relations/types'
+import { AnyGetFunctionOptions, GetFunctionOptions, GetFunctionResult } from '../types'
 
 export type RelatedDataInfo<
   TIsPlural extends boolean = boolean,

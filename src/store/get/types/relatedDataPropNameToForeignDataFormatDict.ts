@@ -1,4 +1,4 @@
-import { DataFormatDeclarations } from '../../dataFormat/types'
+import { DataFormatDeclarations } from '../../../dataFormat/types'
 import {
   RelationDeclarations,
   ExtractRelevantRelationsWithOneToOneToOne,
@@ -7,8 +7,9 @@ import {
   ExtractRelevantRelationsWithOneToManyToMany,
   ExtractRelevantRelationsWithManyToManyFieldRef1,
   ExtractRelevantRelationsWithManyToManyFieldRef2,
-} from '../../relations/types'
-import { RelatedDataPropertyNamesUnion } from './relatedDataDicts'
+  ExtractForeignFormatNameFromRelation,
+  RelationDeclaration,
+} from '../../../relations/types'
 import {
   ManyToManyFieldRef1Name,
   ManyToManyFieldRef2Name,
@@ -18,6 +19,12 @@ import {
   OneToOneToOneName,
 } from './relatedDataPropNames'
 
+type GetForeignDataFormatOfRelation<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclaration,
+  L extends T[number]['name'],
+> = Extract<T[number], { name: ExtractForeignFormatNameFromRelation<K, L> }>
+
 type OneToOneFromOneDict<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
@@ -25,7 +32,7 @@ type OneToOneFromOneDict<
 > = {
   [TRelation in ExtractRelevantRelationsWithOneToOneFromOne<L, K> as
     OneToOneFromOneName<T, TRelation>
-  ]: TRelation
+  ]: GetForeignDataFormatOfRelation<T, TRelation, L>
 }
 
 type OneToOneToOneDict<
@@ -35,7 +42,7 @@ type OneToOneToOneDict<
 > = {
   [TRelation in ExtractRelevantRelationsWithOneToOneToOne<L, K> as
     OneToOneToOneName<T, TRelation>
-  ]: TRelation
+  ]: GetForeignDataFormatOfRelation<T, TRelation, L>
 }
 
 type OneToManyFromOneDict<
@@ -45,7 +52,7 @@ type OneToManyFromOneDict<
 > = {
   [TRelation in ExtractRelevantRelationsWithOneToManyFromOne<L, K> as
     OneToManyFromOneName<T, TRelation>
-  ]: TRelation
+  ]: GetForeignDataFormatOfRelation<T, TRelation, L>
 }
 
 type OneToManyToManyDict<
@@ -55,7 +62,7 @@ type OneToManyToManyDict<
 > = {
   [TRelation in ExtractRelevantRelationsWithOneToManyToMany<L, K> as
     OneToManyToManyName<T, TRelation>
-  ]: TRelation
+  ]: GetForeignDataFormatOfRelation<T, TRelation, L>
 }
 
 type ManyToManyFieldRef1Dict<
@@ -65,7 +72,7 @@ type ManyToManyFieldRef1Dict<
 > = {
   [TRelation in ExtractRelevantRelationsWithManyToManyFieldRef1<L, K> as
     ManyToManyFieldRef1Name<T, TRelation>
-  ]: TRelation
+  ]: GetForeignDataFormatOfRelation<T, TRelation, L>
 }
 
 type ManyToManyFieldRef2Dict<
@@ -75,13 +82,13 @@ type ManyToManyFieldRef2Dict<
 > = {
   [TRelation in ExtractRelevantRelationsWithManyToManyFieldRef2<L, K> as
     ManyToManyFieldRef2Name<T, TRelation>
-  ]: TRelation
+  ]: GetForeignDataFormatOfRelation<T, TRelation, L>
 }
 
 /**
  * The dict that maps a related data property name to the relation
  */
-export type RelatedDataPropertyNameToRelationDict<
+export type RelatedDataPropertyNameToForeignDataFormatDict<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   L extends T[number]['name'],
@@ -91,10 +98,3 @@ export type RelatedDataPropertyNameToRelationDict<
   & OneToManyToManyDict<T, K, L>
   & ManyToManyFieldRef1Dict<T, K, L>
   & ManyToManyFieldRef2Dict<T, K, L>
-
-export type GetRelationOfRelatedDataPropertyName<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
-  P extends RelatedDataPropertyNamesUnion<T, K, L>,
-> = RelatedDataPropertyNameToRelationDict<T, K, L>[P]
