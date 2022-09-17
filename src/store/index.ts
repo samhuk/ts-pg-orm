@@ -1,114 +1,19 @@
 import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
-import { DbService, SimplePgClient } from 'simple-pg-client/dist/types'
-import { createValueList } from '../dataFormat/sql'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 import {
-  CreateRecordOptions,
   DataFormat,
-  DataFormatDeclaration,
   DataFormatDeclarations,
-  ManualCreateRecordOptions,
-  ToRecord,
 } from '../dataFormat/types'
-import { createInsertReturningSql, createParametersString } from '../helpers/sql'
 import { objectPropsToCamelCase } from '../helpers/string'
-import { ExtractRelevantRelations, Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
+import { Relation, RelationDeclarations, RelationsDict, RelationType } from '../relations/types'
 import { TsPgOrm } from '../types'
 import { createQueryPlan } from './get/queryPlan'
-import { DeleteSingleFunctionOptions, DeleteSingleFunctionResult, Store, UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
+import { Store } from './types'
 import { AnyGetFunctionOptions } from './types/get'
-
-const create = async <T extends DataFormatDeclaration>(
-  db: DbService,
-  df: DataFormat<T>,
-  options: CreateRecordOptions<T>,
-): Promise<ToRecord<T>> => {
-  const fieldNamesInProvidedCreateOptions = Object.keys(options)
-  const fieldNames = df.createRecordFieldNames.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
-
-  const valueList = createValueList(df, options, fieldNames)
-  const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.columnNames[f]))
-  const row = await db.queryGetFirstRow(sql, valueList)
-  return objectPropsToCamelCase(row)
-}
-
-const createManual = async <T extends DataFormatDeclaration>(
-  db: DbService,
-  df: DataFormat<T>,
-  options: ManualCreateRecordOptions<T>,
-): Promise<ToRecord<T>> => {
-  const fieldNamesInProvidedCreateOptions = Object.keys(options)
-  const fieldNames = df.fieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
-  const valueList = fieldNames.map(f => (options as any)[f])
-  const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.columnNames[f]))
-  const row = await db.queryGetFirstRow(sql, valueList)
-  return objectPropsToCamelCase(row)
-}
-
-const updateSingle = async (
-  db: DbService,
-  df: DataFormat,
-  options: UpdateSingleFunctionOptions,
-): Promise<UpdateSingleFunctionResult> => {
-  const fieldNamesToUpdate = Object.keys(options.record)
-    .filter(fName => df.sql.columnNames[fName] != null)
-  if (fieldNamesToUpdate.length === 0)
-    return null
-
-  const columnNamesToUpdate = fieldNamesToUpdate
-    .map(fName => df.sql.columnNames[fName])
-
-  const whereClause = createDataFilter(options.filter).toSql({
-    transformer: node => ({ left: df.sql.columnNames[node.field] }),
-  })
-  const returnRecord = options.return ?? false
-  const suffix = `where ${whereClause} returning ${returnRecord ? '*' : '1'}`
-  let columnsAndValuesSql: string
-  if (fieldNamesToUpdate.length > 1) {
-    const columnsSql = columnNamesToUpdate.join(', ')
-    const parametersSql = createParametersString(fieldNamesToUpdate.length)
-    columnsAndValuesSql = `(${columnsSql}) = (${parametersSql})`
-  }
-  else {
-    columnsAndValuesSql = `${columnNamesToUpdate[0]} = $1`
-  }
-  const sql = `${df.sql.updateSqlBase} ${columnsAndValuesSql} ${suffix}`
-  const values = fieldNamesToUpdate.map(fName => options.record[fName])
-
-  const row = await db.queryGetFirstRow(sql, values)
-  return (returnRecord ? objectPropsToCamelCase(row) : row != null) as any
-}
-
-const deleteSingle = async (
-  db: DbService,
-  df: DataFormat,
-  options: DeleteSingleFunctionOptions,
-): Promise<DeleteSingleFunctionResult> => {
-  const rootSql = df.sql.deleteSqlBase
-  const whereClause = createDataFilter(options.filter).toSql({
-    transformer: node => ({ left: df.sql.columnNames[node.field] }),
-  })
-  const returnRecord = options.return ?? false
-  const sql = `${rootSql} where ${whereClause} returning ${returnRecord ? '*' : '1'}`
-
-  const row = await db.queryGetFirstRow(sql)
-  return (returnRecord ? objectPropsToCamelCase(row) : row != null) as any
-}
-
-export const getRelationsRelevantToDataFormat = <
-  T extends DataFormatDeclarations,
-  K extends Relation<T>[],
-  L extends T[number]['name'],
->(relationList: K, dataFormatName: L): ExtractRelevantRelations<L, K>[] => (
-  relationList.filter(d => (
-    (d.type === RelationType.ONE_TO_ONE && d.fromOneField.formatName === dataFormatName)
-    || (d.type === RelationType.ONE_TO_ONE && d.toOneField.formatName === dataFormatName)
-    || (d.type === RelationType.ONE_TO_MANY && d.fromOneField.formatName === dataFormatName)
-    || (d.type === RelationType.ONE_TO_MANY && d.toManyField.formatName === dataFormatName)
-    || (d.type === RelationType.MANY_TO_MANY && d.fieldRef1.formatName === dataFormatName)
-    || (d.type === RelationType.MANY_TO_MANY && d.fieldRef2.formatName === dataFormatName)
-  )) as ExtractRelevantRelations<L, K>[]
-  )
+import { create, createManual } from './create'
+import { deleteSingle } from './delete'
+import { updateSingle } from './update'
 
 /**
  * Finds all of the relations where this data format requires a foreign key. This will be the
