@@ -1,9 +1,9 @@
-import { DataFormatDeclarations } from '../../dataFormat/types'
-import { RelationDeclarations } from '../../relations/types'
-import { DeleteSingleFunction } from '../delete/types'
-import { GetSingleFunction, GetMultipleFunction } from '../get/types'
-import { UpdateSingleFunction } from '../update/types'
-import { CreateManualSingleFunction, CreateSingleFunction } from '../create/types'
+import { DataFormatDeclarations } from '../dataFormat/types'
+import { RelationDeclarations } from '../relations/types'
+import { CreateSingleFunction, CreateManualSingleFunction } from './create/types'
+import { DeleteSingleFunction } from './delete/types'
+import { GetSingleFunction, GetMultipleFunction } from './get/types'
+import { UpdateSingleFunction } from './update/types'
 
 export type Store<
   T extends DataFormatDeclarations,
