@@ -1,6 +1,6 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
-import { createMockDbService } from '../../mock/dbService'
-import { tsPgOrm } from '../../testData'
+import { createMockDbService } from '../../../mock/dbService'
+import { tsPgOrm } from '../../../testData'
 import { createQueryPlan } from './queryPlan'
 
 describe('queryPlan', () => {

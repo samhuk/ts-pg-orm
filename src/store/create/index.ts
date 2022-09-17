@@ -1,11 +1,11 @@
-import { DbService } from 'simple-pg-client/dist/types'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { createValueList } from '../../dataFormat/sql'
 import { DataFormatDeclaration, DataFormat, CreateRecordOptions, ToRecord, ManualCreateRecordOptions } from '../../dataFormat/types'
 import { createInsertReturningSql } from '../../helpers/sql'
 import { objectPropsToCamelCase } from '../../helpers/string'
 
 export const create = async <T extends DataFormatDeclaration>(
-  db: DbService,
+  db: SimplePgClient,
   df: DataFormat<T>,
   options: CreateRecordOptions<T>,
 ): Promise<ToRecord<T>> => {
@@ -19,7 +19,7 @@ export const create = async <T extends DataFormatDeclaration>(
 }
 
 export const createManual = async <T extends DataFormatDeclaration>(
-  db: DbService,
+  db: SimplePgClient,
   df: DataFormat<T>,
   options: ManualCreateRecordOptions<T>,
 ): Promise<ToRecord<T>> => {

@@ -1,11 +1,11 @@
 import { createDataFilter } from '@samhuk/data-filter'
-import { DbService } from 'simple-pg-client/dist/types'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat } from '../../dataFormat/types'
 import { objectPropsToCamelCase } from '../../helpers/string'
 import { DeleteSingleFunctionOptions, DeleteSingleFunctionResult } from './types'
 
 export const deleteSingle = async (
-  db: DbService,
+  db: SimplePgClient,
   df: DataFormat,
   options: DeleteSingleFunctionOptions,
 ): Promise<DeleteSingleFunctionResult> => {

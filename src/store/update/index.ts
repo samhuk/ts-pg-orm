@@ -1,12 +1,12 @@
 import { createDataFilter } from '@samhuk/data-filter'
-import { DbService } from 'simple-pg-client/dist/types'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat } from '../../dataFormat/types'
 import { createParametersString } from '../../helpers/sql'
 import { objectPropsToCamelCase } from '../../helpers/string'
 import { UpdateSingleFunctionOptions, UpdateSingleFunctionResult } from './types'
 
 export const updateSingle = async (
-  db: DbService,
+  db: SimplePgClient,
   df: DataFormat,
   options: UpdateSingleFunctionOptions,
 ): Promise<UpdateSingleFunctionResult> => {

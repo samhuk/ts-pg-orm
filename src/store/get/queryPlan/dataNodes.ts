@@ -1,8 +1,8 @@
-import { DataFormatsDict, DataFormat, FieldRef, DataFormatDeclarations } from '../../dataFormat/types'
-import { removeDuplicates } from '../../helpers/array'
-import { toDict } from '../../helpers/dict'
-import { RelationsDict, RelationType, Relation, RelationDeclarations } from '../../relations/types'
-import { AnyGetFunctionOptions, GetFunctionOptions } from '../types/get'
+import { DataFormatsDict, DataFormat, FieldRef, DataFormatDeclarations } from '../../../dataFormat/types'
+import { removeDuplicates } from '../../../helpers/array'
+import { toDict } from '../../../helpers/dict'
+import { RelationsDict, RelationType, Relation, RelationDeclarations } from '../../../relations/types'
+import { AnyGetFunctionOptions, GetFunctionOptions } from '../types'
 import { RelatedDataInfoDict, DataNodes, UnresolvedDataNodes, FieldsInfo, DataNode, PluralDataNode, NonPluralDataNode } from './types'
 
 /**

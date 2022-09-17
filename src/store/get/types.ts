@@ -1,279 +1,142 @@
 import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { DataFormat, DataFormatDeclarations, FieldRef } from '../../dataFormat/types'
-import { Relation, RelationDeclarations } from '../../relations/types'
-import { AnyGetFunctionOptions, GetFunctionOptions, GetFunctionResult } from '../types/get'
+import { DataFormatDeclarations, DataFormatDeclaration, ToRecord } from '../../dataFormat/types'
+import { ArrayTernary, ExpandRecursively, IsAny, PickAny } from '../../helpers/types'
+import { RelationDeclarations, IsForeignFormatPluralFromRelation } from '../../relations/types'
+import { RelatedDataPropertyNamesUnion } from '../types/relatedDataDicts'
+import { RelatedDataPropertyNameToForeignDataFormatDict } from '../types/relatedDataPropNameToForeignDataFormatDict'
+import { RelatedDataPropertyNameToRelationDict } from '../types/relatedDataPropNameToRelationDict.ts'
 
-export type RelatedDataInfo<
-  TIsPlural extends boolean = boolean,
-> = {
-  /**
-   * The name of the property name within the original get function options that
-   * birthed this Data Node.
-   */
-  relatedDataPropName: string
-  /**
-   * The field ref of the parent Data Node's side of the relation.
-   */
-  parentFieldRef: FieldRef
-  /**
-   * The field ref of this Data Node's side of the relation.
-   */
-  fieldRef: FieldRef
-  /**
-   * Denotes the Data Node as either singular or plural. This essentially represents if
-   * this Data Node is the "to-many" side of `relation`.
-   */
-  isPlural: TIsPlural
-  /**
-   * The relation between this Data Node and it's parent Data Node.
-   */
-  relation: Relation
-}
+// For depth-limiting
+type MaxDepth = 3
+type Prev = [never, 0, 1, 2, 3]
 
-export type RelatedDataInfoDict = { [relatedDataPropName: string]: RelatedDataInfo }
+export type AnyGetFunctionOptions<TIsPlural extends boolean = boolean> = GetFunctionOptions<
+  DataFormatDeclarations,
+  RelationDeclarations,
+  DataFormatDeclaration,
+  TIsPlural
+>
 
-export type UnresolvedDataNode = RelatedDataInfo & {
-  /**
-   * Unique identifier of the Data Node.
-   */
-  id: number
-  /**
-   * The Data Format of the Data Node. This is driven by what the parent Data Node
-   * is, and what related data property name links them.
-   */
-  dataFormat: DataFormat
-  /**
-   * Identifier of the parent Data Node.
-   */
-  parentId: number
-  /**
-   * List of identifiers of the child Data Nodes.
-   */
-  childIds: number[]
-  /**
-   * The original get function options for this Data Node.
-   */
-  options: AnyGetFunctionOptions
-}
-
-export type UnresolvedDataNodes = { [dataNodeId: number]: UnresolvedDataNode }
-
-export type FieldsInfo = {
-  /**
-   * List of field names that must be included in the select query of the Query Node
-   * of the Data Node.
-   */
-  fieldsToSelectFor: string[]
-  /**
-   * List of field names that have been included in `fieldsToSelectFor` only because they
-   * are required by relations.
-   */
-  fieldsOnlyUsedForRelations: string[]
-  /**
-   * List of field names within `fieldsToSelectFor` that must be kept in the final record(s)
-   * of this Data Node.
-   */
-  fieldsToKeepInRecord: string[]
-  /**
-   * E.g. `user_id` => `0.userId`
-   */
-  fieldToColumnNameAlias: { [fieldName: string]: string }
-  /**
-   * E.g. `"0.userId"` => `user_id`
-   */
-  columnNameAliasToField: { [columnNameAlias: string]: string }
-  /**
-   * E.g. `user_id` => `"0".user_id`
-   */
-  fieldToFullyQualifiedColumnName: { [fieldName: string]: string }
-  /**
-   * Unquoted join table name
-   */
-  joinTableAlias?: string
-  joinTableParentColumnNameAlias?: string
-  joinTableParentFullyQualifiedColumnName?: string
-  joinTableFullyQualifiedColumnName?: string
-}
-
-/**
- * A Data Node represents a single table as part of a Query Node's SQL.
- */
-export type DataNode<
-  TIsPlural extends boolean = boolean
-> = RelatedDataInfo<TIsPlural> & {
-  /**
-   * Unique identifier of the Data Node.
-   */
-  id: number
-  /**
-   * The Data Format of the Data Node. This is driven by what the parent Data Node
-   * is, and what related data property name links them.
-   */
-  dataFormat: DataFormat
-  /**
-   * Reference to the parent Data Node.
-   */
-  parent: DataNode
-  /**
-   * References to the child Data Nodes.
-   */
-  children: DataNodes
-  /**
-   * The original get function options for this Data Node.
-   */
-  options: AnyGetFunctionOptions<TIsPlural>
-  /**
-   * A collection of useful information about the fields, i.e. fields to include in
-   * the select query for this Data Node, column name aliases, etc.
-   */
-  fieldsInfo: FieldsInfo
-  /**
-   * Quoted alias for the table of this data node, i.e. `"0"`.
-   */
-  tableAlias: string
-  /**
-   * Unquoted alias for the table of this data node, i.e. `0`.
-   */
-  unquotedTableAlias: string
-  /**
-   * Creates a list of the column sql segments, e.g. `"0".id "0.id"`, `"0".name "0.name"`, ` "0".email "0.email"`
-   */
-  createColumnsSqlSegments: () => string[]
-}
-
-export type PluralDataNode = DataNode<true>
-
-export type NonPluralDataNode = DataNode<false>
-
-export type DataNodes = { [dataNodeId: number]: DataNode }
-
-export type NonRootDataNode = DataNode<false>
-
-export type NonRootDataNodes = { [dataNodeId: number]: NonRootDataNode }
-
-export type ParentQueryNodeLink<
-  TIsPlural extends boolean = boolean
-> = {
-  parentQueryNode: QueryNode<TIsPlural>
-  parentDataNode: DataNode
-}
-
-export type ChildQueryNodeLink = {
-  childQueryNode: QueryNode
-  sourceDataNode: DataNode
-}
-
-/**
- * SQL representation of a Query Node.
- */
-export type QueryNodeSql<
-  TIsPlural extends boolean = boolean
-> = {
-  /**
-   * SQL query text
-   */
-  sql: string
-  /**
-   * Updates the linked field values-dependant part of the SQL query text.
-   */
-  updateLinkedFieldValues: (values: any[]) => void
-} & (TIsPlural extends true ? {
-  /**
-   * Modifies the part of the SQL query text that is dependant on the root Data Node data query.
-   */
-  modifyRootDataNodeDataQuery: (newDataQuery: DataQueryRecord) => void
-} : {
-  /**
-   * Modifies the part of the SQL query text that is dependant on the root Data Node data filter.
-   */
-  modifyRootDataNodeDataFilter: (newDataFilter: DataFilterNodeOrGroup) => void
-})
-
-/**
- * A Query Node represents a single SQL query that is ran. Query nodes are composed of
- * a directed acyclical graph of Data Nodes, with one of them as a root Data Node and
- * all others non-root.
- *
- * The root Data Node is either singular or plural, but all other Data Nodes (non-root)
- * are always singular.
- *
- * The root Data Node represents the "root SQL query", i.e. `SELECT ... FROM {root data node table}`.
- * Non-root data nodes, being singular, are LEFT JOIN-ed onto the root SQL query.
- */
-export type QueryNode<
-  TIsPlural extends boolean = boolean
-> = {
-  /**
-   * Unique identifier of the Query Node.
-   */
-  id: number
-  /**
-   * Display name of the Query Node. This has no effect on the actual execution of the Query Node.
-   */
-  name: string
-  /**
-   * The root Data Node.
-   */
-  rootDataNode: DataNode<TIsPlural>
-  /**
-   * Non-root Data Nodes.
-   */
-  nonRootDataNodes: NonRootDataNodes
-  /**
-   * All Data Nodes, root and non-root.
-   */
-  dataNodes: DataNodes
-  /**
-   * A reference to the parent Query Node of this Query Node.
-   */
-  parentQueryNodeLink: ParentQueryNodeLink
-  /**
-   * A list of references to the child Query Nodes of this Query Node.
-   */
-  childQueryNodeLinks: ChildQueryNodeLink[]
-  /**
-   * Cnnverts this Query Node to QueryNodeSql.
-   */
-  toSql: (linkedFieldValues?: any[]) => QueryNodeSql
-}
-
-export type QueryNodes = { [queryNodeId: number]: QueryNode }
-
-/**
- * A Query Plan represents a directed acyclical graph of Query Nodes, with one root Query Node
- * and all others non-root Query Nodes.
- *
- * Query Plans are created from get function options, and can be re-executed with different root
- * Data Node data queries/filters for more efficient performance.
- */
-export type QueryPlan<
+export type GetFunctionOptions<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
-  L extends T[number] = T[number],
+  L extends T[number] = DataFormatDeclaration,
+  TIsPlural extends boolean = boolean,
+  D extends Prev[number] = MaxDepth
+> = [D] extends [never] ? never : (
+  {
+    /**
+     * The fields of the data format to include.
+     */
+    fields?: L['fields'][number]['name'][]
+    /**
+     * Child relations to include.
+     */
+    relations?: {
+      [TRelatedDataPropertyName in RelatedDataPropertyNamesUnion<T, K, L['name']>]?:
+        GetFunctionOptions<
+          T,
+          K,
+          // @ts-ignore
+          RelatedDataPropertyNameToForeignDataFormatDict<T, K, L['name']>[TRelatedDataPropertyName],
+          IsForeignFormatPluralFromRelation<
+            // @ts-ignore
+            RelatedDataPropertyNameToRelationDict<T, K, L['name']>[TRelatedDataPropertyName],
+            L['name']
+          >,
+          Prev[D]
+        >
+    }
+  } & (
+    TIsPlural extends true
+      /**
+       * Query to use to select the records.
+       */
+      ? { query?: DataQueryRecord<L['fields'][number]['name']> }
+      /**
+       * Filter to use to select the record.
+       */
+      : { filter?: DataFilterNodeOrGroup<L['fields'][number]['name']> }
+  )
+)
+
+export type AnyGetFunctionResult<TIsPlural extends boolean = boolean> = GetFunctionResult<
+  DataFormatDeclarations,
+  RelationDeclarations,
+  DataFormatDeclaration,
+  TIsPlural,
+  GetFunctionOptions<DataFormatDeclarations, RelationDeclarations, DataFormatDeclaration, TIsPlural>
+>
+
+export type GetFunctionResultInternal<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = DataFormatDeclaration,
   TIsPlural extends boolean = boolean,
   TOptions extends GetFunctionOptions<T, K, L, TIsPlural> = GetFunctionOptions<T, K, L, TIsPlural>,
-> = {
-  dataNodes: DataNodes
-  queryNodes: QueryNodes
-  rootQueryNode: QueryNode
-  /**
-   * Executes the query plan, using the given database service `db`, returning the results.
-   *
-   * This will recursively work through the Query Node graph, starting at the root Query Node.
-   */
-  execute: (db: SimplePgClient) => Promise<GetFunctionResult<T, K, L, TIsPlural, TOptions>>
-} & (TIsPlural extends true ? {
-  /**
-   * Modifies the data query of the root node of the query plan. This is more efficient than
-   * creating a whole new query plan.
-   */
-  modifyRootDataQuery: (newDataQuery: DataQueryRecord<L['fields'][number]['name']>) => void
-} : {
-  /**
-   * Modifies the data filter of the root node of the query plan. This is more efficient than
-   * creating a whole new query plan.
-   */
-  modifyRootDataFilter: (newDataFilter: DataFilterNodeOrGroup<L['fields'][number]['name']>) => void
-})
+  D extends Prev[number] = MaxDepth
+> =
+  ArrayTernary<
+    ExpandRecursively<
+      // this node
+      (
+        // If the fields property is present...
+        TOptions extends { fields: string[] }
+          // ...And if the fields[number] is any, then it's probably an empty array
+          ? IsAny<TOptions['fields'][number]> extends true
+            ? { } // So infer that as them wanting no fields of this node
+            // else, it's probably a populated array (at least one field within)
+            : PickAny<ToRecord<L>, TOptions['fields'][number]>
+          // Else (fields property is not present), then default to the full record
+          : ToRecord<L>
+      )
+      // child nodes
+      & (
+        TOptions extends { relations: any }
+          ? {
+            [TRelatedDataPropertyName in keyof TOptions['relations']]:
+              GetFunctionResultInternal<
+                T,
+                K,
+                // @ts-ignore
+                RelatedDataPropertyNameToForeignDataFormatDict<T, K, L['name']>[TRelatedDataPropertyName],
+                IsForeignFormatPluralFromRelation<
+                  // @ts-ignore
+                  RelatedDataPropertyNameToRelationDict<T, K, L['name']>[TRelatedDataPropertyName],
+                  L['name']
+                >,
+                TOptions['relations'][TRelatedDataPropertyName],
+                Prev[D]
+              >
+            }
+          : { }
+      )
+    >,
+    TIsPlural
+  >
+
+export type GetFunctionResult<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = DataFormatDeclaration,
+  TIsPlural extends boolean = boolean,
+  TOptions extends GetFunctionOptions<T, K, L, TIsPlural> = GetFunctionOptions<T, K, L, TIsPlural>,
+  D extends Prev[number] = MaxDepth
+> = ExpandRecursively<GetFunctionResultInternal<T, K, L, TIsPlural, TOptions, D>>
+
+export type GetSingleFunction<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  K extends RelationDeclarations<T> = RelationDeclarations<T>,
+  L extends T[number] = DataFormatDeclaration,
+> = <TGetFunctionOptions extends GetFunctionOptions<T, K, L, false>>(
+  options: TGetFunctionOptions,
+) => Promise<GetFunctionResult<T, K, L, false, TGetFunctionOptions>>
+
+export type GetMultipleFunction<
+  T extends DataFormatDeclarations,
+  K extends RelationDeclarations<T>,
+  L extends T[number],
+> = <TGetFunctionOptions extends GetFunctionOptions<T, K, L, true>>(
+  options: TGetFunctionOptions,
+) => Promise<GetFunctionResult<T, K, L, true, TGetFunctionOptions>>

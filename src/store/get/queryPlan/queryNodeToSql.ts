@@ -1,8 +1,8 @@
 import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
-import { DataFormatDeclarations, DataType } from '../../dataFormat/types'
-import { filterForNotNullAndEmpty } from '../../helpers/string'
-import { Relation, RelationType } from '../../relations/types'
+import { DataFormatDeclarations, DataType } from '../../../dataFormat/types'
+import { filterForNotNullAndEmpty } from '../../../helpers/string'
+import { Relation, RelationType } from '../../../relations/types'
 import { isDataNodePlural } from './dataNodes'
 import { QueryNode, DataNode, QueryNodeSql } from './types'
 

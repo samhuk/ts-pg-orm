@@ -1,5 +1,5 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
-import { tsPgOrm } from '../../testData'
+import { tsPgOrm } from '../../../testData'
 import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
 import { toSqlNew } from './queryNodeToSql'
