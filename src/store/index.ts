@@ -16,6 +16,13 @@ import { AnyGetFunctionOptions } from './get/types'
  * Finds all of the relations where this data format requires a foreign key. This will be the
  * case if this data format is being referenced as the "to many" of any "one to many" relations
  * or as the "to one" of any "one to one" relations.
+ *
+ * If this data format is the former ("to many" of any "one to many" relations), then it will
+ * require a foreign key constraint in the create sql.
+ *
+ * If this data format is the latter ("to one" of any "one to one" relations), then it will
+ * require a foreign key constraint *and* a UNIQUE constraint (for the linked column) in the
+ * create sql.
  */
 const getRelevantRelationsForForeignKeys = <
   T extends DataFormatDeclarations,

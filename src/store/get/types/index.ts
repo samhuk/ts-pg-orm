@@ -1,11 +1,11 @@
 import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { DataFormatDeclarations, DataFormatDeclaration, ToRecord } from '../../dataFormat/types'
-import { ArrayTernary, ExpandRecursively, IsAny, PickAny } from '../../helpers/types'
-import { RelationDeclarations, IsForeignFormatPluralFromRelation } from '../../relations/types'
-import { RelatedDataPropertyNamesUnion } from '../types/relatedDataDicts'
-import { RelatedDataPropertyNameToForeignDataFormatDict } from '../types/relatedDataPropNameToForeignDataFormatDict'
-import { RelatedDataPropertyNameToRelationDict } from '../types/relatedDataPropNameToRelationDict.ts'
+import { DataFormatDeclarations, DataFormatDeclaration, ToRecord } from '../../../dataFormat/types'
+import { ArrayTernary, ExpandRecursively, IsAny, PickAny } from '../../../helpers/types'
+import { RelationDeclarations, IsForeignFormatPluralFromRelation } from '../../../relations/types'
+import { RelatedDataPropertyNamesUnion } from './relatedDataDicts'
+import { RelatedDataPropertyNameToForeignDataFormatDict } from './relatedDataPropNameToForeignDataFormatDict'
+import { RelatedDataPropertyNameToRelationDict } from './relatedDataPropNameToRelationDict.ts'
 
 // For depth-limiting
 type MaxDepth = 3
