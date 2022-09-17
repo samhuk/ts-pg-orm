@@ -104,7 +104,6 @@ export const getMultiple = async (
   }
 
   const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, df, true, options)
-  // @ts-ignore
   const result = await queryPlan.execute(db)
   return result
 }

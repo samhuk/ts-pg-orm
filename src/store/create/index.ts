@@ -25,6 +25,7 @@ export const createManual = async <T extends DataFormatDeclaration>(
 ): Promise<ToRecord<T>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.fieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
+
   const valueList = fieldNames.map(f => (options as any)[f])
   const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.columnNames[f]))
   const row = await db.queryGetFirstRow(sql, valueList)

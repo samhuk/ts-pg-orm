@@ -226,5 +226,69 @@ describe('store', () => {
         expect(result).toEqual(true)
       })
     })
+
+    describe('count', () => {
+      test('test 1 - no query provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exact_count: 3 })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.count()
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select count(*) as exact_count
+from "article"`,
+        })
+
+        expect(result).toEqual(3)
+      })
+
+      test('test 1 - only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exact_count: 3 })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.count({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select count(*) as exact_count
+from "article"
+where date_deleted is null`,
+        })
+
+        expect(result).toEqual(3)
+      })
+
+      test('test 1 - not only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exact_count: 3 })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.count({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+          sorting: [{ field: 'id', dir: SortingDirection.ASC }],
+          pageSize: 50,
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select count(*) as exact_count
+from (
+select 1 from "article"
+where date_deleted is null
+order by id asc limit 50 offset 0
+)`,
+        })
+
+        expect(result).toEqual(3)
+      })
+    })
   })
 })
