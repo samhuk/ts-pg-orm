@@ -12,6 +12,7 @@ import { updateSingle } from './update'
 import { getSingle, getMultiple } from './get'
 import { AnyGetFunctionOptions } from './get/types'
 import { count } from './count'
+import { exists } from './exists'
 
 /**
  * Finds all of the relations where this data format requires a foreign key. This will be the
@@ -62,5 +63,6 @@ export const createStore = <
     getSingle: options => getSingle(tsPgOrm as any, db, localDataFormat, options as AnyGetFunctionOptions<false>) as any,
     getMultiple: options => getMultiple(tsPgOrm as any, db, localDataFormat, options as AnyGetFunctionOptions<true>) as any,
     count: options => count(db, localDataFormat, options),
+    exists: options => exists(db, localDataFormat, options),
   }
 }

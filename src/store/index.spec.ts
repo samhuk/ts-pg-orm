@@ -290,5 +290,70 @@ order by id asc limit 50 offset 0
         expect(result).toEqual(3)
       })
     })
+
+    describe('exists', () => {
+      test('test 1 - no query provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exists: true })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.exists()
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select exists (
+select 1 from "article"
+)`,
+        })
+
+        expect(result).toEqual(true)
+      })
+
+      test('test 1 - only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exists: true })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.exists({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select exists (
+select 1 from "article"
+where date_deleted is null
+)`,
+        })
+
+        expect(result).toEqual(true)
+      })
+
+      test('test 1 - not only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exists: false })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.exists({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+          sorting: [{ field: 'id', dir: SortingDirection.ASC }],
+          pageSize: 50,
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select exists (
+select 1 from "article"
+where date_deleted is null
+order by id asc limit 50 offset 0
+)`,
+        })
+
+        expect(result).toEqual(false)
+      })
+    })
   })
 })

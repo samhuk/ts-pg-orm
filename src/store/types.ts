@@ -3,6 +3,7 @@ import { RelationDeclarations } from '../relations/types'
 import { CountFunction } from './count/types'
 import { CreateSingleFunction, CreateManualSingleFunction } from './create/types'
 import { DeleteSingleFunction } from './delete/types'
+import { ExistsFunction } from './exists/types'
 import { GetSingleFunction, GetMultipleFunction } from './get/types'
 import { UpdateSingleFunction } from './update/types'
 
@@ -85,9 +86,8 @@ export type Store<
    * Counts the number of records that exist that correspond to the given query.
    */
   count: CountFunction<T, K, Extract<T[number], { name: L }>>
-  // TODO:
   /**
    * Determines if there is at least one record corresponding to the given query.
    */
-  // exists: GetSingleFunction<T, K, Extract<T[number], { name: L }>>
+  exists: ExistsFunction<T, K, Extract<T[number], { name: L }>>
 }
