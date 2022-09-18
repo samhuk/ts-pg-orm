@@ -28,7 +28,7 @@ export const count = async (
     sqlParts.push(`select 1 from ${df.sql.tableName}`)
     sqlParts.push(queryInfo?.where)
     sqlParts.push(queryInfo?.orderByLimitOffset)
-    sqlParts.push(')')
+    sqlParts.push(') as cte')
   }
 
   const sql = sqlParts.filter(s => s != null).join('\n')

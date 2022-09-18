@@ -284,7 +284,7 @@ from (
 select 1 from "article"
 where date_deleted is null
 order by id asc limit 50 offset 0
-)`,
+) as cte`,
         })
 
         expect(result).toEqual(3)
