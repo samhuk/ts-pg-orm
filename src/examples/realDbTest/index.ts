@@ -129,6 +129,30 @@ const init = async () => {
     return: true,
   })
 
+  let exists = await stores.article.exists()
+  console.log('Exists 1: ', exists)
+  exists = await stores.article.exists({
+    filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+  })
+  console.log('Exists 2: ', exists)
+  exists = await stores.article.exists({
+    filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+    sorting: [{ field: 'id', dir: SortingDirection.ASC }],
+  })
+  console.log('Exists 3: ', exists)
+
+  let count = await stores.article.count()
+  console.log('Count 1: ', count)
+  count = await stores.article.count({
+    filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+  })
+  console.log('Count 2: ', count)
+  count = await stores.article.count({
+    filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+    sorting: [{ field: 'id', dir: SortingDirection.ASC }],
+  })
+  console.log('Count 3: ', count)
+
   ORM.db.client.end()
 }
 
