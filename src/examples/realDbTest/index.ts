@@ -19,7 +19,7 @@ const provision = async (): Promise<Stores> => {
     events: {
       ...createConsoleLogEventHandlers(),
       // TODO: This can cause a lot of console noise if enabled
-      onQuery: (q, m, sql, p) => console.log(m, p),
+      // onQuery: (q, m, sql, p) => console.log(m, p),
       onQueryError: (q, m, sql, p) => console.log(m),
     },
   })
@@ -145,6 +145,31 @@ const init = async () => {
     return: 'first',
   })
   console.log('article updated: ', articleUpdated)
+
+  const numArticlesDeleted = await stores.article.delete({
+    query: {
+      filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+    },
+  })
+  console.log('num articles deleted: ', numArticlesDeleted)
+
+  const articlesDeleted = await stores.article.delete({
+    query: {
+      filter: { field: 'id', op: Operator.EQUALS, val: 2 },
+    },
+    return: true,
+  })
+  console.log('articles deleted: ', articlesDeleted)
+
+  const articleDeleted = await stores.article.delete({
+    query: {
+      filter: { field: 'id', op: Operator.EQUALS, val: 3 },
+      page: 1,
+      pageSize: 1,
+    },
+    return: 'first',
+  })
+  console.log('article deleted: ', articleDeleted)
 
   let exists = await stores.article.exists()
   console.log('Exists 1: ', exists)

@@ -1,14 +1,7 @@
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { DataFormatDeclaration, ToRecord, DataFormatDeclarations } from '../../dataFormat/types'
 import { RelationDeclarations } from '../../relations/types'
-
-export enum ReturnMode {
-  RETURN_ALL_ROWS,
-  RETURN_FIRST_ROW,
-  RETURN_COUNT,
-}
-
-export type ReturnModeRaw = boolean | 'first'
+import { ReturnModeRaw } from '../common/types'
 
 export type UpdateFunctionOptions<
   T extends DataFormatDeclaration = DataFormatDeclaration,

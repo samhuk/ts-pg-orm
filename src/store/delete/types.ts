@@ -1,20 +1,27 @@
-import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
+import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { DataFormatDeclaration, DataFormatDeclarations, ToRecord } from '../../dataFormat/types'
 import { RelationDeclarations } from '../../relations/types'
+import { ReturnModeRaw } from '../common/types'
 
 export type DeleteFunctionOptions<
   T extends DataFormatDeclaration = DataFormatDeclaration,
 > = {
   /**
-   * Filter to select the single record to update.
+   * Data query to select the record(s) to delete.
    */
-  filter: DataFilterNodeOrGroup<T['fields'][number]['name']>
+   query?: DataQueryRecord<T['fields'][number]['name']>
   /**
-   * Determines whether the deleted record is returned.
+   * Determines whether the deleted record(s) are to be returned.
+   *
+   * If `false`, the count of deleted records is returned.
+   *
+   * This can be alternatively be defined as `'first'`, which will cause
+   * only the first record to be returned. This is useful when it is expected
+   * that only one record will be deleted.
    *
    * @default false
    */
-   return?: boolean
+   return?: ReturnModeRaw
 }
 
 export type DeleteFunctionResult<
@@ -24,9 +31,13 @@ export type DeleteFunctionResult<
   TOptions extends DeleteFunctionOptions<L> = DeleteFunctionOptions<L>,
 > = TOptions extends { return: boolean }
 ? TOptions['return'] extends true
-  ? ToRecord<L> | null
-  : boolean
-: ToRecord<L> | null
+  ? ToRecord<L>[] | null
+  : number
+: TOptions extends { return: string }
+  ? TOptions['return'] extends 'first'
+    ? ToRecord<L>
+    : number
+  : number
 
 export type DeleteFunction<
   T extends DataFormatDeclarations,

@@ -3,7 +3,8 @@ import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat } from '../../dataFormat/types'
 import { createParametersString } from '../../helpers/sql'
 import { objectPropsToCamelCase } from '../../helpers/string'
-import { ReturnMode, ReturnModeRaw, UpdateFunctionOptions, UpdateFunctionResult } from './types'
+import { ReturnModeRaw, ReturnMode } from '../common/types'
+import { UpdateFunctionOptions, UpdateFunctionResult } from './types'
 
 const determineReturnMode = (returnMode: ReturnModeRaw): ReturnMode => (
   returnMode == null
@@ -79,9 +80,9 @@ export const update = async (
     case ReturnMode.RETURN_COUNT:
       return result.rowCount
     case ReturnMode.RETURN_ALL_ROWS:
-      return result.rows as any
+      return result.rows.map(row => objectPropsToCamelCase(row)) as any
     case ReturnMode.RETURN_FIRST_ROW:
-      return result.rows[0] as any
+      return objectPropsToCamelCase(result.rows[0]) as any
     default:
       return result.rowCount
   }

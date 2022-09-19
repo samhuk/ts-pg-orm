@@ -247,22 +247,70 @@ returning *`,
     })
 
     describe('delete', () => {
-      test('basic test', async () => {
+      test('multiple fields, return count, no query', async () => {
         const db = createMockDbService()
-        db.queueResponse([1])
+        db.queueResponse({ rowCount: 1 })
 
-        const store = fn(db, tsPgOrm, 'article')
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.delete({ })
+
+        expect(result).toEqual(1)
+        expect(db.receivedQueries).toEqual([
+          {
+            sql: 'delete from "user"',
+          },
+        ])
+      })
+
+      test('multiple fields, return count, only where', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ rowCount: 1 })
+
+        const store = fn(db, tsPgOrm, 'user')
+
         const result = await store.delete({
-          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+          query: {
+            filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+          },
         })
 
-        expect(db.receivedQueries.length).toBe(1)
-        expect(db.receivedQueries[0]).toEqual({
-          parameters: undefined,
-          sql: 'delete from "article" where date_deleted is null returning 1',
+        expect(result).toEqual(1)
+        expect(db.receivedQueries).toEqual([
+          {
+            sql: `delete from "user"
+where id = 1`,
+          },
+        ])
+      })
+
+      test('single field, return first row, full query', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ rows: [{ id: 1, name: 'NEW USER NAME' }] })
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.delete({
+          query: {
+            filter: { field: 'name', op: Operator.EQUALS, val: 'user1' },
+            page: 1,
+            pageSize: 10,
+          },
+          return: 'first',
         })
 
-        expect(result).toEqual(true)
+        expect(result).toEqual({ id: 1, name: 'NEW USER NAME' })
+        expect(db.receivedQueries).toEqual([
+          {
+            sql: `delete from "user"
+where ctid in (
+select ctid from "user"
+where name = 'user1'
+limit 10 offset 0
+)
+returning *`,
+          },
+        ])
       })
     })
 
