@@ -28,7 +28,7 @@ const init = async () => {
     // Handle GET /userProfile/1
     if (req.method === 'GET' && req.url === '/userProfile/1') {
       // Use the created types and stores to have robust and fully type-safe controller logic.
-      const userWithArticles: UserProfilePageData = await stores.user.getSingle({
+      const userWithArticles: UserProfilePageData = await stores.user.get({
         filter: { field: 'id', op: Operator.EQUALS, val: 1 },
         relations: {
           articles: { },

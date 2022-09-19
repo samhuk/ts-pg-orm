@@ -8,7 +8,7 @@ describe('store', () => {
   describe('createStore', () => {
     const fn = createStore
 
-    describe('getSingle', () => {
+    describe('get', () => {
       test('basic test', async () => {
         const db = createMockDbService()
         db.queueResponses([
@@ -54,7 +54,7 @@ describe('store', () => {
         ])
 
         const store = fn(db, tsPgOrm, 'article')
-        const result = await store.getSingle({
+        const result = await store.get({
           fields: ['uuid', 'title', 'dateCreated', 'datePublished'],
           filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
           relations: {
@@ -99,7 +99,7 @@ describe('store', () => {
         })
 
         const store = fn(db, tsPgOrm, 'article')
-        const result = await store.getSingle({
+        const result = await store.get({
           fields: ['uuid', 'title', 'dateCreated', 'datePublished'],
           filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
         })
@@ -119,7 +119,7 @@ describe('store', () => {
       })
     })
 
-    describe('getMultiple', () => {
+    describe('getMany', () => {
       test('no relations (performance optimization)', async () => {
         const db = createMockDbService()
         db.queueResponse([
@@ -132,7 +132,7 @@ describe('store', () => {
         ])
 
         const store = fn(db, tsPgOrm, 'article')
-        const result = await store.getMultiple({
+        const result = await store.getMany({
           fields: ['uuid', 'title', 'dateCreated', 'datePublished'],
           query: {
             filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
@@ -160,70 +160,286 @@ describe('store', () => {
       })
     })
 
-    describe('updateSingle', () => {
-      test('basic test', async () => {
+    describe('update', () => {
+      test('multiple fields, return count, no query', async () => {
         const db = createMockDbService()
-        db.queueResponse([1])
+        db.queueResponse({ rowCount: 1 })
 
         const store = fn(db, tsPgOrm, 'user')
 
-        const result = await store.updateSingle({
-          filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+        const result = await store.update({
           record: {
             id: 3,
             name: 'NEW USER NAME',
           },
         })
 
-        expect(result).toEqual(true)
+        expect(result).toEqual(1)
         expect(db.receivedQueries).toEqual([
           {
             parameters: [3, 'NEW USER NAME'],
-            sql: 'update "user" set (id, name) = ($1, $2) where id = 1 returning 1',
+            sql: `update "user" set
+(id, name) = ($1, $2)`,
           },
         ])
       })
 
-      test('single field', async () => {
+      test('multiple fields, return count, only where', async () => {
         const db = createMockDbService()
-        db.queueResponse([1])
+        db.queueResponse({ rowCount: 1 })
 
         const store = fn(db, tsPgOrm, 'user')
 
-        const result = await store.updateSingle({
-          filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+        const result = await store.update({
+          query: {
+            filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+          },
           record: {
+            id: 3,
             name: 'NEW USER NAME',
           },
         })
 
-        expect(result).toEqual(true)
+        expect(result).toEqual(1)
+        expect(db.receivedQueries).toEqual([
+          {
+            parameters: [3, 'NEW USER NAME'],
+            sql: `update "user" set
+(id, name) = ($1, $2)
+where id = 1`,
+          },
+        ])
+      })
+
+      test('single field, return first row, full query', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ rows: [{ id: 1, name: 'NEW USER NAME' }] })
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.update({
+          query: {
+            filter: { field: 'name', op: Operator.EQUALS, val: 'user1' },
+            page: 1,
+            pageSize: 10,
+          },
+          record: {
+            name: 'NEW USER NAME',
+          },
+          return: 'first',
+        })
+
+        expect(result).toEqual({ id: 1, name: 'NEW USER NAME' })
         expect(db.receivedQueries).toEqual([
           {
             parameters: ['NEW USER NAME'],
-            sql: 'update "user" set name = $1 where id = 1 returning 1',
+            sql: `update "user" set
+name = $1
+where ctid in (
+select ctid from "user"
+where name = 'user1'
+limit 10 offset 0
+)
+returning *`,
           },
         ])
       })
     })
 
-    describe('deleteSingle', () => {
-      test('basic test', async () => {
+    describe('delete', () => {
+      test('multiple fields, return count, no query', async () => {
         const db = createMockDbService()
-        db.queueResponse([1])
+        db.queueResponse({ rowCount: 1 })
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.delete({ })
+
+        expect(result).toEqual(1)
+        expect(db.receivedQueries).toEqual([
+          {
+            sql: 'delete from "user"',
+          },
+        ])
+      })
+
+      test('multiple fields, return count, only where', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ rowCount: 1 })
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.delete({
+          query: {
+            filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+          },
+        })
+
+        expect(result).toEqual(1)
+        expect(db.receivedQueries).toEqual([
+          {
+            sql: `delete from "user"
+where id = 1`,
+          },
+        ])
+      })
+
+      test('single field, return first row, full query', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ rows: [{ id: 1, name: 'NEW USER NAME' }] })
+
+        const store = fn(db, tsPgOrm, 'user')
+
+        const result = await store.delete({
+          query: {
+            filter: { field: 'name', op: Operator.EQUALS, val: 'user1' },
+            page: 1,
+            pageSize: 10,
+          },
+          return: 'first',
+        })
+
+        expect(result).toEqual({ id: 1, name: 'NEW USER NAME' })
+        expect(db.receivedQueries).toEqual([
+          {
+            sql: `delete from "user"
+where ctid in (
+select ctid from "user"
+where name = 'user1'
+limit 10 offset 0
+)
+returning *`,
+          },
+        ])
+      })
+    })
+
+    describe('count', () => {
+      test('test 1 - no query provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exact_count: 3 })
 
         const store = fn(db, tsPgOrm, 'article')
-        const result = await store.deleteSingle({
+        const result = await store.count()
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select count(*) as exact_count
+from "article"`,
+        })
+
+        expect(result).toEqual(3)
+      })
+
+      test('test 1 - only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exact_count: 3 })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.count({
           filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
         })
 
         expect(db.receivedQueries.length).toBe(1)
         expect(db.receivedQueries[0]).toEqual({
           parameters: undefined,
-          sql: 'delete from "article" where date_deleted is null returning 1',
+          sql: `select count(*) as exact_count
+from "article"
+where date_deleted is null`,
+        })
+
+        expect(result).toEqual(3)
+      })
+
+      test('test 1 - not only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exact_count: 3 })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.count({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+          sorting: [{ field: 'id', dir: SortingDirection.ASC }],
+          pageSize: 50,
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select count(*) as exact_count
+from (
+select 1 from "article"
+where date_deleted is null
+order by id asc limit 50 offset 0
+) as cte`,
+        })
+
+        expect(result).toEqual(3)
+      })
+    })
+
+    describe('exists', () => {
+      test('test 1 - no query provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exists: true })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.exists()
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select exists (
+select 1 from "article"
+)`,
         })
 
         expect(result).toEqual(true)
+      })
+
+      test('test 1 - only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exists: true })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.exists({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select exists (
+select 1 from "article"
+where date_deleted is null
+)`,
+        })
+
+        expect(result).toEqual(true)
+      })
+
+      test('test 1 - not only where provided', async () => {
+        const db = createMockDbService()
+        db.queueResponse({ exists: false })
+
+        const store = fn(db, tsPgOrm, 'article')
+        const result = await store.exists({
+          filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
+          sorting: [{ field: 'id', dir: SortingDirection.ASC }],
+          pageSize: 50,
+        })
+
+        expect(db.receivedQueries.length).toBe(1)
+        expect(db.receivedQueries[0]).toEqual({
+          parameters: undefined,
+          sql: `select exists (
+select 1 from "article"
+where date_deleted is null
+order by id asc limit 50 offset 0
+)`,
+        })
+
+        expect(result).toEqual(false)
       })
     })
   })

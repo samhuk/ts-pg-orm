@@ -34,7 +34,7 @@ describe('createTsPgOrm', () => {
       expect(stores.notAStore).toBeUndefined()
 
       // -- Act
-      const user = await stores.user.getSingle({ filter: { field: 'id', op: Operator.EQUALS, val: 1 } })
+      const user = await stores.user.get({ filter: { field: 'id', op: Operator.EQUALS, val: 1 } })
 
       // -- Assert
       expect(user).toEqual({

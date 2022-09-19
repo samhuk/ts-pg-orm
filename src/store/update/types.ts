@@ -1,41 +1,52 @@
-import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
+import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { DataFormatDeclaration, ToRecord, DataFormatDeclarations } from '../../dataFormat/types'
 import { RelationDeclarations } from '../../relations/types'
+import { ReturnModeRaw } from '../common/types'
 
-export type UpdateSingleFunctionOptions<
+export type UpdateFunctionOptions<
   T extends DataFormatDeclaration = DataFormatDeclaration,
 > = {
   /**
-   * The fields to update with their new values.
+   * The field(s) to update with their new values.
    */
   record: Partial<ToRecord<T>>
   /**
-   * Filter to select the single record to update.
+   * Data query to select the record(s) to update.
    */
-  filter: DataFilterNodeOrGroup<T['fields'][number]['name']>
+  query?: DataQueryRecord<T['fields'][number]['name']>
   /**
-   * Determines whether the updated record is returned.
+   * Determines whether the updated record(s) are to be returned.
+   *
+   * If `false`, the count of updated records is returned.
+   *
+   * This can be alternatively be defined as `'first'`, which will cause
+   * only the first record to be returned. This is useful when it is expected
+   * that only one record will be updated.
    *
    * @default false
    */
-  return?: boolean
+  return?: ReturnModeRaw
 }
 
-export type UpdateSingleFunctionResult<
+export type UpdateFunctionResult<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
   L extends T[number] = T[number],
-  TOptions extends UpdateSingleFunctionOptions<L> = UpdateSingleFunctionOptions<L>,
+  TOptions extends UpdateFunctionOptions<L> = UpdateFunctionOptions<L>,
 > = TOptions extends { return: boolean }
 ? TOptions['return'] extends true
-  ? ToRecord<L> | null
-  : boolean
-: boolean
+  ? ToRecord<L>[] | null
+  : number
+: TOptions extends { return: string }
+  ? TOptions['return'] extends 'first'
+    ? ToRecord<L>
+    : number
+  : number
 
-export type UpdateSingleFunction<
+export type UpdateFunction<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   L extends T[number],
-> = <TOptions extends UpdateSingleFunctionOptions<L>>(
+> = <TOptions extends UpdateFunctionOptions<L>>(
   options: TOptions,
-) => UpdateSingleFunctionResult<T, K, L, TOptions>
+) => UpdateFunctionResult<T, K, L, TOptions>
