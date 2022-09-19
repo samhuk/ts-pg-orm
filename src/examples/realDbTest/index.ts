@@ -35,7 +35,7 @@ const getResult = (stores: Stores) => (
    * with all of their uploaded articles and images, and each of those
    * articles with it's image.
    */
-  stores.user.getMultiple({
+  stores.user.getMany({
     fields: ['uuid', 'name', 'email', 'dateCreated'],
     query: {
       filter: { field: 'dateDeleted', op: Operator.EQUALS, val: null },
@@ -93,13 +93,13 @@ const init = async () => {
   fs.writeFileSync(path.resolve(outputDir, 'articles-query.json'), JSON.stringify(result1.result, null, 2))
 
   // many-to-many
-  const result2 = await timedFn(() => stores.user.getMultiple({
+  const result2 = await timedFn(() => stores.user.getMany({
     fields: ['name'],
     relations: { userGroups: {} },
   }), 'query')
   fs.writeFileSync(path.resolve(outputDir, 'user-user-groups-query.json'), JSON.stringify(result2.result, null, 2))
 
-  const result3 = await timedFn(() => stores.user.getMultiple({
+  const result3 = await timedFn(() => stores.user.getMany({
     fields: ['name'],
     relations: {
       userGroups: {
@@ -118,16 +118,33 @@ const init = async () => {
 
   console.log(`avg dt: ${avgDt.toPrecision(4)} ms`)
 
-  await stores.article.updateSingle({
-    record: { title: 'UDPATED TITLE' },
-    filter: { field: 'id', op: Operator.EQUALS, val: 1 },
-    return: true,
+  const numArticlesUpdated = await stores.article.update({
+    record: { title: 'UPDATED TITLE' },
+    query: {
+      filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+    },
   })
+  console.log('num articles updated: ', numArticlesUpdated)
 
-  await stores.article.deleteSingle({
-    filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+  const articlesUpdated = await stores.article.update({
+    record: { title: 'UPDATED TITLE' },
+    query: {
+      filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+    },
     return: true,
   })
+  console.log('articles updated: ', articlesUpdated)
+
+  const articleUpdated = await stores.article.update({
+    record: { title: 'UPDATED TITLE', creatorUserId: 1 },
+    query: {
+      filter: { field: 'id', op: Operator.EQUALS, val: 1 },
+      page: 1,
+      pageSize: 1,
+    },
+    return: 'first',
+  })
+  console.log('article updated: ', articleUpdated)
 
   let exists = await stores.article.exists()
   console.log('Exists 1: ', exists)

@@ -2,7 +2,7 @@ import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataFormatDeclaration, DataFormatDeclarations, ToRecord } from '../../dataFormat/types'
 import { RelationDeclarations } from '../../relations/types'
 
-export type DeleteSingleFunctionOptions<
+export type DeleteFunctionOptions<
   T extends DataFormatDeclaration = DataFormatDeclaration,
 > = {
   /**
@@ -17,21 +17,21 @@ export type DeleteSingleFunctionOptions<
    return?: boolean
 }
 
-export type DeleteSingleFunctionResult<
+export type DeleteFunctionResult<
   T extends DataFormatDeclarations = DataFormatDeclarations,
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
   L extends T[number] = T[number],
-  TOptions extends DeleteSingleFunctionOptions<L> = DeleteSingleFunctionOptions<L>,
+  TOptions extends DeleteFunctionOptions<L> = DeleteFunctionOptions<L>,
 > = TOptions extends { return: boolean }
 ? TOptions['return'] extends true
   ? ToRecord<L> | null
   : boolean
 : ToRecord<L> | null
 
-export type DeleteSingleFunction<
+export type DeleteFunction<
   T extends DataFormatDeclarations,
   K extends RelationDeclarations<T>,
   L extends T[number],
-> = <TOptions extends DeleteSingleFunctionOptions<L>>(
+> = <TOptions extends DeleteFunctionOptions<L>>(
   options: TOptions,
-) => DeleteSingleFunctionResult<T, K, L, TOptions>
+) => DeleteFunctionResult<T, K, L, TOptions>

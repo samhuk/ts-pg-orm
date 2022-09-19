@@ -7,8 +7,8 @@ import { Relation, RelationDeclarations, RelationsDict, RelationType } from '../
 import { TsPgOrm } from '../types'
 import { Store } from './types'
 import { create, createManual } from './create'
-import { deleteSingle } from './delete'
-import { updateSingle } from './update'
+import { _delete } from './delete'
+import { update } from './update'
 import { getSingle, getMultiple } from './get'
 import { AnyGetFunctionOptions } from './get/types'
 import { count } from './count'
@@ -58,11 +58,11 @@ export const createStore = <
     unprovision: () => db.query(`drop table if exists ${localDataFormat.sql.tableName}`) as Promise<any>,
     create: options => create(db, localDataFormat, options) as any,
     createManual: options => createManual(db, localDataFormat, options) as any,
-    updateSingle: options => updateSingle(db, localDataFormat, options) as any,
-    deleteSingle: options => deleteSingle(db, localDataFormat, options) as any,
-    getSingle: options => getSingle(tsPgOrm as any, db, localDataFormat, options as AnyGetFunctionOptions<false>) as any,
-    getMultiple: options => getMultiple(tsPgOrm as any, db, localDataFormat, options as AnyGetFunctionOptions<true>) as any,
+    update: options => update(db, localDataFormat, options) as any,
+    delete: options => _delete(db, localDataFormat, options) as any,
     count: options => count(db, localDataFormat, options),
     exists: options => exists(db, localDataFormat, options),
+    get: options => getSingle(tsPgOrm as any, db, localDataFormat, options as AnyGetFunctionOptions<false>) as any,
+    getMany: options => getMultiple(tsPgOrm as any, db, localDataFormat, options as AnyGetFunctionOptions<true>) as any,
   }
 }

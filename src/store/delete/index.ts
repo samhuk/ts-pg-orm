@@ -2,13 +2,13 @@ import { createDataFilter } from '@samhuk/data-filter'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat } from '../../dataFormat/types'
 import { objectPropsToCamelCase } from '../../helpers/string'
-import { DeleteSingleFunctionOptions, DeleteSingleFunctionResult } from './types'
+import { DeleteFunctionOptions, DeleteFunctionResult } from './types'
 
-export const deleteSingle = async (
+export const _delete = async (
   db: SimplePgClient,
   df: DataFormat,
-  options: DeleteSingleFunctionOptions,
-): Promise<DeleteSingleFunctionResult> => {
+  options: DeleteFunctionOptions,
+): Promise<DeleteFunctionResult> => {
   const rootSql = df.sql.deleteSqlBase
   const whereClause = createDataFilter(options.filter).toSql({
     transformer: node => ({ left: df.sql.columnNames[node.field] }),
