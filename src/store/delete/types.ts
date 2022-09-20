@@ -44,5 +44,5 @@ export type DeleteFunction<
   K extends RelationDeclarations<T>,
   L extends T[number],
 > = <TOptions extends DeleteFunctionOptions<L>>(
-  options: TOptions,
+  options?: TOptions,
 ) => DeleteFunctionResult<T, K, L, TOptions>

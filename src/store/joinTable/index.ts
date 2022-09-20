@@ -2,6 +2,7 @@ import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../dataFormat/types'
 import { capitalize, objectPropsToCamelCase } from '../../helpers/string'
 import { Relation, RelationDeclarations, RelationType } from '../../relations/types'
+import { deleteBase } from '../delete'
 import {
   DeleteLinkByIdFunctionOptions,
   JoinTableStore,
@@ -99,12 +100,21 @@ const createJoinTableStore = <T extends DataFormatDeclarations>(
   const createLinks = createCreateLinksFunction(dataFormats, relation, db)
   const deleteLink = createDeleteLinkbyIdFunction(relation, db)
 
+  const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
+  const fieldNameToColumnName = {
+    id: 'id',
+    dateCreated: 'date_created',
+    [fieldsInfo.fieldRef1JoinTableFieldName]: relation.sql.joinTableFieldRef1ColumnName,
+    [fieldsInfo.fieldRef2JoinTableFieldName]: relation.sql.joinTableFieldRef2ColumnName,
+  }
+
   return {
     provision: () => db.query(relation.sql.createJoinTableSql).then(() => true as any),
     unprovision: () => db.query(relation.sql.dropJoinTableSql).then(() => true as any),
     create: options => createLink(options as any) as any,
     createMultiple: options => createLinks(options as any),
     deleteById: options => deleteLink(options) as any,
+    delete: options => deleteBase(db, relation.sql.joinTableName, fieldNameToColumnName, options) as any,
   }
 }
 

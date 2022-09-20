@@ -1,3 +1,4 @@
+import { Operator } from '@samhuk/data-filter/dist/types'
 import { createJoinTableStoresDict } from '.'
 import { filterForManyToManyRelations } from '../..'
 import { createMockDbService } from '../../mock/dbService'
@@ -97,6 +98,50 @@ values ($5, $6) returning *`,
       expect(db.receivedQueries[0]).toEqual({
         parameters: [2],
         sql: 'delete from user_to_user_group where id = $1 returning *',
+      })
+    })
+  })
+
+  describe('delete', () => {
+    test('basic test', async () => {
+      const db = createMockDbService()
+      const manyToManyRelationsList = filterForManyToManyRelations(tsPgOrm.relations)
+      const joinStoresDict = createJoinTableStoresDict<
+        typeof tsPgOrm['dataFormatDeclarations'],
+        typeof tsPgOrm['relationDeclarations']
+      >(tsPgOrm.dataFormats, manyToManyRelationsList as any, db)
+
+      db.queueResponse({
+        rows: [
+          {
+            id: 1,
+            user_id: 2,
+            user_group_id: 3,
+          },
+        ],
+      })
+
+      const newJoinTableRecord = await joinStoresDict['user.id <<-->> userGroup.id'].delete({
+        query: {
+          filter: {
+            field: 'userId', op: Operator.EQUALS, val: 2,
+          },
+        },
+        return: 'first',
+      })
+
+      expect(newJoinTableRecord).toEqual({
+        id: 1,
+        userId: 2,
+        userGroupId: 3,
+      })
+
+      expect(db.receivedQueries.length).toBe(1)
+      expect(db.receivedQueries[0]).toEqual({
+        parameters: undefined,
+        sql: `delete from user_to_user_group
+where user_id = 2
+returning *`,
       })
     })
   })

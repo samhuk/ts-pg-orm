@@ -33,5 +33,16 @@
       ],
       "preLaunchTask": "realDbTestDebugPreLaunchTask"
     },
+    {
+      "name": "Run Integration Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "./build-integration-test/integrationTests/index.js",
+      "args": [
+          "--runInBand",
+          "--no-cache"
+      ],
+      "preLaunchTask": "IntegrationTestsDebugPreLaunchTask"
+    },
   ]
 }

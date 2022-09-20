@@ -1,3 +1,4 @@
+import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { DataFormatDeclarations, DataFormatFieldToRecordPropertyValue } from '../../dataFormat/types'
 import { ExpandRecursively } from '../../helpers/types'
 import {
@@ -8,6 +9,7 @@ import {
   RelationsDict,
   RelationType,
 } from '../../relations/types'
+import { ReturnModeRaw } from '../common/types'
 
 type JoinTableRecordLinkedFields<
   T extends DataFormatDeclarations,
@@ -146,6 +148,100 @@ export type _DeleteLinkByIdFunction<
   Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>
 >
 
+export type DeleteFunctionOptions<
+  T extends DataFormatDeclarations,
+  TFieldRef1DataFormat extends T[number],
+  TFieldRef2DataFormat extends T[number],
+  TFieldRef1Field extends T[number]['fields'][number],
+  TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>
+> = {
+  /**
+   * Data query to select the record(s) to delete.
+   */
+  query?: DataQueryRecord<
+    (keyof JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) & string
+  >
+  /**
+   * Determines whether the deleted record(s) are to be returned.
+   *
+   * If `false`, the count of deleted records is returned.
+   *
+   * This can be alternatively be defined as `'first'`, which will cause
+   * only the first record to be returned. This is useful when it is expected
+   * that only one record will be deleted.
+   *
+   * @default false
+   */
+   return?: ReturnModeRaw
+}
+
+export type _DeleteFunctionOptions<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
+> = DeleteFunctionOptions<
+  T,
+  Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>,
+  Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>,
+  TRelation
+>
+
+export type DeleteFunctionResult<
+  T extends DataFormatDeclarations,
+  TFieldRef1DataFormat extends T[number],
+  TFieldRef2DataFormat extends T[number],
+  TFieldRef1Field extends T[number]['fields'][number],
+  TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
+  TOptions extends DeleteFunctionOptions<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
+    = DeleteFunctionOptions<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>,
+> = TOptions extends { return: boolean }
+? TOptions['return'] extends true
+  ? (keyof JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) & string[] | null
+  : number
+: TOptions extends { return: string }
+  ? TOptions['return'] extends 'first'
+    ? (keyof JoinTableRecord<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) & string
+    : number
+  : number
+
+export type _DeleteFunctionResult<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
+> = DeleteFunctionResult<
+  T,
+  Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>,
+  Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>,
+  TRelation
+>
+
+export type DeleteFunction<
+  T extends DataFormatDeclarations,
+  TFieldRef1DataFormat extends T[number],
+  TFieldRef2DataFormat extends T[number],
+  TFieldRef1Field extends T[number]['fields'][number],
+  TFieldRef2Field extends T[number]['fields'][number],
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
+> = <TOptions extends DeleteFunctionOptions<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>>(
+  options?: TOptions,
+) => DeleteFunctionResult<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation, TOptions>
+
+export type _DeleteFunction<
+  T extends DataFormatDeclarations = DataFormatDeclarations,
+  TRelation extends AnyManyToManyRelation<T> = AnyManyToManyRelation<T>,
+> = DeleteFunction<
+  T,
+  Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>,
+  Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef1']['formatName'] }>['fields'][number], { name: TRelation['fieldRef1']['fieldName'] }>,
+  Extract<Extract<T[number], { name: TRelation['fieldRef2']['formatName'] }>['fields'][number], { name: TRelation['fieldRef2']['fieldName'] }>,
+  TRelation
+>
+
 export type _JoinTableStore<
   T extends DataFormatDeclarations,
   TFieldRef1DataFormat extends T[number],
@@ -158,6 +254,7 @@ export type _JoinTableStore<
   unprovision: () => Promise<void>
   create: CreateLinkFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
   createMultiple: CreateLinksFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
+  delete: DeleteFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
   deleteById: DeleteLinkByIdFunction<T, TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
 }
 

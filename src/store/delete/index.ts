@@ -17,17 +17,20 @@ const determineReturnMode = (returnMode: ReturnModeRaw): ReturnMode => (
         : ReturnMode.RETURN_COUNT
 )
 
-export const _delete = async (
+export const deleteBase = async (
   db: SimplePgClient,
-  df: DataFormat,
-  options: DeleteFunctionOptions,
+  tableName: string,
+  fieldToColumnNameMap: { [fieldName: string]: string },
+  options?: DeleteFunctionOptions,
 ): Promise<DeleteFunctionResult> => {
-  const sqlParts: string[] = [`delete from ${df.sql.tableName}`]
+  const sqlParts: string[] = [`delete from ${tableName}`]
 
-  const queryInfo = createDataQuery(options.query).toSql({
-    filterTransformer: node => ({ left: df.sql.columnNames[node.field] }),
-    sortingTransformer: node => ({ left: df.sql.columnNames[node.field] }),
-  })
+  const queryInfo = options?.query != null
+    ? createDataQuery(options?.query).toSql({
+      filterTransformer: node => ({ left: fieldToColumnNameMap[node.field] }),
+      sortingTransformer: node => ({ left: fieldToColumnNameMap[node.field] }),
+    })
+    : null
 
   // If there is no OBLO, then we can do a simple form
   if (queryInfo?.orderByLimitOffset == null) {
@@ -36,14 +39,14 @@ export const _delete = async (
   // Else, we need to use ctid and a subquery
   else {
     sqlParts.push('where ctid in (')
-    sqlParts.push(`select ctid from ${df.sql.tableName}`)
+    sqlParts.push(`select ctid from ${tableName}`)
     sqlParts.push(queryInfo?.where)
     sqlParts.push(queryInfo?.orderByLimitOffset)
     sqlParts.push(')')
   }
 
   // -- Returning statement
-  const returnMode = determineReturnMode(options.return)
+  const returnMode = determineReturnMode(options?.return)
   if (returnMode !== ReturnMode.RETURN_COUNT)
     sqlParts.push('returning *')
 
@@ -62,3 +65,14 @@ export const _delete = async (
       return result.rowCount
   }
 }
+
+export const _delete = (
+  db: SimplePgClient,
+  df: DataFormat,
+  options?: DeleteFunctionOptions,
+): Promise<DeleteFunctionResult> => deleteBase(
+  db,
+  df.sql.tableName,
+  df.sql.columnNames,
+  options,
+)
