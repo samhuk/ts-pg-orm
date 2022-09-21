@@ -1,4 +1,5 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
+import { readObjPropDeep, setObjPropDeep } from '../../../common/obj'
 import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../../dataFormat/types'
 import { removeDuplicates, removeNullAndUndefinedValues } from '../../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../../helpers/object'
@@ -220,18 +221,36 @@ const foldResultsRowIteration = (
         childLinkedFieldName = `$$${rootDataNodeOfChildQueryNode.fieldsInfo.joinTableParentColumnNameAlias}`
       else
         childLinkedFieldName = rootDataNodeOfChildQueryNode.fieldRef.fieldName
+
+      const relatedDataPropNamePath = []
+      let currentDataNode = rootDataNodeOfChildQueryNode
+      while (currentDataNode != null) {
+        relatedDataPropNamePath.push(currentDataNode.relatedDataPropName)
+        if (currentDataNode.parent !== queryNode.rootDataNode)
+          currentDataNode = currentDataNode.parent
+        else
+          currentDataNode = null
+      }
+      relatedDataPropNamePath.reverse()
+      const relatedDataPropParentObjPath = relatedDataPropNamePath.slice(0)
+      relatedDataPropParentObjPath.pop()
+
       // Filter for child values that join to this row
-      row[rootDataNodeOfChildQueryNode.relatedDataPropName] = rootDataNodeOfChildQueryNode.isPlural
+      setObjPropDeep(row, relatedDataPropNamePath, rootDataNodeOfChildQueryNode.isPlural
         ? foldedChildQueryNodeResults.filter(childRow => {
+          const rowLinkedDataObj = readObjPropDeep(row, relatedDataPropParentObjPath)
+          // Determine the linked field value of this row. It could be prefixed with the removal tag.
           const linkedFieldValue = linkedFieldName in row
-            ? row[linkedFieldName]
-            : row[`$$${linkedFieldName}`]
+            ? rowLinkedDataObj[linkedFieldName]
+            : rowLinkedDataObj[`$$${linkedFieldName}`]
+          // Determine the linked field value of the child row. It could be prefixed with the removal tag.
           const childLinkedFieldValue = childLinkedFieldName in childRow
             ? childRow[childLinkedFieldName]
             : childRow[`$$${childLinkedFieldName}`]
+          // This child row should be included if it's linked value matches this row's linked value
           return linkedFieldValue === childLinkedFieldValue
         })
-        : foldedChildQueryNodeResults
+        : foldedChildQueryNodeResults, true)
     }
     else {
       row[rootDataNodeOfChildQueryNode.relatedDataPropName] = rootDataNodeOfChildQueryNode.isPlural ? [] : null

@@ -117,7 +117,7 @@ export const provisionOrm = async (): Promise<Stores> => {
     extensions: ['uuid-ossp'],
     events: {
       ...createConsoleLogEventHandlers(),
-      // TODO: This can cause a lot of console noise if enabled
+      // This can cause a lot of console noise if enabled
       // onQuery: (q, m, sql, p) => console.log(m, p),
       onQueryError: (q, m, sql, p) => console.log(m),
     },

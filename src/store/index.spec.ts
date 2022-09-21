@@ -25,30 +25,6 @@ describe('store', () => {
               '2.streetAddress': '1 Foo Road',
               '2.postCode': 'SE1 9U7',
             },
-            {
-              '0.uuid': '456',
-              '0.title': 'Article 2 by User 2',
-              '0.dateCreated': '1970-01-01',
-              '0.datePublished': '1970-01-01',
-              '0.createdByUserId': 2,
-              '1.id': 2,
-              '1.name': 'User 2',
-              '2.userId': 2,
-              '2.streetAddress': '2 Foo Road',
-              '2.postCode': 'SE1 9U7',
-            },
-            {
-              '0.uuid': '789',
-              '0.title': 'Article 3 by User 3',
-              '0.dateCreated': '1970-01-01',
-              '0.datePublished': '1970-01-01',
-              '0.createdByUserId': 3,
-              '1.id': 3,
-              '1.name': 'User 3',
-              '2.userId': 3,
-              '2.streetAddress': '3 Foo Road',
-              '2.postCode': 'SE1 9U7',
-            },
           ],
           [],
         ])
@@ -75,7 +51,6 @@ describe('store', () => {
         expect(result).toEqual({
           dateCreated: '1970-01-01',
           datePublished: '1970-01-01',
-          recipes: [],
           title: 'Article 1 by User 1',
           user: {
             name: 'User 1',
@@ -84,6 +59,7 @@ describe('store', () => {
               streetAddress: '1 Foo Road',
               userId: 1,
             },
+            recipes: [],
           },
           uuid: '123',
         })

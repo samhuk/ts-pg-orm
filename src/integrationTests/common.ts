@@ -45,9 +45,9 @@ export const deleteAllSampleData = async (stores: Stores) => {
 }
 
 const executeTest = async (stores: Stores, tests: Test[], onComplete: () => void, i: number = 0) => {
+  await deleteAllSampleData(stores)
   await addSampleData(stores)
   await tests[i](stores)
-  await deleteAllSampleData(stores)
   if (i < tests.length - 1)
     await executeTest(stores, tests, onComplete, i + 1)
   else
