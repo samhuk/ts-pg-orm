@@ -25,8 +25,20 @@ export const update = async (
 ): Promise<UpdateFunctionResult> => {
   const fieldNamesToUpdate = Object.keys(options.record)
     .filter(fName => df.sql.columnNames[fName] != null)
-  if (fieldNamesToUpdate.length === 0)
-    return null
+
+  const returnMode = determineReturnMode(options.return)
+  if (fieldNamesToUpdate.length === 0) {
+    switch (returnMode) {
+      case ReturnMode.RETURN_COUNT:
+        return 0
+      case ReturnMode.RETURN_ALL_ROWS:
+        return [] as any
+      case ReturnMode.RETURN_FIRST_ROW:
+        return null
+      default:
+        return null
+    }
+  }
 
   const sqlParts: string[] = [`update ${df.sql.tableName} set`]
 
@@ -66,7 +78,6 @@ export const update = async (
   }
 
   // -- Returning statement
-  const returnMode = determineReturnMode(options.return)
   if (returnMode !== ReturnMode.RETURN_COUNT)
     sqlParts.push('returning *')
 
