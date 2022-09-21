@@ -1,3 +1,10 @@
+------------------------------------------------
+-- This is a test document that shows examples
+-- of the SQL that needs to be formed for a Query
+-- Node for each combination of is many-to-many
+-- or not and is range-constrained or not.
+------------------------------------------------
+
 select * from "user"
 
 select * from "user_group"

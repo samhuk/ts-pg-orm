@@ -21,8 +21,11 @@ const ORM = createTsPgOrm()
   .loadRelations(dfs => [...] as const)
 await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
 const stores = await ORM.createStores()
+```
 
-// -- Perform CRUD operations on data stores
+Perform CRUD operations on data stores
+
+```typescript
 // Create
 const userCreated = await stores.user.create({ name: 'alice' })
 // Get
@@ -50,16 +53,22 @@ const userDeleted = await stores.user.delete({
   },
   return: true,
 })
+```
 
-// -- Create types for use throughout your application
+Create types to use throughout your application
+
+```typescript
 export type UserRecord = ToRecord<typeof USER_DFD>
 // { id: number, name: string, ... }
 export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
 // { name: string, ... }
 export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
 // { id: number, name: string, ... }
+```
 
-// -- Use type-enforced data format sql information to create bespoke SQL statements
+Use type-enforced sql information to create bespoke SQL statements
+
+```typescript
 const sql = ORM.dataFormats.user.sql
 const customUserSql = `select ${sql.columnNames.name} from ${sql.tableName}`
 ```
