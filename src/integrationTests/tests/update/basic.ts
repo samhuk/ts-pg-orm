@@ -1,7 +1,7 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic get', async (stores, assert) => {
+export const basicTest = test('basic', async (stores, assert) => {
   const result = await stores.user.update({
     record: {
       email: 'user1NewEmail@email.com',

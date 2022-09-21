@@ -1,7 +1,7 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic get', async (stores, assert) => {
+export const basicTest = test('basic', async (stores, assert) => {
   const result = await stores.user.get({
     fields: ['name', 'email', 'dateCreated'],
     filter: {

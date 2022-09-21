@@ -1,35 +1,30 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const fullQueryTest = test('full query', async (stores, assert) => {
-  const result = await stores.user.update({
-    record: {
-      email: 'user1NewEmail@email.com',
-    },
+export const basicTest = test('basic', async (stores, assert) => {
+  const result = await stores.userAddress.delete({
     query: {
       filter: {
         logic: DataFilterLogic.AND,
         nodes: [
-          { field: 'name', op: Operator.EQUALS, val: 'User 1' },
+          { field: 'city', op: Operator.EQUALS, val: 'London' },
           { field: 'dateDeleted', op: Operator.EQUALS, val: null },
         ],
       },
-      page: 1,
-      pageSize: 1,
     },
   })
 
   assert(result, 1)
 
-  const userRecord = await stores.user.get({
+  const userAddressRecord = await stores.userAddress.get({
     filter: {
       logic: DataFilterLogic.AND,
       nodes: [
-        { field: 'name', op: Operator.EQUALS, val: 'User 1' },
+        { field: 'city', op: Operator.EQUALS, val: 'London' },
         { field: 'dateDeleted', op: Operator.EQUALS, val: null },
       ],
     },
   })
 
-  assert(userRecord.email, 'user1NewEmail@email.com')
+  assert(userAddressRecord, null)
 })

@@ -23,13 +23,7 @@ export const test = (
 ): Test => async (stores: Stores) => {
   console.log(`Running test: ${name}`)
   const _assert = (actual: any, expected: any, message?: string): any => {
-    try {
-      assert.deepStrictEqual(actual, expected, message)
-    }
-    catch (error) {
-      console.log('Test failed: ', error)
-      throw error
-    }
+    assert.deepStrictEqual(actual, expected, message)
   }
   const timedFnResult = await timedFn(() => fn(stores, _assert))
   console.log('Done. Dt (ms):', formatPerformanceDtToMs(timedFnResult.dt))
