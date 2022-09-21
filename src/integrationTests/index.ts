@@ -1,13 +1,19 @@
+import { executeTestGroups } from './common'
 import { ORM, provisionOrm } from './orm'
+import { createTests } from './tests/create'
 import { deleteTests } from './tests/delete'
 import { getTests } from './tests/get'
 import { updateTests } from './tests/update'
 
 const init = async () => {
   const stores = await provisionOrm()
-  await getTests(stores)
-  await updateTests(stores)
-  await deleteTests(stores)
+  await executeTestGroups(
+    stores,
+    getTests,
+    updateTests,
+    deleteTests,
+    createTests,
+  )
   await ORM.db.client.end()
 }
 

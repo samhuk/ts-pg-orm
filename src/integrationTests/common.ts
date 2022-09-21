@@ -57,3 +57,15 @@ export const testGroup = (
     executeTest(stores, tests, () => res())
   })
 }
+
+const executeTestGroup = async (stores: Stores, testGroups: TestGroup[], onComplete: () => void, i: number = 0) => {
+  await testGroups[i](stores)
+  if (i < testGroups.length - 1)
+    await executeTestGroup(stores, testGroups, onComplete, i + 1)
+  else
+    onComplete()
+}
+
+export const executeTestGroups = (stores: Stores, ...testGroups: TestGroup[]) => new Promise((res, rej) => {
+  executeTestGroup(stores, testGroups, () => res(null))
+})
