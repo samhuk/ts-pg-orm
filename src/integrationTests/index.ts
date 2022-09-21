@@ -1,7 +1,9 @@
 import { executeTestGroups } from './common'
 import { ORM, provisionOrm } from './orm'
+import { countTests } from './tests/count'
 import { createTests } from './tests/create'
 import { deleteTests } from './tests/delete'
+import { existsTests } from './tests/exists'
 import { getTests } from './tests/get'
 import { updateTests } from './tests/update'
 
@@ -13,6 +15,8 @@ const init = async () => {
     updateTests,
     deleteTests,
     createTests,
+    countTests,
+    existsTests,
   )
   await ORM.db.client.end()
 }
