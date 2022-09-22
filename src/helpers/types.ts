@@ -80,14 +80,14 @@ export type DeepReadonlyOrMutable<T> = DeepReadonly<T> | DeepMutable<T>
  */
 export type ExpandOneLevel<T> = T extends object
  ? T extends infer O ? { [K in keyof O]: O[K] } : never
- : T;
+ : T
 
 /**
  * Forces typescript to recursively expand the type definition of `T`.
  */
 export type ExpandRecursively<T> = T extends object
   ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
-  : T;
+  : T
 
 export type DeepReadonly<T> =
   T extends (infer R)[] ? DeepReadonlyArray<R> :

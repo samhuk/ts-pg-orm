@@ -1,12 +1,26 @@
-# ts-pg-orm
+<h1 align="center">ts-pg-orm</h1>
+<p align="center">
+    <em>Delightful Typescript PostgreSQL ORM</em>
+</p>
 
-![build](https://github.com/samhuk/ts-pg-orm/actions/workflows/build.yaml/badge.svg)
-![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
-[![npm version](https://badge.fury.io/js/ts-pg-orm.svg)](https://badge.fury.io/js/ts-pg-orm)
+<p align="center">
+  <a href="https://github.com/samhuk/ts-pg-orm/actions/workflows/build.yaml/badge.svg" target="_blank">
+    <img src="https://github.com/samhuk/ts-pg-orm/actions/workflows/build.yaml/badge.svg" alt="build" />
+  </a>
+  <a href="https://img.shields.io/badge/License-MIT-green.svg" target="_blank">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="license" />
+  </a>
+  <a href="https://app.fossa.com/projects/custom%2B33608%2Fgithub.com%2Fsamhuk%2Fts-pg-orm?ref=badge_shield" alt="FOSSA Status">
+    <img src="https://app.fossa.com/api/projects/custom%2B33608%2Fgithub.com%2Fsamhuk%2Fts-pg-orm.svg?type=shield"/>
+  </a>
+  <a href="https://badge.fury.io/js/ts-pg-orm.svg" target="_blank">
+    <img src="https://badge.fury.io/js/ts-pg-orm.svg" alt="npm version" />
+  </a>
+</p>
 
-Delightful Typescript PostgreSQL ORM.
+## Introduction
 
-PostgreSQL persistence for your Typescript application with less guess-work and less mistakes.
+ts-pg-orm provides PostgreSQL persistence for your Typescript application with less guess-work and support for complex querying.
 
 Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started) guide.
 
