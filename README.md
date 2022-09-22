@@ -7,6 +7,9 @@
   <a href="https://github.com/samhuk/ts-pg-orm/actions/workflows/ci.yaml/badge.svg" target="_blank">
     <img src="https://github.com/samhuk/ts-pg-orm/actions/workflows/ci.yaml/badge.svg" alt="ci status" />
   </a>
+  <a href="https://codecov.io/gh/samhuk/ts-pg-orm" > 
+    <img src="https://codecov.io/gh/samhuk/ts-pg-orm/branch/master/graph/badge.svg?token=N0WKDLEDNM"/> 
+  </a>
   <a href="https://img.shields.io/badge/License-MIT-green.svg" target="_blank">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="license" />
   </a>
