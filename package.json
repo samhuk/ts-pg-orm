@@ -31,7 +31,9 @@
     "run-article-api": "node ./build-examples/examples/articleApi/index.js",
     "run-real-db-test": "node ./build-examples/examples/realDbTest/index.js",
     "article-api": "npm run clean-examples && npm run build-examples && npm run run-article-api",
-    "real-db-test": "npm run clean-examples && npm run build-examples && npm run run-real-db-test"
+    "real-db-test": "npm run clean-examples && npm run build-examples && npm run run-real-db-test",
+
+    "clean-all": "npm run clean-unit-tests && npm run clean-integration-tests && npm run clean && npm run clean-examples"
   },
   "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",
