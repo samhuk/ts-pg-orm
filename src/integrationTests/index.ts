@@ -5,6 +5,7 @@ import { createTests } from './tests/create'
 import { deleteTests } from './tests/delete'
 import { existsTests } from './tests/exists'
 import { getTests } from './tests/get'
+import { getManyTests } from './tests/getMany'
 import { joinTableTests } from './tests/joinTable'
 import { updateTests } from './tests/update'
 
@@ -13,6 +14,7 @@ const init = async () => {
   await executeTestGroups(
     stores,
     getTests,
+    getManyTests,
     updateTests,
     deleteTests,
     createTests,
