@@ -16,16 +16,26 @@
 
     "clean-integration-tests": "rimraf ./build-integration-test",
     "build-integration-tests": "tsc -p ./tsconfig.integration-tests.json",
-    "run-integration-tests": "node ./build-integration-test/integrationTests/index.js",
-    "run-integration-tests-local": "env-cmd -e integration-tests node ./build-integration-test/integrationTests/index.js",
+    "run-integration-tests-ci": "node ./build-integration-test/integrationTests/index.js",
+    "run-integration-tests": "env-cmd -e integration-tests node ./build-integration-test/integrationTests/index.js",
+    "integration-tests-ci": "npm run clean-integration-tests && npm run build-integration-tests && npm run run-integration-tests-ci",
     "integration-tests": "npm run clean-integration-tests && npm run build-integration-tests && npm run run-integration-tests",
-    "integration-tests-local": "npm run clean-integration-tests && npm run build-integration-tests && npm run run-integration-tests-local",
+
+    "clean-tests": "npm run clean-unit-tests && npm run clean-integration-tests",
+    "build-tests": "npm run build-unit-tests && npm run build-integration-tests",
+    "run-tests": "npm run run-unit-tests && npm run run-integration-tests",
+    "run-tests-ci": "npm run run-unit-tests && npm run run-integration-tests-ci",
+    "tests": "npm run clean-tests && npm run build-tests && npm run run-tests",
+    "tests-ci": "npm run clean-tests && npm run build-tests && npm run run-tests-ci",
 
     "lint": "eslint -c .eslintrc.json ./src --ext .ts,.tsx",
     "lint-errors-only": "eslint -c .eslintrc.json ./src --ext .ts,.tsx --quiet",
+
     "clean": "rimraf ./dist",
     "build-ts": "npm run clean && tsc -p ./tsconfig.dist.json",
-    "check": "npm rum lint-errors-only && npm run build-ts && npm run unit-tests",
+
+    "check": "npm rum lint-errors-only && npm run build-ts && npm run tests",
+
     "start": "tsc -p ./src/tsconfig.json --watch",
 
     "clean-examples": "rimraf ./build-examples",

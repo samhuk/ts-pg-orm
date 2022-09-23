@@ -71,4 +71,4 @@ jobs:
         DATABASE_PASSWORD: ${{ matrix.database-password }}
         DATABASE_HOST: ${{ matrix.database-host }}
         DATABASE_PORT: ${{ matrix.database-port }}
-      run: npm run integration-tests
+      run: npm run integration-tests-ci
