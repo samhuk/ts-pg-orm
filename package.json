@@ -17,7 +17,9 @@
     "clean-integration-tests": "rimraf ./build-integration-test",
     "build-integration-tests": "tsc -p ./tsconfig.integration-tests.json",
     "run-integration-tests": "node ./build-integration-test/integrationTests/index.js",
+    "run-integration-tests-local": "env-cmd -e integration-tests node ./build-integration-test/integrationTests/index.js",
     "integration-tests": "npm run clean-integration-tests && npm run build-integration-tests && npm run run-integration-tests",
+    "integration-tests-local": "npm run clean-integration-tests && npm run build-integration-tests && npm run run-integration-tests-local",
 
     "lint": "eslint -c .eslintrc.json ./src --ext .ts,.tsx",
     "lint-errors-only": "eslint -c .eslintrc.json ./src --ext .ts,.tsx --quiet",

@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
-  build:
+  buildAndUnitTests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,3 +26,49 @@ jobs:
       run: npm run unit-tests
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+  integrationTests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+        database-name:
+        - ts-pg-orm-integration-tests
+        database-password:
+        - postgres
+        database-user:
+        - postgres
+        database-host:
+        - 127.0.0.1
+        database-port:
+        - 5432
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: ${{ matrix.database-name }}
+          POSTGRES_USER: ${{ matrix.database-user }}
+          POSTGRES_PASSWORD: ${{ matrix.database-password }}
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options:
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install dependencies
+      run: npm install
+    - name: Integration tests
+      env:
+        DATABASE_NAME: ${{ matrix.database-name }}
+        DATABASE_USER: ${{ matrix.database-user }}
+        DATABASE_PASSWORD: ${{ matrix.database-password }}
+        DATABASE_HOST: ${{ matrix.database-host }}
+        DATABASE_PORT: ${{ matrix.database-port }}
+      run: npm run integration-tests
