@@ -108,11 +108,11 @@ export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
 
 export const provisionOrm = async (): Promise<Stores> => {
   await ORM.initDbClient({
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    password: 'postgres',
-    db: 'ts-pg-orm-test',
+    host: process.env.DATABASE_HOST,
+    port: parseInt(process.env.DATABASE_PORT),
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    db: process.env.DATABASE_NAME,
     createDbIfNotExists: true,
     extensions: ['uuid-ossp'],
     events: {
