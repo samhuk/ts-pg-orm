@@ -1,12 +1,11 @@
 {
   "name": "ts-pg-orm",
-  "version": "4.3.4",
+  "version": "4.3.5",
   "description": "Typescript PostgreSQL ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist/**/*",
-    "src/**/*"
+    "dist/**/*"
   ],
   "scripts": {
     "clean-unit-tests": "rimraf ./build-test",
@@ -34,7 +33,7 @@
     "clean": "rimraf ./dist",
     "build-ts": "npm run clean && tsc -p ./tsconfig.dist.json",
 
-    "check": "npm rum lint-errors-only && npm run build-ts && npm run tests",
+    "check": "npm rum lint-errors-only && npm run build-ts && npm run tests && echo Done!",
 
     "start": "tsc -p ./src/tsconfig.json --watch",
 
