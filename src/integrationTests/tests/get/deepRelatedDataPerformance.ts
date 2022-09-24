@@ -1,11 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
-import { benchmarkAsyncFn, reportBenchmark, test } from '../../common'
+import { benchmarkAsyncFn, test } from '../../common'
 
-export const deepRelatedDataPerformanceTest = test('deep related data - performance', (stores, assert) => new Promise((res, rej) => {
-  const start = performance.now()
-  const numIterations = 5000
-
-  benchmarkAsyncFn(stores, async () => {
+export const deepRelatedDataPerformanceTest = test('deep related data - performance', async (stores, assert) => {
+  await benchmarkAsyncFn(async () => {
     const userNumber = Math.ceil((Math.random() * 3)) // Random number between 1 and 3
     const userName = `User ${userNumber}` // Either "User 1", "User 2", or "User 3"
     await stores.user.get({
@@ -49,8 +46,5 @@ export const deepRelatedDataPerformanceTest = test('deep related data - performa
         },
       },
     })
-  }, () => {
-    reportBenchmark(numIterations, start, 1400)
-    res()
-  }, 5000)
-}))
+  })
+})

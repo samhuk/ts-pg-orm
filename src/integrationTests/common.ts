@@ -6,25 +6,57 @@ import { addSampleData } from './sampleData'
 type TestGroup = (stores: Stores) => Promise<void>
 type Test = (stores: Stores) => Promise<void>
 
-const formatPerformanceDtToMs = (dt: number) => parseFloat(dt.toPrecision(6))
+const formatPerformanceDtToMs = (dt: number) => parseFloat(dt.toPrecision(5))
 
-export const reportBenchmark = (numIterations: number, start: number, approximateExpectedItsPerSec: number) => {
-  const dtMs = performance.now() - start
-  const itsPerSec = parseFloat((numIterations / (dtMs / 1000)).toPrecision(4))
-  console.log(`diff from expected: ${((itsPerSec / approximateExpectedItsPerSec) * 100).toPrecision(3)}%`)
-  console.log('Its/sec: ', itsPerSec)
-  console.log('ms/It: ', parseFloat((dtMs / numIterations).toPrecision(3)))
+const calculateItsPerSec = (numIts: number, dtMs: number) => parseFloat((numIts / (dtMs / 1000)).toPrecision(4))
+
+const calculateMsPerIt = (numIts: number, dtMs: number) => parseFloat((dtMs / numIts).toPrecision(3))
+
+export const reportBenchmark = (numIts: number, fnDtMs: number, controlFnDtMs?: number) => {
+  const itsPerSecFn = calculateItsPerSec(numIts, fnDtMs)
+  const msPerItFn = calculateMsPerIt(numIts, fnDtMs)
+  console.log('its/sec: ', itsPerSecFn)
+  console.log('ms/It: ', msPerItFn)
+  if (controlFnDtMs != null) {
+    const itsPerSecControlFn = calculateItsPerSec(numIts, controlFnDtMs)
+    const percentOfControl = (controlFnDtMs / fnDtMs) * 100
+    console.log('% of control:', parseFloat(percentOfControl.toPrecision(3)), '%  (control =', itsPerSecControlFn, 'its/sec)')
+  }
 }
 
-export const benchmarkAsyncFn = async (stores: Stores, fn: () => Promise<void>, onComplete: () => void, numIterations: number, i: number = 0) => {
+const _benchmarkAsyncFn = async (fn: () => Promise<void>, onComplete: () => void, numIterations: number, i: number = 0) => {
   await fn()
   if (i % 1000 === 0)
     console.log(`Iteration: ${i}/${numIterations} (${(i / numIterations) * 100}%)`)
   if (i < numIterations)
-    await benchmarkAsyncFn(stores, fn, onComplete, numIterations, i + 1)
+    await _benchmarkAsyncFn(fn, onComplete, numIterations, i + 1)
   else
     onComplete()
 }
+
+export const benchmarkAsyncFn = (
+  fn: () => Promise<void>,
+  controlFn?: () => Promise<void>,
+  numIterations: number = 5000,
+) => new Promise((res, rej) => {
+  if (controlFn != null) {
+    const controlFnStart = performance.now()
+    _benchmarkAsyncFn(controlFn, () => {
+      const fnStart = performance.now()
+      _benchmarkAsyncFn(fn, () => {
+        reportBenchmark(numIterations, performance.now() - fnStart, fnStart - controlFnStart)
+        res(undefined)
+      }, numIterations)
+    }, numIterations)
+  }
+  else {
+    const start = performance.now()
+    _benchmarkAsyncFn(fn, () => {
+      reportBenchmark(numIterations, performance.now() - start)
+      res(undefined)
+    }, numIterations)
+  }
+})
 
 export const timedFn = async <T>(fn: () => Promise<T> | T): Promise<{ dt: number, result: T }> => {
   const start = performance.now()
