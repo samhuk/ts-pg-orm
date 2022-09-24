@@ -8,6 +8,22 @@ type Test = (stores: Stores) => Promise<void>
 
 const formatPerformanceDtToMs = (dt: number) => parseFloat(dt.toPrecision(6))
 
+export const reportBenchmark = (numIterations: number, start: number) => {
+  const dtMs = performance.now() - start
+  console.log('Its/sec: ', parseFloat((numIterations / (dtMs / 1000)).toPrecision(4)))
+  console.log('ms/It: ', parseFloat((dtMs / numIterations).toPrecision(3)))
+}
+
+export const benchmarkAsyncFn = async (stores: Stores, fn: () => Promise<void>, onComplete: () => void, numIterations: number, i: number = 0) => {
+  await fn()
+  if (i % 1000 === 0)
+    console.log(`Iteration: ${i}/${numIterations} (${(i / numIterations) * 100}%)`)
+  if (i < numIterations)
+    await benchmarkAsyncFn(stores, fn, onComplete, numIterations, i + 1)
+  else
+    onComplete()
+}
+
 export const timedFn = async <T>(fn: () => Promise<T> | T): Promise<{ dt: number, result: T }> => {
   const start = performance.now()
   let end: number = null
