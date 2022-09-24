@@ -23,7 +23,7 @@
 
 ## Introduction
 
-ts-pg-orm provides PostgreSQL persistence for your Typescript application with less guess-work and support for complex querying.
+ts-pg-orm provides powerful PostgreSQL persistence for your Typescript application with less guess-work.
 
 Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started) guide.
 

@@ -1,6 +1,6 @@
 import { testGroup } from '../../common'
 import { basicTest } from './basic'
-import { deepRelatedDataTest } from './deepRelatedata'
+import { deepRelatedDataTest } from './deepRelatedData'
 import { basicPerformanceTest } from './basicPerformance'
 import { deepRelatedDataPerformanceTest } from './deepRelatedDataPerformance'
 
