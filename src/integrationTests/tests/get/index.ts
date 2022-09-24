@@ -1,8 +1,8 @@
 import { testGroup } from '../../common'
 import { basicTest } from './basic'
 import { deepRelatedDataTest } from './deepRelatedata'
-import { basicPerformanceTest } from './performanceBasic'
-import { deepRelatedDataPerformanceTest } from './performanceDeepRelatedData'
+import { basicPerformanceTest } from './basicPerformance'
+import { deepRelatedDataPerformanceTest } from './deepRelatedDataPerformance'
 
 export const getTests = testGroup(
   'get',

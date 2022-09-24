@@ -19,7 +19,7 @@ export const basicPerformanceTest = test('basic - performance', (stores, assert)
       },
     })
   }, () => {
-    reportBenchmark(numIterations, start)
+    reportBenchmark(numIterations, start, 3200)
     res()
   }, 5000)
 }))

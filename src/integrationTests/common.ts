@@ -8,9 +8,11 @@ type Test = (stores: Stores) => Promise<void>
 
 const formatPerformanceDtToMs = (dt: number) => parseFloat(dt.toPrecision(6))
 
-export const reportBenchmark = (numIterations: number, start: number) => {
+export const reportBenchmark = (numIterations: number, start: number, approximateExpectedItsPerSec: number) => {
   const dtMs = performance.now() - start
-  console.log('Its/sec: ', parseFloat((numIterations / (dtMs / 1000)).toPrecision(4)))
+  const itsPerSec = parseFloat((numIterations / (dtMs / 1000)).toPrecision(4))
+  console.log(`diff from expected: ${((itsPerSec / approximateExpectedItsPerSec) * 100).toPrecision(3)}%`)
+  console.log('Its/sec: ', itsPerSec)
   console.log('ms/It: ', parseFloat((dtMs / numIterations).toPrecision(3)))
 }
 

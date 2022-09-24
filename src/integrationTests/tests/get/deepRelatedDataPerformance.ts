@@ -50,7 +50,7 @@ export const deepRelatedDataPerformanceTest = test('deep related data - performa
       },
     })
   }, () => {
-    reportBenchmark(numIterations, start)
+    reportBenchmark(numIterations, start, 1400)
     res()
   }, 5000)
 }))
