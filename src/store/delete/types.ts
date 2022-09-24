@@ -29,15 +29,17 @@ export type DeleteFunctionResult<
   K extends RelationDeclarations<T> = RelationDeclarations<T>,
   L extends T[number] = T[number],
   TOptions extends DeleteFunctionOptions<L> = DeleteFunctionOptions<L>,
-> = TOptions extends { return: boolean }
-? TOptions['return'] extends true
-  ? ToRecord<L>[] | null
-  : number
-: TOptions extends { return: string }
-  ? TOptions['return'] extends 'first'
-    ? ToRecord<L>
-    : number
-  : number
+> = Promise<
+  TOptions extends { return: boolean }
+    ? TOptions['return'] extends true
+      ? ToRecord<L>[] | null
+      : number
+    : TOptions extends { return: string }
+      ? TOptions['return'] extends 'first'
+        ? ToRecord<L>
+        : number
+      : number
+>
 
 export type DeleteFunction<
   T extends DataFormatDeclarations,
