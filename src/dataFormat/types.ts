@@ -265,18 +265,6 @@ type ToDiscrimUnion<T, K extends keyof T> = T extends unknown ? {
 
 type DataFormatFieldBase = {
   displayName?: string
-  /**
-   * Determines whether the field will be available to get records from
-   * entity stores by, i.e. if field is "id" and `enableGetBy` is `true`,
-   * then stores will have `getById(id: number)` present.
-   */
-  enableGetBy?: boolean
-  /**
-   * Determines whether the field will be available to delete records from
-   * entity stores by, i.e. if field is "id" and `enableDeleteBy` is `true`,
-   * then stores will have `deleteById(id: number)` present.
-   */
-   enableDeleteBy?: boolean
 }
 
 type DataFormatFieldWithoutGeneric = DataFormatFieldBase & ToDiscrimUnion<ToDiscrimUnion<DataTypeSubTypeMapping, 'dataType'>, 'dataSubType'>
@@ -289,12 +277,6 @@ export type FieldSubSet<
 }
 
 export type ExtractFieldSubSetNames<T extends DataFormatDeclaration> = T['fieldSubSets'][number]['name']
-
-export type ExtractFieldNamesWithGetBy<T extends DataFormatDeclaration> =
-  Extract<T['fields'][number], { enableGetBy: true }>['name']
-
-export type ExtractFieldNamesWithDeleteBy<T extends DataFormatDeclaration> =
-  Extract<T['fields'][number], { enableDeleteBy: true }>['name']
 
 export type CapitalizedFieldNames<T extends DataFormatDeclaration> =
   { [TFieldName in ExtractDataFormatFieldNames<T>]: Capitalize<TFieldName> }
@@ -635,8 +617,6 @@ export type DataFormat<T extends DataFormatDeclaration = DataFormatDeclaration> 
    * A dictionary of the field names of the declaration.
    */
   fieldNames: { [fieldName in ExtractDataFormatFieldNames<T>]: fieldName }
-  fieldNamesWithEnabledGetByList: ExtractFieldNamesWithGetBy<T>[]
-  fieldNamesWithEnabledDeleteByList: ExtractFieldNamesWithDeleteBy<T>[]
   capitalizedFieldNames: CapitalizedFieldNames<T>
   /**
    * List of field names.

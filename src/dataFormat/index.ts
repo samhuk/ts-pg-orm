@@ -119,8 +119,6 @@ export const createDataFormat = <T extends DataFormatDeclaration>(
     fields,
     fieldNames: fieldNamesDict,
     fieldNameList,
-    fieldNamesWithEnabledGetByList: fieldNameList.filter(fname => fields[fname].enableGetBy ?? false),
-    fieldNamesWithEnabledDeleteByList: fieldNameList.filter(fname => fields[fname].enableDeleteBy ?? false),
     capitalizedFieldNames,
     sql,
     fieldRefs: fieldRefsDict,

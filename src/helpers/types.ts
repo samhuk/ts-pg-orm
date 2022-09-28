@@ -35,7 +35,7 @@ export type TypeDependantBase<
  *   [Type.STRING]: { upperCase: string },
  *   [Type.NUMBER]: { isInteger: boolean },
  * }
- * type Field = TypeDependantBaseIntersection<Type, Map, "dataType">
+ * type Field<T extends Type> = TypeDependantBaseIntersection<Type, Map, T, "dataType">
  * const field1: Field = {
  *   dataType: Type.STRING,
  *   upperCase: false
