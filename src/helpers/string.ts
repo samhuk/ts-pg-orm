@@ -8,6 +8,8 @@ export const getLastPathSegment = (path: string) => (
   path.substring(path.lastIndexOf('/') + 1)
 )
 
+export const quote = (s: string): string => `"${s}"`
+
 /**
  * @example
  * camelCaseToSnakeCase('dateCreated') // date_created

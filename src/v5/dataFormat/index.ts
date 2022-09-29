@@ -1,39 +1,48 @@
+import { mapDict } from '../../helpers/dict'
+import { camelCaseToSnakeCase, capitalize, quote } from '../../helpers/string'
+import { createField } from './field'
 import { DataFormat } from './types'
-import { CreateRecordOptions } from './types/createRecordOptions'
-import { DataType, EpochSubType, NumSubType, StrSubType } from './types/dataType'
 import { FieldsOptions } from './types/field'
 import { FieldSubSetsOptions } from './types/fieldSubSet'
-import { ToRecord } from './types/record'
 
-const createDataFormat = <TName extends string>(
-  name: TName,
-): DataFormat<TName, FieldsOptions, FieldSubSetsOptions<(keyof FieldsOptions) & string>> => {
+export const createDataFormat = <
+  TName extends string,
+  TPluralizedName extends string = `${TName}s`,
+  TFieldsOptions extends FieldsOptions = FieldsOptions,
+  // eslint-disable-next-line arrow-body-style, max-len
+>(
+    name: TName,
+    fieldsOptions: TFieldsOptions,
+    pluralizedName?: TPluralizedName,
+    tableName?: string,
+  ): DataFormat<TName, TPluralizedName, TFieldsOptions, FieldSubSetsOptions<(keyof TFieldsOptions) & string>> => {
+  const unquotedCols = mapDict(fieldsOptions, (f, fName) => f.columnName ?? camelCaseToSnakeCase(fName))
+  const cols = mapDict(unquotedCols, unquotedColName => quote(unquotedColName))
+  const unquotedTableName = tableName ?? camelCaseToSnakeCase(name)
+  const fields = mapDict(fieldsOptions, (fieldOptions, fName) => createField(fName, fieldOptions))
+  const fieldRefs = mapDict(fieldsOptions, (_, fName) => ({ field: fName, dataFormat: name }))
+  const _pluralizedName = pluralizedName ?? `${name}s`
+
   return {
     name,
-    fields: {},
-    fieldList: [],
-    fieldNameList: [],
+    capitalizedName: capitalize(name),
+    pluralizedName: _pluralizedName as any,
+    capitalizedPluralizedName: capitalize(_pluralizedName) as any,
+    fields: fields as any,
+    fieldList: Object.values(fields) as any[],
+    fieldNameList: Object.keys(fieldsOptions),
     fieldSubSets: {},
-    setFields: newFieldsOptions => undefined as any,
+    fieldRefs: fieldRefs as any,
+    createRecordFieldNameList: [] as any[],
+    sql: {
+      cols: cols as any,
+      unquotedCols: unquotedCols as any,
+      columnNameList: Object.values(cols),
+      unquotedColumnNameList: Object.values(unquotedCols),
+      tableName: quote(unquotedTableName),
+      unquotedTableName,
+      createRecordCols: {} as any,
+      createRecordColumnNameList: [] as any[],
+    },
   }
 }
-
-enum UserType {
-  ADMIN,
-  CLIENT
-}
-
-const USER_DF = createDataFormat('user').setFields({
-  id: { type: DataType.NUM, subType: NumSubType.SERIAL },
-  uuid: { type: DataType.STR, subType: StrSubType.UUID_V4, autoGenerate: true },
-  name: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 50 },
-  email: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 200 },
-  profileImageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
-  type: { type: DataType.NUM, subType: NumSubType.INT_ENUM, default: UserType.ADMIN },
-  dateCreated: { type: DataType.EPOCH, subType: EpochSubType.DATE_TIME_WITH_TIMEZONE, defaultToCurrentEpoch: true },
-  dateDeleted: { type: DataType.EPOCH, subType: EpochSubType.DATE_TIME_WITH_TIMEZONE, allowNull: true, excludeFromCreateOptions: true },
-})
-
-type UserRecord = ToRecord<typeof USER_DF>
-
-type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DF>

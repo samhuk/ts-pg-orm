@@ -1,5 +1,4 @@
 import { ExpandOneLevel, ValuesUnionFromDict } from '../../../helpers/types'
-import { DataFormat } from '../types'
 import { Fields, FieldToRecordType } from './field'
 
 /**
@@ -21,7 +20,7 @@ export type ExtractExplicitAllowNullBooleanFieldNames<TFields extends Fields> = 
  * Extracts the field names where `allowNull` is explicitly unprovided (and therefore is not part of the field type).
  */
 export type ExtractExplicitAllowNullUnprovidedFieldNames<TFields extends Fields> = Exclude<
- ValuesUnionFromDict<TFields>['name'],
+  ValuesUnionFromDict<TFields>['name'],
   ExtractExplicitAllowNullBooleanFieldNames<TFields>
 >
 
@@ -32,6 +31,11 @@ export type ExtractAmbiguousAllowNullBooleanFieldNames<TFields extends Fields> =
   ExtractExplicitAllowNullBooleanFieldNames<TFields>,
   ExtractExplicitAllowNullTrueFieldNames<TFields> | ExtractExplicitAllowNullFalseFieldNames<TFields>
 >
+
+export type ExtractHasDefaultFieldNames<TFields extends Fields> = Extract<
+  ValuesUnionFromDict<TFields>,
+  { default: any }
+>['name']
 
 /**
  * Extracts the field names that should be required in the record for the given data format declaration.
@@ -44,7 +48,7 @@ export type ExtractRequiredRecordFieldNames<TFields extends Fields> =
 export type ExtractOptionalRecordFieldNames<TFields extends Fields> =
   ExtractExplicitAllowNullTrueFieldNames<TFields>
 
-export type _ToRecord<TFields extends Fields> = ExpandOneLevel<
+export type ToRecord<TFields extends Fields> = ExpandOneLevel<
   {
     [TFieldName in keyof TFields as TFieldName extends ExtractOptionalRecordFieldNames<TFields> ? TFieldName : never]?:
       FieldToRecordType<TFields[TFieldName]>
@@ -54,5 +58,3 @@ export type _ToRecord<TFields extends Fields> = ExpandOneLevel<
       FieldToRecordType<TFields[TFieldName]>
   }
 >
-
-export type ToRecord<TDataFormat extends DataFormat> = _ToRecord<TDataFormat['fields']>

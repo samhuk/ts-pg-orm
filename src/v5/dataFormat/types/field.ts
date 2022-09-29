@@ -88,7 +88,7 @@ type DataTypeToOptions<
   }
 }
 
-type FieldOptions<
+export type FieldOptions<
   TDataType extends DataType = DataType,
   TSubType extends DataTypeToSubType[TDataType] = DataTypeToSubType[TDataType],
 > = TypeDependantBaseIntersection<DataType, DataTypeToOptions<TSubType>, TDataType> & {
@@ -98,6 +98,10 @@ type FieldOptions<
    * when being created, for example a `dateDeleted` field.
    */
   excludeFromCreateOptions?: boolean
+  /**
+   * Overrides the default column name for the field.
+   */
+  columnName?: string
 }
 
 export type FieldSql = {
