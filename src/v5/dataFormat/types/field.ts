@@ -37,11 +37,12 @@ type DataTypeToOptions<
       default?: string
     }
     [StrSubType.ENUM]: {
-      len?: number
+      maxLen?: number
       default?: string
     }
   }, TSubType, 'subType'> & {
     allowNull?: boolean
+    isPrimaryKey?: boolean
   }
   // -- Num
   [DataType.NUM]: TypeDependantBaseIntersection<NumSubType, {
@@ -62,7 +63,9 @@ type DataTypeToOptions<
       size?: TwoStepNumberSize
       default?: number
     }
-  }, TSubType, 'subType'>
+  }, TSubType, 'subType'> & {
+    isPrimaryKey?: boolean
+  }
   // -- Bool
   [DataType.BOOL]: {
     allowNull?: boolean
@@ -132,6 +135,10 @@ export type Fields<TFieldsOptions extends FieldsOptions = FieldsOptions> = {
     TFieldName & string
   >
 }
+
+export type FieldList<
+  TFieldsOptions extends FieldsOptions = FieldsOptions
+> = ValuesUnionFromDict<Fields<TFieldsOptions>>[]
 
 export type FieldToRecordType<TField extends Field> =
   // If field is json array

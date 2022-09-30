@@ -1,7 +1,8 @@
-import { TypeDependantBaseIntersection } from '../../../helpers/types'
+import { TypeDependantBaseIntersection, ValuesUnionFromDict } from '../../../helpers/types'
 import { DataFormats } from '../../dataFormat/types'
 import { AvailableFieldRefsOfDataFormats, FieldRef } from '../../dataFormat/types/fieldRef'
 import { RelationOptionsToName } from './name'
+import { RelationSql } from './sql'
 
 export enum RelationType {
   /**
@@ -135,7 +136,7 @@ export type Relation<
   TRelationOptions extends RelationOptions<TRelationType, TDataFormats> = RelationOptions<TRelationType, TDataFormats>,
 > = TRelationOptions & {
   name: string
-}
+} & RelationSql<TRelationType>
 
 export type Relations<
   TDataFormats extends DataFormats,
@@ -150,3 +151,11 @@ export type Relations<
     ? Relation<TRelationOptionsList[K]['type'], TDataFormats, TRelationOptionsList[K]>
     : never
 }
+
+export type RelationList<
+  TDataFormats extends DataFormats = DataFormats,
+> = Relation<RelationType, TDataFormats>[]
+
+export type NonManyToManyRelationList<
+  TDataFormats extends DataFormats = DataFormats,
+> = Relation<RelationType.ONE_TO_ONE | RelationType.ONE_TO_MANY, TDataFormats>[]

@@ -1,3 +1,4 @@
+import { NonManyToManyRelationList } from '../../relations/types'
 import { Fields } from './field'
 
 export type DataFormatSql<TFields extends Fields = Fields> = {
@@ -9,4 +10,5 @@ export type DataFormatSql<TFields extends Fields = Fields> = {
   columnNameList: string[]
   unquotedColumnNameList: string[]
   createRecordColumnNameList: string[]
+  createTableSql: (relations: NonManyToManyRelationList) => string
 }

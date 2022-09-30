@@ -1,5 +1,4 @@
-import { ValuesUnionFromDict } from '../../../helpers/types'
-import { FieldsOptions, Fields } from './field'
+import { FieldsOptions, Fields, FieldList } from './field'
 import { FieldRefs } from './fieldRef'
 import { FieldSubSets, FieldSubSetsOptions } from './fieldSubSet'
 import { DataFormatSql } from './sql'
@@ -16,7 +15,7 @@ type _DataFormat<
   pluralizedName: TNamePluralized,
   capitalizedPluralizedName: Capitalize<TNamePluralized>
   fields: TFields
-  fieldList: ValuesUnionFromDict<TFields>[]
+  fieldList: FieldList<TFields>
   fieldNameList: (keyof TFields)[]
   fieldSubSets: FieldSubSets<(keyof TFieldsOptions) & string, TFieldSubSetsOptions>
   fieldRefs: FieldRefs<TFields, TName>

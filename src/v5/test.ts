@@ -53,6 +53,13 @@ const orm = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF] as const)
       fromOneField: USER_DF.fieldRefs.id,
       toManyField: IMAGE_DF.fieldRefs.creatorUserId,
     },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: IMAGE_DF.fieldRefs.id,
+      toManyField: ARTICLE_DF.fieldRefs.thumbnailImageId,
+    },
   ] as const)
 
 const t1 = orm.relations.userIdToImageCreatorUserId
+
+const t2 = orm.relations.userIdToImageCreatorUserId.sql.foreignKeySql

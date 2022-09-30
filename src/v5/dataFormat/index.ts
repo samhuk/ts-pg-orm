@@ -1,6 +1,8 @@
 import { mapDict } from '../../helpers/dict'
 import { camelCaseToSnakeCase, capitalize, quote } from '../../helpers/string'
+import { NonManyToManyRelationList, RelationList } from '../relations/types'
 import { createField } from './field'
+import { createTableSql } from './sql'
 import { DataFormat } from './types'
 import { FieldsOptions } from './types/field'
 import { FieldSubSetsOptions } from './types/fieldSubSet'
@@ -22,6 +24,7 @@ export const createDataFormat = <
   const fields = mapDict(fieldsOptions, (fieldOptions, fName) => createField(fName, fieldOptions))
   const fieldRefs = mapDict(fieldsOptions, (_, fName) => ({ field: fName, dataFormat: name }))
   const _pluralizedName = pluralizedName ?? `${name}s`
+  const fieldList = Object.values(fields)
 
   return {
     name,
@@ -29,7 +32,7 @@ export const createDataFormat = <
     pluralizedName: _pluralizedName as any,
     capitalizedPluralizedName: capitalize(_pluralizedName) as any,
     fields: fields as any,
-    fieldList: Object.values(fields) as any[],
+    fieldList: fieldList as any,
     fieldNameList: Object.keys(fieldsOptions),
     fieldSubSets: {},
     fieldRefs: fieldRefs as any,
@@ -43,6 +46,7 @@ export const createDataFormat = <
       unquotedTableName,
       createRecordCols: {} as any,
       createRecordColumnNameList: [] as any[],
+      createTableSql: (relations: NonManyToManyRelationList) => createTableSql(name, fieldList, relations),
     },
   }
 }
