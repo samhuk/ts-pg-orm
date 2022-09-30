@@ -1,6 +1,12 @@
 import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { ArrayTernary, ExpandRecursively, IsAny, PickAny, ValuesUnionFromDict } from '../../../../helpers/types'
+import {
+  ArrayTernary,
+  ExpandRecursivelyWithAdditionalLeafNodes,
+  IsAny,
+  PickAny,
+  ValuesUnionFromDict,
+} from '../../../../helpers/types'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { ToRecord } from '../../../dataFormat/types/record'
 import { Relations } from '../../../relations/types'
@@ -71,7 +77,7 @@ export type AnyGetFunctionResult<TIsPlural extends boolean = boolean> = GetFunct
   GetFunctionOptions<DataFormats, Relations, DataFormat, TIsPlural>
 >
 
-export type GetFunctionResultInternal<
+type _GetFunctionResult<
   TDataFormats extends DataFormats = DataFormats,
   TRelations extends Relations = Relations,
   TLocalDataFormat extends DataFormat = DataFormat,
@@ -81,41 +87,39 @@ export type GetFunctionResultInternal<
   D extends Prev[number] = MaxDepth
 > =
   ArrayTernary<
-    ExpandRecursively<
-      // this node
-      (
-        // If the fields property is present...
-        TOptions extends { fields: string[] }
-          // ...And if the fields[number] is any, then it's probably an empty array
-          ? IsAny<TOptions['fields'][number]> extends true
-            ? { } // So infer that as them wanting no fields of this node
-            // else, it's probably a populated array (at least one field within)
-            : PickAny<ToRecord<TLocalDataFormat['fields']>, TOptions['fields'][number]>
-          // Else (fields property is not present), then default to the full record
-          : ToRecord<TLocalDataFormat['fields']>
-      )
-      // child nodes
-      & (
-        TOptions extends { relations: any }
-          ? {
-            [TRelatedDataPropertyName in keyof TOptions['relations']]:
-              GetFunctionResultInternal<
-                TDataFormats,
-                TRelations,
+    // this node
+    (
+      // If the fields property is present...
+      TOptions extends { fields: string[] }
+        // ...And if the fields[number] is any, then it's probably an empty array
+        ? IsAny<TOptions['fields'][number]> extends true
+          ? { } // So infer that as them wanting no fields of this node
+          // else, it's probably a populated array (at least one field within)
+          : PickAny<ToRecord<TLocalDataFormat['fields']>, TOptions['fields'][number]>
+        // Else (fields property is not present), then default to the full record
+        : ToRecord<TLocalDataFormat['fields']>
+    )
+    // child nodes
+    & (
+      TOptions extends { relations: any }
+        ? {
+          [TRelatedDataPropertyName in keyof TOptions['relations']]:
+            _GetFunctionResult<
+              TDataFormats,
+              TRelations,
+              // @ts-ignore
+              RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
+              IsForeignFormatPluralFromRelation<
                 // @ts-ignore
-                RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
-                IsForeignFormatPluralFromRelation<
-                  // @ts-ignore
-                  RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
-                  TLocalDataFormat['name']
-                >,
-                TOptions['relations'][TRelatedDataPropertyName],
-                Prev[D]
-              >
-            }
-          : { }
-      )
-    >,
+                RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
+                TLocalDataFormat['name']
+              >,
+              TOptions['relations'][TRelatedDataPropertyName],
+              Prev[D]
+            >
+          }
+        : { }
+    ),
     TIsPlural
   >
 
@@ -127,7 +131,7 @@ export type GetFunctionResult<
   TOptions extends GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural> =
     GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
   D extends Prev[number] = MaxDepth
-> = ExpandRecursively<GetFunctionResultInternal<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions, D>>
+> = ExpandRecursivelyWithAdditionalLeafNodes<_GetFunctionResult<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions, D>, Date>
 
 export type GetSingleFunction<
   TDataFormats extends DataFormats,

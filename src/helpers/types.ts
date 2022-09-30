@@ -86,8 +86,18 @@ export type ExpandOneLevel<T> = T extends object
  * Forces typescript to recursively expand the type definition of `T`.
  */
 export type ExpandRecursively<T> = T extends object
-  ? T extends infer O ? { [K in keyof O]: K extends Date ? O[K] : ExpandRecursively<O[K]> } : never
+  ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
   : T
+
+/**
+ * Forces typescript to recursively expand the type definition of `T`.
+ */
+export type ExpandRecursivelyWithAdditionalLeafNodes<T, TAdditionalLeafNodes> =
+  T extends TAdditionalLeafNodes
+    ? T
+    : T extends object
+      ? T extends infer O ? { [K in keyof O]: ExpandRecursivelyWithAdditionalLeafNodes<O[K], TAdditionalLeafNodes> } : never
+      : T
 
 export type DeepReadonly<T> =
   T extends (infer R)[] ? DeepReadonlyArray<R> :
