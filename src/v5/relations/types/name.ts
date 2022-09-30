@@ -1,4 +1,4 @@
-import { RelationOptions, RelationType } from '.'
+import { Relation, RelationOptions, RelationType } from '.'
 import { DataFormat, DataFormats } from '../../dataFormat/types'
 
 type _RelationOptionsToName<
@@ -34,3 +34,5 @@ export type RelationOptionsToName<TRelationOptions extends RelationOptions, TDat
     >
     : never
 }[TRelationOptions['type']]
+
+export type RelationToName<TRelation extends Relation, TDataFormats extends DataFormats> = RelationOptionsToName<TRelation, TDataFormats>

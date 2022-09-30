@@ -135,12 +135,12 @@ export type Relation<
   TDataFormats extends DataFormats = DataFormats,
   TRelationOptions extends RelationOptions<TRelationType, TDataFormats> = RelationOptions<TRelationType, TDataFormats>,
 > = TRelationOptions & {
-  name: string
+  name: RelationOptionsToName<TRelationOptions, TDataFormats>
 } & RelationSql<TRelationType>
 
 export type Relations<
-  TDataFormats extends DataFormats,
-  TRelationOptionsList extends RelationOptionsList<TDataFormats>,
+  TDataFormats extends DataFormats = DataFormats,
+  TRelationOptionsList extends RelationOptionsList<TDataFormats> = RelationOptionsList<TDataFormats>,
 > = {
   [K in keyof TRelationOptionsList & `${bigint}` as TRelationOptionsList[K] extends infer TRelationOptions
     ? TRelationOptions extends RelationOptions

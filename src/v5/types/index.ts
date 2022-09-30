@@ -10,8 +10,8 @@ export type TsPgOrmWithNoRelations<TDataFormatList extends DataFormatList> = {
 }
 
 export type TsPgOrm<
-  TDataFormats extends DataFormats,
-  TRelationOptionsList extends RelationOptionsList<TDataFormats>
+  TDataFormats extends DataFormats = DataFormats,
+  TRelationOptionsList extends RelationOptionsList<TDataFormats> = RelationOptionsList<TDataFormats>
 > = {
   /**
    * The default `SimplePgClient` that will be used for all database-related

@@ -1,6 +1,7 @@
-import { mapDict } from '../../helpers/dict'
+import { mapDict, toDict } from '../../helpers/dict'
 import { camelCaseToSnakeCase, capitalize, quote } from '../../helpers/string'
-import { NonManyToManyRelationList, RelationList } from '../relations/types'
+import { NonManyToManyRelationList } from '../relations/types'
+import { filterForCreateRecordField } from './createRecord'
 import { createField } from './field'
 import { createTableSql } from './sql'
 import { DataFormat } from './types'
@@ -25,6 +26,7 @@ export const createDataFormat = <
   const fieldRefs = mapDict(fieldsOptions, (_, fName) => ({ field: fName, dataFormat: name }))
   const _pluralizedName = pluralizedName ?? `${name}s`
   const fieldList = Object.values(fields)
+  const createRecordFields = filterForCreateRecordField(fieldList)
 
   return {
     name,
@@ -34,9 +36,9 @@ export const createDataFormat = <
     fields: fields as any,
     fieldList: fieldList as any,
     fieldNameList: Object.keys(fieldsOptions),
-    fieldSubSets: {},
+    fieldSubSets: {}, // TODO later
     fieldRefs: fieldRefs as any,
-    createRecordFieldNameList: [] as any[],
+    createRecordFieldNameList: createRecordFields.map(f => f.name),
     sql: {
       cols: cols as any,
       unquotedCols: unquotedCols as any,
@@ -44,8 +46,8 @@ export const createDataFormat = <
       unquotedColumnNameList: Object.values(unquotedCols),
       tableName: quote(unquotedTableName),
       unquotedTableName,
-      createRecordCols: {} as any,
-      createRecordColumnNameList: [] as any[],
+      createRecordCols: toDict(createRecordFields, item => ({ key: item.name, value: item.sql.columnName })) as any,
+      createRecordColumnNameList: createRecordFields.map(f => name),
       createTableSql: (relations: NonManyToManyRelationList) => createTableSql(name, fieldList, relations),
     },
   }

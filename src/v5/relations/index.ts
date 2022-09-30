@@ -66,7 +66,7 @@ export const createRelation = (
     case RelationType.ONE_TO_ONE: {
       const relation: Relation<RelationType.ONE_TO_ONE> = {
         ...options,
-        name: createRelationName(resolvedInfo),
+        name: createRelationName(resolvedInfo) as any,
         sql: { foreignKeySql: createOneToOneForeignKeySql(options) },
       }
       return relation
@@ -74,7 +74,7 @@ export const createRelation = (
     case RelationType.ONE_TO_MANY: {
       const relation: Relation<RelationType.ONE_TO_MANY> = {
         ...options,
-        name: createRelationName(resolvedInfo),
+        name: createRelationName(resolvedInfo) as any,
         sql: { foreignKeySql: createOneToManyForeignKeySql(options) },
       }
       return relation
@@ -86,7 +86,7 @@ export const createRelation = (
 
       const relation: Relation<RelationType.MANY_TO_MANY> = {
         ...options,
-        name: createRelationName(resolvedInfo),
+        name: createRelationName(resolvedInfo) as any,
         sql: {
           createJoinTableSql: createManyToManyJoinTableSql(options),
           dropJoinTableSql: `drop table if exists "${unquotedJoinTableName}";`,

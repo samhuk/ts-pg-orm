@@ -16,7 +16,7 @@ type _DataFormat<
   capitalizedPluralizedName: Capitalize<TNamePluralized>
   fields: TFields
   fieldList: FieldList<TFields>
-  fieldNameList: (keyof TFields)[]
+  fieldNameList: ((keyof TFields) & string)[]
   fieldSubSets: FieldSubSets<(keyof TFieldsOptions) & string, TFieldSubSetsOptions>
   fieldRefs: FieldRefs<TFields, TName>
   createRecordFieldNameList: (keyof TFields)[]
