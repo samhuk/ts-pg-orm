@@ -1,7 +1,7 @@
 import { SimplePgClient, SimplePgClientFromClientOptions, SimplePgClientOptions } from 'simple-pg-client/dist/types'
-import { DataFormatList, DataFormats } from '../dataFormat/types'
-import { RelationOptionsList, Relations } from '../relations/types'
-import { ProvisionStoresOptions, StoresAndJoinTableStoresDict, UnprovisionStoresOptions } from '../stores/types'
+import { DataFormatList, DataFormats } from './dataFormat/types'
+import { RelationOptionsList, Relations } from './relations/types'
+import { ProvisionStoresOptions, StoresAndJoinTableStoresDict, UnprovisionStoresOptions } from './stores/types'
 
 export type TsPgOrmWithNoRelations<TDataFormatList extends DataFormatList> = {
   dataFormats: DataFormats<TDataFormatList>
@@ -50,6 +50,8 @@ export type TsPgOrm<
   dataFormats: TDataFormats,
   relations: TRelations,
   stores: StoresAndJoinTableStoresDict<TDataFormats, TRelations>
-  provisionStores: (options?: UnprovisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
-  unprovisionStores: (stores?: ProvisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
+  provisionStores: (options?: ProvisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
+  createProvisionStoresSql: (options?: ProvisionStoresOptions<TDataFormats, TRelations>) => string
+  unprovisionStores: (stores?: UnprovisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
+  createUnprovisionStoresSql: (options?: UnprovisionStoresOptions<TDataFormats, TRelations>) => string
 }

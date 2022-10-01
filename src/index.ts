@@ -3,7 +3,7 @@ import { toDictReadonly } from './helpers/dict'
 import { DataFormatList, DataFormats } from './dataFormat/types'
 import { createRelation } from './relations'
 import { TsPgOrm, TsPgOrmWithNoRelations } from './types'
-import { createStores, provisionStores, unprovisionStores } from './stores'
+import { createProvisionStoresSql, createStores, createUnprovisionStoresSql, provisionStores, unprovisionStores } from './stores'
 import { RelationOptionsList, Relation, Relations, RelationType } from './relations/types'
 
 export const createTsPgOrm = <TDataFormatList extends DataFormatList>(
@@ -46,7 +46,9 @@ export const createTsPgOrm = <TDataFormatList extends DataFormatList>(
         relations,
         stores: null,
         provisionStores: options => provisionStores(tsPgOrm as any, options),
+        createProvisionStoresSql: options => createProvisionStoresSql(tsPgOrm as any, options),
         unprovisionStores: options => unprovisionStores(tsPgOrm as any, options),
+        createUnprovisionStoresSql: options => createUnprovisionStoresSql(tsPgOrm as any, options),
       }
       return tsPgOrm
     },
