@@ -95,6 +95,7 @@ export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP
 
 export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
   typeof ORM['dataFormats'],
+  // @ts-ignore TODO: This seems to be failing only on remote build
   typeof ORM['relations']['userIdToUserGroupId']
 >
 
