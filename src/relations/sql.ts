@@ -1,16 +1,16 @@
 import { camelCaseToSnakeCase } from '../helpers/string'
-import { DataFormatDeclarations, FieldRef } from '../dataFormat/types'
-import { RelationDeclaration, RelationType } from './types'
+import { FieldRef } from '../dataFormat/types/fieldRef'
+import { RelationType, RelationOptions } from './types'
 
-export const createManyToManyJoinTableName = (r: RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>) => {
-  const tableName1 = camelCaseToSnakeCase(r.fieldRef1.formatName)
-  const tableName2 = camelCaseToSnakeCase(r.fieldRef2.formatName)
+export const createManyToManyJoinTableName = (r: RelationOptions<RelationType.MANY_TO_MANY>) => {
+  const tableName1 = camelCaseToSnakeCase(r.fieldRef1.dataFormat)
+  const tableName2 = camelCaseToSnakeCase(r.fieldRef2.dataFormat)
   return `${tableName1}_to_${tableName2}`
 }
 
 export const createManyToManyJoinTableFieldRefColumnName = (fieldRef: FieldRef) => {
-  const tableName = camelCaseToSnakeCase(fieldRef.formatName)
-  const fieldName = camelCaseToSnakeCase(fieldRef.fieldName)
+  const tableName = camelCaseToSnakeCase(fieldRef.dataFormat)
+  const fieldName = camelCaseToSnakeCase(fieldRef.field)
   return `${tableName}_${fieldName}`
 }
 
@@ -18,11 +18,11 @@ export const createManyToManyJoinTableFieldRefColumnName = (fieldRef: FieldRef) 
  * Creates the join table "create table" sql text required for the
  * given many-to-many relation.
  */
-export const createManyToManyJoinTableSql = (r: RelationDeclaration<DataFormatDeclarations, RelationType.MANY_TO_MANY>) => {
-  const tableName1 = camelCaseToSnakeCase(r.fieldRef1.formatName)
-  const tableName2 = camelCaseToSnakeCase(r.fieldRef2.formatName)
-  const fieldName1 = camelCaseToSnakeCase(r.fieldRef1.fieldName)
-  const fieldName2 = camelCaseToSnakeCase(r.fieldRef2.fieldName)
+export const createManyToManyJoinTableSql = (r: RelationOptions<RelationType.MANY_TO_MANY>) => {
+  const tableName1 = camelCaseToSnakeCase(r.fieldRef1.dataFormat)
+  const tableName2 = camelCaseToSnakeCase(r.fieldRef2.dataFormat)
+  const fieldName1 = camelCaseToSnakeCase(r.fieldRef1.field)
+  const fieldName2 = camelCaseToSnakeCase(r.fieldRef2.field)
   const columnName1 = createManyToManyJoinTableFieldRefColumnName(r.fieldRef1)
   const columnName2 = createManyToManyJoinTableFieldRefColumnName(r.fieldRef2)
 
@@ -59,10 +59,10 @@ const createForeignKeySql = (
   localFieldRef: FieldRef,
   foreignFieldRef: FieldRef,
 ) => {
-  const localTableName = camelCaseToSnakeCase(localFieldRef.formatName)
-  const foreignTableName = camelCaseToSnakeCase(foreignFieldRef.formatName)
-  const localColumnName = camelCaseToSnakeCase(localFieldRef.fieldName)
-  const foreignColumnName = camelCaseToSnakeCase(foreignFieldRef.fieldName)
+  const localTableName = camelCaseToSnakeCase(localFieldRef.dataFormat)
+  const foreignTableName = camelCaseToSnakeCase(foreignFieldRef.dataFormat)
+  const localColumnName = camelCaseToSnakeCase(localFieldRef.field)
+  const foreignColumnName = camelCaseToSnakeCase(foreignFieldRef.field)
   const foreignKeyName = `${localTableName}_to_${foreignTableName}_${localColumnName}_fkey`
   return (
     `  constraint ${foreignKeyName} foreign key (${localColumnName})
@@ -76,7 +76,7 @@ const createForeignKeySql = (
  * Creates the "constraint ... foreign key (...)" sql text required for the
  * given one-to-many relation.
  */
-export const createOneToManyForeignKeySql = (r: RelationDeclaration<DataFormatDeclarations, RelationType.ONE_TO_MANY>) => (
+export const createOneToManyForeignKeySql = (r: RelationOptions<RelationType.ONE_TO_MANY>) => (
   createForeignKeySql(
     r.toManyField,
     r.fromOneField,
@@ -87,7 +87,7 @@ export const createOneToManyForeignKeySql = (r: RelationDeclaration<DataFormatDe
  * Creates the "constraint ... foreign key (...)" sql text required for the
  * given one-to-one relation.
  */
-export const createOneToOneForeignKeySql = (r: RelationDeclaration<DataFormatDeclarations, RelationType.ONE_TO_ONE>) => (
+export const createOneToOneForeignKeySql = (r: RelationOptions<RelationType.ONE_TO_ONE>) => (
   createForeignKeySql(
     r.toOneField,
     r.fromOneField,

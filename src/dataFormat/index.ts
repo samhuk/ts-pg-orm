@@ -1,140 +1,56 @@
-import {
-  DataFormatDeclaration,
-  ExtractDataFormatFieldNames,
-  DataFormat,
-  FieldRefsDict,
-  DataType,
-  NumberDataSubType,
-  StringDataSubType,
-  CreateRecordFieldNames,
-  CreateRecordOptions,
-  DataFormatSqlInfo,
-  CapitalizedFieldNames,
-} from './types'
-import { toDictReadonly } from '../helpers/dict'
-import { camelCaseToSnakeCase, capitalize } from '../helpers/string'
-import { convertDataFormatDeclarationToCreateTableSql } from './sql'
-import { createSampleData } from './sampleData'
-import { COMMON_FIELDS } from './common'
+import { mapDict, toDict } from '../helpers/dict'
+import { camelCaseToSnakeCase, capitalize, quote } from '../helpers/string'
+import { NonManyToManyRelationList } from '../relations/types'
+import { filterForCreateRecordField } from './createRecord'
+import { createField } from './field'
+import { createTableSql } from './sql'
+import { DataFormat } from './types'
+import { FieldsOptions } from './types/field'
+import { FieldSubSetsOptions } from './types/fieldSubSet'
 
-type ToFieldsDict<T extends DataFormatDeclaration> = (
-  { [fieldName in T['fields'][number]['name']]: Extract<T['fields'][number], { name: fieldName }> }
-)
-
-const createSelectSqlBase = <T extends DataFormatDeclaration>(
-  declaration: T,
-  columnNames: { [fieldName in ExtractDataFormatFieldNames<T>]: string },
-  fieldNames?: ExtractDataFormatFieldNames<T>[],
-): string => {
-  const columns = fieldNames?.map(fieldName => columnNames[fieldName]).join(', ') ?? '*'
-  const tableName = camelCaseToSnakeCase(declaration.name)
-  return `select ${columns} from "${tableName}"`
-}
-
-/**
- * Parses the given data format declaration, enriching it with additional information
- * and exposing functions for the purpose of extracting information from it.
- */
-export const createDataFormat = <T extends DataFormatDeclaration>(
-  dataFormatDeclaration: T,
-): Readonly<DataFormat<T>> => {
-  type FieldNames = ExtractDataFormatFieldNames<T>
-  type FieldsDict = ToFieldsDict<T>
-
-  // Create field name to field name dict
-  const fieldNamesDict = toDictReadonly(dataFormatDeclaration.fields, f => ({
-    key: f.name,
-    value: f.name,
-  })) as { [fieldName in FieldNames]: fieldName }
-  const fieldNameList = dataFormatDeclaration.fields.map(f => f.name) as FieldNames[]
-  // Create field name to field ref dict
-  const fieldRefsDict = toDictReadonly(dataFormatDeclaration.fields, f => ({
-    key: f.name,
-    value: {
-      formatName: dataFormatDeclaration.name,
-      fieldName: f.name,
-    },
-  })) as FieldRefsDict<T>
-  // Create field name to field dict. Using "as" here since we *will* make it a FieldsDict just below. We promise.
-  const fields: FieldsDict = { } as FieldsDict
-  // TODO: Although f.name is always (obviously) going to be a key in "dfd.fields", TS doesn't see it...
-  // @ts-ignore
-  dataFormatDeclaration.fields.forEach(f => fields[f.name] = f)
-
-  // Create record field names list
-  const createRecordFieldNames = dataFormatDeclaration.fields.filter(f => {
-    if (f.dataType === DataType.NUMBER && f.dataSubType === NumberDataSubType.SERIAL)
-      return false
-    if (f.dataType === DataType.STRING && f.dataSubType === StringDataSubType.UUID_V4 && (f.autoGenerate ?? true))
-      return false
-    if (f.dataType === DataType.DATE && (f.defaultToCurrentEpoch ?? false))
-      return false
-    return true
-  /* Using "as" here as we need to convince TS that all the operations above do
-   * indeed yield CreateRecordFieldNames<T>. We promise.
-   */
-  }).map(f => f.name) as CreateRecordFieldNames<T>
-
-  // -- PostgreSql
-  // Create field name to column name dict
-  const columnNamesDict = toDictReadonly(dataFormatDeclaration.fields, f => ({
-    key: f.name,
-    value: camelCaseToSnakeCase(f.name),
-  })) as { [fieldName in FieldNames]: string }
-  const columnNameList = Object.values(columnNamesDict) as string[]
-  // Create table name
-  const tableName = `"${camelCaseToSnakeCase(dataFormatDeclaration.name)}"`
-
-  const fieldSubSetSelectSqlBases = {} as any
-
-  dataFormatDeclaration.fieldSubSets?.forEach(fss => {
-    const columnsSql = fss.fields.map(fname => `${tableName}.${(columnNamesDict as any)[fname]}`).join(', ')
-    fieldSubSetSelectSqlBases[fss.name] = `select ${columnsSql} from ${tableName}`
-  })
-
-  const sql: DataFormatSqlInfo<T> = {
-    tableName,
-    columnNames: columnNamesDict,
-    createCreateTableSql: relations => convertDataFormatDeclarationToCreateTableSql(dataFormatDeclaration, relations),
-    columnNameList,
-    selectSqlBase: createSelectSqlBase(dataFormatDeclaration, columnNamesDict),
-    updateSqlBase: `update ${tableName} set`,
-    deleteSqlBase: `delete from ${tableName}`,
-    fieldSubSetSelectSqlBases,
-  }
-
-  const pluralizedName = dataFormatDeclaration.pluralizedName ?? `${dataFormatDeclaration.name}s` as any
-
-  const capitalizedFieldNames = toDictReadonly(
-    dataFormatDeclaration.fields,
-    f => ({ key: f.name, value: capitalize(f.name) }),
-  ) as CapitalizedFieldNames<T>
+export const createDataFormat = <
+  TName extends string,
+  TPluralizedName extends string = `${TName}s`,
+  TFieldsOptions extends FieldsOptions = FieldsOptions,
+  // eslint-disable-next-line arrow-body-style, max-len
+>(
+    name: TName,
+    fieldsOptions: TFieldsOptions,
+    pluralizedName?: TPluralizedName,
+    tableName?: string,
+  ): DataFormat<TName, TPluralizedName, TFieldsOptions, FieldSubSetsOptions<(keyof TFieldsOptions) & string>> => {
+  const unquotedCols = mapDict(fieldsOptions, (f, fName) => f.columnName ?? camelCaseToSnakeCase(fName))
+  const cols = mapDict(unquotedCols, unquotedColName => quote(unquotedColName))
+  const unquotedTableName = tableName ?? camelCaseToSnakeCase(name)
+  const _tableName = quote(unquotedTableName)
+  const fields = mapDict(fieldsOptions, (fieldOptions, fName) => createField(fName, fieldOptions))
+  const fieldRefs = mapDict(fieldsOptions, (_, fName) => ({ field: fName, dataFormat: name }))
+  const _pluralizedName = pluralizedName ?? `${name}s`
+  const fieldList = Object.values(fields)
+  const createRecordFields = filterForCreateRecordField(fieldList)
 
   return {
-    name: dataFormatDeclaration.name,
-    capitalizedName: capitalize(dataFormatDeclaration.name) as any,
-    pluralizedName,
-    capitalizedPluralizedName: capitalize(pluralizedName) as any,
-    declaration: dataFormatDeclaration,
-    fields,
-    fieldNames: fieldNamesDict,
-    fieldNameList,
-    capitalizedFieldNames,
-    sql,
-    fieldRefs: fieldRefsDict,
-    createRecordFieldNames,
-    createRandomCreateOptions: () => {
-      const record = {} as CreateRecordOptions<T>
-      createRecordFieldNames.forEach(fname => {
-        if (fname === COMMON_FIELDS.dateDeleted.name)
-          return
-
-        // Although fname is always going to be a key in "fields", TS doesn't see it.
-        (record as any)[fname] = createSampleData(fields[fname])
-      })
-      return record
+    name,
+    capitalizedName: capitalize(name),
+    pluralizedName: _pluralizedName as any,
+    capitalizedPluralizedName: capitalize(_pluralizedName) as any,
+    fields: fields as any,
+    fieldList: fieldList as any,
+    fieldNameList: Object.keys(fieldsOptions),
+    fieldSubSets: {}, // TODO later
+    fieldRefs: fieldRefs as any,
+    createRecordFieldNameList: createRecordFields.map(f => f.name),
+    sql: {
+      cols: cols as any,
+      unquotedCols: unquotedCols as any,
+      columnNameList: Object.values(cols),
+      unquotedColumnNameList: Object.values(unquotedCols),
+      tableName: _tableName,
+      unquotedTableName,
+      createRecordCols: toDict(createRecordFields, item => ({ key: item.name, value: item.sql.columnName })) as any,
+      createRecordColumnNameList: createRecordFields.map(f => name),
+      createTableSql: (relations: NonManyToManyRelationList) => createTableSql(_tableName, fieldList, relations),
+      dropTableSql: `drop table if exists ${_tableName};`,
     },
   }
 }
-
-export const createDataFormatDeclaration = <T extends DataFormatDeclaration>(d: T): T => d

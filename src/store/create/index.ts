@@ -1,33 +1,34 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { createValueList } from '../../dataFormat/sql'
-import { DataFormatDeclaration, DataFormat, CreateRecordOptions, ToRecord, ManualCreateRecordOptions } from '../../dataFormat/types'
+import { DataFormat } from '../../dataFormat/types'
+import { CreateRecordOptions, ManualCreateRecordOptions } from '../../dataFormat/types/createRecordOptions'
+import { ToRecord } from '../../dataFormat/types/record'
 import { createInsertReturningSql } from '../../helpers/sql'
 import { objectPropsToCamelCase } from '../../helpers/string'
 
-export const create = async <T extends DataFormatDeclaration>(
+export const create = async <TDataFormat extends DataFormat>(
   db: SimplePgClient,
-  df: DataFormat<T>,
-  options: CreateRecordOptions<T>,
-): Promise<ToRecord<T>> => {
+  df: TDataFormat,
+  options: CreateRecordOptions<TDataFormat['fields']>,
+): Promise<ToRecord<TDataFormat['fields']>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
-  const fieldNames = df.createRecordFieldNames.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
+  const fieldNames = df.createRecordFieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
 
-  const valueList = createValueList(df, options, fieldNames)
-  const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.columnNames[f]))
+  const valueList = fieldNames.map(fName => (options as any)[fName])
+  const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.cols[f]))
   const row = await db.queryGetFirstRow(sql, valueList)
   return objectPropsToCamelCase(row)
 }
 
-export const createManual = async <T extends DataFormatDeclaration>(
+export const createManual = async <TDataFormat extends DataFormat>(
   db: SimplePgClient,
-  df: DataFormat<T>,
-  options: ManualCreateRecordOptions<T>,
-): Promise<ToRecord<T>> => {
+  df: TDataFormat,
+  options: ManualCreateRecordOptions<TDataFormat['fields']>,
+): Promise<ToRecord<TDataFormat['fields']>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.fieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
 
   const valueList = fieldNames.map(f => (options as any)[f])
-  const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.columnNames[f]))
+  const sql = createInsertReturningSql(df.sql.tableName, fieldNames.map(f => df.sql.cols[f]))
   const row = await db.queryGetFirstRow(sql, valueList)
   return objectPropsToCamelCase(row)
 }

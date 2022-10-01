@@ -1,8 +1,8 @@
 import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
-import { DataFormatDeclarations, DataType } from '../../../dataFormat/types'
 import { filterForNotNullAndEmpty } from '../../../helpers/string'
-import { Relation, RelationType } from '../../../relations/types'
+import { DataType } from '../../../dataFormat/types/dataType'
+import { RelationType, Relation } from '../../../relations/types'
 import { isDataNodePlural } from './dataNodes'
 import { QueryNode, DataNode, QueryNodeSql } from './types'
 
@@ -77,10 +77,10 @@ const createDataNodeQueryInfo = (dataNode: DataNode): DataNodeQueryInfo | null =
  */
 const createLeftJoinsSql = (queryNode: QueryNode) => (
   Object.values(queryNode.nonRootDataNodes).map(dataNode => {
-    const linkedColumnName = dataNode.dataFormat.sql.columnNames[dataNode.fieldRef.fieldName]
-    const parentLinkedColumnName = dataNode.parent.dataFormat.sql.columnNames[dataNode.parentFieldRef.fieldName]
+    const linkedColumnName = dataNode.dataFormat.sql.cols[dataNode.fieldRef.field]
+    const parentLinkedColumnName = dataNode.parent.dataFormat.sql.cols[dataNode.parentFieldRef.field]
     const whereClause = createWhereClauseOfDataNode(dataNode)
-    // E.g. left join "userImage" "1" on "1".user_id = "0".id and "1".date_deleted is not null\n
+    // E.g. left join "userImage" "1" on "1"."user_id" = "0"."id" and "1"."date_deleted" is not null\n
     return filterForNotNullAndEmpty([
       `left join ${dataNode.dataFormat.sql.tableName} ${dataNode.tableAlias} on ${dataNode.tableAlias}.${linkedColumnName} = ${dataNode.parent.tableAlias}.${parentLinkedColumnName}`,
       whereClause,
@@ -100,16 +100,16 @@ const createLinkedFieldWhereClause = (
 
   // -- Linked field values equality clause suffix
   let linkedFieldValuesEqualityClause: string
-  const linkedFieldDataType = rootDataNode.dataFormat.fields[rootDataNode.fieldRef.fieldName].dataType
+  const linkedFieldDataType = rootDataNode.dataFormat.fields[rootDataNode.fieldRef.field].type
 
   // Performance optimization for when there is only one linked field.
   if (linkedFieldValues.length === 1) {
     // E.g. = 1
-    linkedFieldValuesEqualityClause = linkedFieldDataType === DataType.STRING ? ` = '${linkedFieldValues[0]}'` : ` = ${linkedFieldValues[0]}`
+    linkedFieldValuesEqualityClause = linkedFieldDataType === DataType.STR ? ` = '${linkedFieldValues[0]}'` : ` = ${linkedFieldValues[0]}`
   }
   else {
     // E.g. (1),(2),(3),(4)
-    const valuesSql = (linkedFieldDataType === DataType.STRING
+    const valuesSql = (linkedFieldDataType === DataType.STR
       ? linkedFieldValues.map(v => `('${v}')`)
       : linkedFieldValues.map(v => `(${v})`)
     ).join(',')
@@ -121,9 +121,9 @@ const createLinkedFieldWhereClause = (
   let linkedFieldColumnSql: string
 
   if (isRangeConstrained) {
-    const parentLinkedColumnName = rootDataNode.parent.dataFormat.sql.columnNames[rootDataNode.parentFieldRef.fieldName]
+    const parentLinkedColumnName = rootDataNode.parent.dataFormat.sql.cols[rootDataNode.parentFieldRef.field]
     // E.g. "_0"."id"
-    linkedFieldColumnSql = `"_${rootDataNode.parent.unquotedTableAlias}"."${parentLinkedColumnName}"`
+    linkedFieldColumnSql = `"_${rootDataNode.parent.unquotedTableAlias}".${parentLinkedColumnName}`
   }
   else if (rootDataNode.relation?.type === RelationType.MANY_TO_MANY) {
     // E.g. "u2ug"."user_id"
@@ -131,14 +131,14 @@ const createLinkedFieldWhereClause = (
   }
   else {
     // E.g. "0".creator_user_id
-    linkedFieldColumnSql = rootDataNode.fieldsInfo.fieldToFullyQualifiedColumnName[rootDataNode.fieldRef.fieldName]
+    linkedFieldColumnSql = rootDataNode.fieldsInfo.fieldToFullyQualifiedColumnName[rootDataNode.fieldRef.field]
   }
 
   // E.g. "0".creator_user_id = any (values (1),(2),(3))
   return `${linkedFieldColumnSql}${linkedFieldValuesEqualityClause}`
 }
 
-export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
+export const toSql = (queryNode: QueryNode, linkedFieldValues: any[]) => {
   const isManyToMany = queryNode.rootDataNode.relation?.type === RelationType.MANY_TO_MANY
   const isRangeConstrained = isQueryNodeRangeConstrained(queryNode) && linkedFieldValues?.length > 0
 
@@ -158,20 +158,20 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
   if (isManyToMany) {
     let fieldRef1ColumnSegment: string
     let fieldRef2ColumnSegment: string
-    const rootDataNodeRelationSql = (rootDataNode.relation as Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>).sql
+    const rootDataNodeRelationSql = (rootDataNode.relation as Relation<RelationType.MANY_TO_MANY>).sql
 
     // If query node is range constrained, then the join tables are within the lateral join, accessible from the root data node table alias.
     if (isRangeConstrained) {
       // E.g. "0"."u2ug.user_id" "u2ug.user_id"
-      fieldRef1ColumnSegment = `${rootDataNode.tableAlias}."${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef1ColumnName}" "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef1ColumnName}"`
+      fieldRef1ColumnSegment = `${rootDataNode.tableAlias}."${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef1ColumnName}" "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef1ColumnName}"`
       // E.g. "0"."u2ug.user_group_id" "u2ug.user_group_id"
-      fieldRef2ColumnSegment = `${rootDataNode.tableAlias}."${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef2ColumnName}" "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef2ColumnName}"`
+      fieldRef2ColumnSegment = `${rootDataNode.tableAlias}."${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef2ColumnName}" "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef2ColumnName}"`
     }
     else {
       // E.g. "u2ug".user_id "u2ug.user_id"
-      fieldRef1ColumnSegment = `"${rootDataNode.fieldsInfo.joinTableAlias}".${rootDataNodeRelationSql.joinTableFieldRef1ColumnName} "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef1ColumnName}"`
+      fieldRef1ColumnSegment = `"${rootDataNode.fieldsInfo.joinTableAlias}".${rootDataNodeRelationSql.unquotedJoinTableFieldRef1ColumnName} "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef1ColumnName}"`
       // E.g. "u2ug".user_group_id "u2ug.user_group_id"
-      fieldRef2ColumnSegment = `"${rootDataNode.fieldsInfo.joinTableAlias}".${rootDataNodeRelationSql.joinTableFieldRef2ColumnName} "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef2ColumnName}"`
+      fieldRef2ColumnSegment = `"${rootDataNode.fieldsInfo.joinTableAlias}".${rootDataNodeRelationSql.unquotedJoinTableFieldRef2ColumnName} "${rootDataNode.fieldsInfo.joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef2ColumnName}"`
     }
 
     const rootDataNodeJoinTableColumnsSql = [fieldRef1ColumnSegment, fieldRef2ColumnSegment].join(', ')
@@ -198,11 +198,11 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
     fromSql = `from ${rootDataNode.parent.dataFormat.sql.tableName} "_${rootDataNode.parent.unquotedTableAlias}"`
   }
   else if (isManyToMany) {
-    const joinTableName = (rootDataNode.relation as Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>).sql.joinTableName
+    const joinTableName = (rootDataNode.relation as Relation<RelationType.MANY_TO_MANY>).sql.joinTableName
     // E.g. from "user_to_user_group" "u2ug"
     fromSql = `from ${joinTableName} "${rootDataNode.fieldsInfo.joinTableAlias}"`
     // E.g. join "user_group" "1" on "1".id = "u2ug".user_group_id
-    fromSql += `\njoin ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.fieldName} = ${rootDataNode.fieldsInfo.joinTableFullyQualifiedColumnName}`
+    fromSql += `\njoin ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.field} = ${rootDataNode.fieldsInfo.joinTableFullyQualifiedColumnName}`
   }
   else {
     // E.g. from "user" "0"
@@ -218,8 +218,8 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
 
     sqlParts.push('select')
 
-    const linkedColumnName = rootDataNode.dataFormat.sql.columnNames[rootDataNode.fieldRef.fieldName]
-    const parentLinkedColumnName = rootDataNode.parent.dataFormat.sql.columnNames[rootDataNode.parentFieldRef.fieldName]
+    const linkedColumnName = rootDataNode.dataFormat.sql.cols[rootDataNode.fieldRef.field]
+    const parentLinkedColumnName = rootDataNode.parent.dataFormat.sql.cols[rootDataNode.parentFieldRef.field]
 
     // -- Lateral join select
     if (isManyToMany) {
@@ -227,17 +227,17 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
 
       // E.g. "0"."id" "id", "0"."email" "email", "0"."date_created" "date_created"
       const columnsSql = rootDataNode.fieldsInfo.fieldsToSelectFor.map(fName => {
-        const columnName = rootDataNode.dataFormat.sql.columnNames[fName]
-        return `${rootDataNode.tableAlias}."${columnName}" "${columnName}"`
+        const columnName = rootDataNode.dataFormat.sql.cols[fName]
+        return `${rootDataNode.tableAlias}.${columnName} ${columnName}`
       }).join(', ')
       columnSegmentsLines2.push(columnsSql)
 
       const joinTableAlias = rootDataNode.fieldsInfo.joinTableAlias
-      const rootDataNodeRelationSql = (rootDataNode.relation as Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>).sql
-      // E.g. "u2ug".user_id "u2ug.user_id"
-      const fieldRef1ColumnSegment = `"${joinTableAlias}".${rootDataNodeRelationSql.joinTableFieldRef1ColumnName} "${joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef1ColumnName}"`
-      // E.g. "u2ug".user_group_id "u2ug.user_group_id"
-      const fieldRef2ColumnSegment = `"${joinTableAlias}".${rootDataNodeRelationSql.joinTableFieldRef2ColumnName} "${joinTableAlias}.${rootDataNodeRelationSql.joinTableFieldRef2ColumnName}"`
+      const rootDataNodeRelationSql = (rootDataNode.relation as Relation<RelationType.MANY_TO_MANY>).sql
+      // E.g. "u2ug"."user_id" "u2ug.user_id"
+      const fieldRef1ColumnSegment = `"${joinTableAlias}".${rootDataNodeRelationSql.joinTableFieldRef1ColumnName} "${joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef1ColumnName}"`
+      // E.g. "u2ug"."user_group_id" "u2ug.user_group_id"
+      const fieldRef2ColumnSegment = `"${joinTableAlias}".${rootDataNodeRelationSql.joinTableFieldRef2ColumnName} "${joinTableAlias}.${rootDataNodeRelationSql.unquotedJoinTableFieldRef2ColumnName}"`
 
       const joinTableColumnsSql = [fieldRef1ColumnSegment, fieldRef2ColumnSegment].join(', ')
       columnSegmentsLines2.push(joinTableColumnsSql)
@@ -246,21 +246,21 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
 
       sqlParts.push(columnSegmentsSql2)
 
-      const joinTableName = (rootDataNode.relation as Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>).sql.joinTableName
+      const joinTableName = (rootDataNode.relation as Relation<RelationType.MANY_TO_MANY>).sql.joinTableName
 
       // E.g. from "user_to_user_group" "u2ug"
       sqlParts.push(`from ${joinTableName} "${joinTableAlias}"`)
 
       // E.g. join "user_group" "1" on "1".id = "u2ug".user_group_id
-      sqlParts.push(`join ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.fieldName} = ${rootDataNode.fieldsInfo.joinTableFullyQualifiedColumnName}`)
+      sqlParts.push(`join ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${rootDataNode.fieldRef.field} = ${rootDataNode.fieldsInfo.joinTableFullyQualifiedColumnName}`)
 
       // E.g. where "u2ug"."user_id" = "_0"."id"
-      sqlParts.push(`where ${rootDataNode.fieldsInfo.joinTableParentFullyQualifiedColumnName} = "_${rootDataNode.parent.unquotedTableAlias}"."${parentLinkedColumnName}"`)
+      sqlParts.push(`where ${rootDataNode.fieldsInfo.joinTableParentFullyQualifiedColumnName} = "_${rootDataNode.parent.unquotedTableAlias}".${parentLinkedColumnName}`)
     }
     else {
       // E.g. "id", "email", "date_created"
       const columnsSql = rootDataNode.fieldsInfo.fieldsToSelectFor
-        .map(fName => `"${rootDataNode.dataFormat.sql.columnNames[fName]}"`)
+        .map(fName => rootDataNode.dataFormat.sql.cols[fName])
         .join(', ')
       sqlParts.push(columnsSql)
 
@@ -268,7 +268,7 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
       sqlParts.push(`from  ${rootDataNode.dataFormat.sql.tableName} ${rootDataNode.tableAlias}`)
 
       // E.g. where "1"."creator_user_id" = "_0"."id"
-      sqlParts.push(`where ${rootDataNode.tableAlias}."${linkedColumnName}" = "_${rootDataNode.parent.unquotedTableAlias}"."${parentLinkedColumnName}"`)
+      sqlParts.push(`where ${rootDataNode.tableAlias}.${linkedColumnName} = "_${rootDataNode.parent.unquotedTableAlias}".${parentLinkedColumnName}`)
     }
 
     // -- Root data node query SQL
@@ -281,9 +281,9 @@ export const toSqlNew = (queryNode: QueryNode, linkedFieldValues: any[]) => {
     // -- As ... sql
     let asSql: string
     if (isManyToMany)
-      asSql = `as ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}."${rootDataNode.fieldsInfo.joinTableParentColumnNameAlias}" = "_${rootDataNode.parent.unquotedTableAlias}"."${parentLinkedColumnName}"`
+      asSql = `as ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}."${rootDataNode.fieldsInfo.joinTableParentColumnNameAlias}" = "_${rootDataNode.parent.unquotedTableAlias}".${parentLinkedColumnName}`
     else
-      asSql = `as ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}."${linkedColumnName}" = "_${rootDataNode.parent.unquotedTableAlias}"."${parentLinkedColumnName}"`
+      asSql = `as ${rootDataNode.tableAlias} on ${rootDataNode.tableAlias}.${linkedColumnName} = "_${rootDataNode.parent.unquotedTableAlias}".${parentLinkedColumnName}`
 
     sqlParts.push(`) ${asSql}`)
   }
@@ -326,10 +326,10 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
   let currentLinkedFieldValues = linkedFieldValues
 
   return queryNodeSql = {
-    sql: toSqlNew(queryNode, currentLinkedFieldValues),
+    sql: toSql(queryNode, currentLinkedFieldValues),
     updateLinkedFieldValues: (newLinkedFieldValues: any[] | null) => {
       currentLinkedFieldValues = newLinkedFieldValues
-      queryNodeSql.sql = toSqlNew(queryNode, currentLinkedFieldValues)
+      queryNodeSql.sql = toSql(queryNode, currentLinkedFieldValues)
     },
     modifyRootDataNodeDataFilter: newDataFilter => {
       if (queryNode.rootDataNode.isPlural)
@@ -337,7 +337,7 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
 
       const _nonPluralRootDataNode = queryNode.rootDataNode as DataNode<false>
       _nonPluralRootDataNode.options.filter = newDataFilter
-      queryNodeSql.sql = toSqlNew(queryNode, currentLinkedFieldValues)
+      queryNodeSql.sql = toSql(queryNode, currentLinkedFieldValues)
     },
     modifyRootDataNodeDataQuery: newDataQuery => {
       if (!queryNode.rootDataNode.isPlural)
@@ -345,7 +345,7 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
 
       const _pluralRootDataNode = queryNode.rootDataNode as DataNode<true>
       _pluralRootDataNode.options.query = newDataQuery
-      queryNodeSql.sql = toSqlNew(queryNode, currentLinkedFieldValues)
+      queryNodeSql.sql = toSql(queryNode, currentLinkedFieldValues)
     },
   }
 }

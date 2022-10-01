@@ -2,7 +2,7 @@ import { createDataQuery } from '@samhuk/data-query'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat } from '../../dataFormat/types'
 import { objectPropsToCamelCase } from '../../helpers/string'
-import { ReturnModeRaw, ReturnMode } from '../common/types'
+import { ReturnModeRaw, ReturnMode } from '../types'
 import { DeleteFunctionOptions, DeleteFunctionResult } from './types'
 
 const determineReturnMode = (returnMode: ReturnModeRaw): ReturnMode => (
@@ -73,6 +73,6 @@ export const _delete = (
 ): Promise<DeleteFunctionResult> => deleteBase(
   db,
   df.sql.tableName,
-  df.sql.columnNames,
+  df.sql.cols,
   options,
 )

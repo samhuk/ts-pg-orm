@@ -3,7 +3,7 @@ import { test } from '../../common'
 
 export const basicTest = test('basic', async (stores, assert) => {
   const result = await stores.user.get({
-    fields: ['name', 'email', 'dateCreated'],
+    fields: ['name', 'email'],
     filter: {
       field: 'name', op: Operator.EQUALS, val: 'User 1',
     },
@@ -14,13 +14,9 @@ export const basicTest = test('basic', async (stores, assert) => {
     },
   })
 
-  // TODO: How do we handle dates?
-  result.dateCreated = result.dateCreated.toString()
-
   assert(result, {
     name: 'User 1',
     email: 'user1@email.com',
-    dateCreated: result.dateCreated, // TODO: How do we handle dates?
     userAddress: {
       city: 'London',
       country: 'UK',

@@ -1,17 +1,14 @@
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { DataFormatDeclaration, DataFormatDeclarations } from '../../dataFormat/types'
-import { RelationDeclarations } from '../../relations/types'
+import { DataFormat } from '../../dataFormat/types'
 
 export type CountFunctionOptions<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
-> = DataQueryRecord<T['fields'][number]['name']>
+  TDataFormat extends DataFormat = DataFormat,
+> = DataQueryRecord<TDataFormat['fieldNameList'][number]>
 
 export type CountFunctionResult = Promise<number>
 
 export type CountFunction<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
-> = <TOptions extends CountFunctionOptions<L>>(
+  TLocalDataFormat extends DataFormat = DataFormat,
+> = <TOptions extends CountFunctionOptions<TLocalDataFormat>>(
   options?: TOptions,
 ) => CountFunctionResult

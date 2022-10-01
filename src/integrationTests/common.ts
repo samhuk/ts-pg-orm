@@ -80,7 +80,7 @@ export const test = (
 }
 
 export const deleteAllSampleData = async (stores: Stores) => {
-  await stores['user.id <<-->> userGroup.id'].delete()
+  await stores.userIdToUserGroupId.delete()
   await stores.article.delete()
   await stores.image.delete()
   await stores.userAddress.delete()

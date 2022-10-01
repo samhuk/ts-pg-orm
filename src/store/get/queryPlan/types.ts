@@ -1,8 +1,10 @@
 import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { DataFormat, DataFormatDeclarations, FieldRef } from '../../../dataFormat/types'
-import { Relation, RelationDeclarations } from '../../../relations/types'
+import { ValuesUnionFromDict } from '../../../helpers/types'
+import { DataFormat, DataFormats } from '../../../dataFormat/types'
+import { FieldRef } from '../../../dataFormat/types/fieldRef'
+import { Relation, Relations } from '../../../relations/types'
 import { AnyGetFunctionOptions, GetFunctionOptions, GetFunctionResult } from '../types'
 
 export type RelatedDataInfo<
@@ -249,11 +251,12 @@ export type QueryNodes = { [queryNodeId: number]: QueryNode }
  * Data Node data queries/filters for more efficient performance.
  */
 export type QueryPlan<
-  T extends DataFormatDeclarations = DataFormatDeclarations,
-  K extends RelationDeclarations<T> = RelationDeclarations<T>,
-  L extends T[number] = T[number],
+  TDataFormats extends DataFormats = DataFormats,
+  TRelations extends Relations = Relations,
+  TLocalDataFormat extends DataFormat = DataFormat,
   TIsPlural extends boolean = boolean,
-  TOptions extends GetFunctionOptions<T, K, L, TIsPlural> = GetFunctionOptions<T, K, L, TIsPlural>,
+  TOptions extends GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural> =
+    GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
 > = {
   dataNodes: DataNodes
   queryNodes: QueryNodes
@@ -263,17 +266,17 @@ export type QueryPlan<
    *
    * This will recursively work through the Query Node graph, starting at the root Query Node.
    */
-  execute: (db: SimplePgClient) => Promise<GetFunctionResult<T, K, L, TIsPlural, TOptions>>
+  execute: (db: SimplePgClient) => Promise<GetFunctionResult<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions>>
 } & (TIsPlural extends true ? {
   /**
    * Modifies the data query of the root node of the query plan. This is more efficient than
    * creating a whole new query plan.
    */
-  modifyRootDataQuery: (newDataQuery: DataQueryRecord<L['fields'][number]['name']>) => void
+  modifyRootDataQuery: (newDataQuery: DataQueryRecord<ValuesUnionFromDict<TLocalDataFormat['fields']>['name']>) => void
 } : {
   /**
    * Modifies the data filter of the root node of the query plan. This is more efficient than
    * creating a whole new query plan.
    */
-  modifyRootDataFilter: (newDataFilter: DataFilterNodeOrGroup<L['fields'][number]['name']>) => void
+  modifyRootDataFilter: (newDataFilter: DataFilterNodeOrGroup<ValuesUnionFromDict<TLocalDataFormat['fields']>['name']>) => void
 })

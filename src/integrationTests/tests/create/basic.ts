@@ -11,12 +11,12 @@ export const basicTest = test('basic', async (stores, assert) => {
   // Ensure consistent values for generated values
   result.id = 1
   result.uuid = '123'
-  result.dateCreated = result.dateCreated.toString() // TODO
+  result.dateCreated = null
 
   assert(result, {
     id: 1,
     uuid: '123',
-    dateCreated: result.dateCreated,
+    dateCreated: null,
     dateDeleted: null,
     name: 'newUser',
     email: 'newUser@email.com',

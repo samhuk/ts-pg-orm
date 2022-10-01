@@ -1,9 +1,11 @@
-import { DataFormatsDict, DataFormat, FieldRef, DataFormatDeclarations } from '../../../dataFormat/types'
 import { removeDuplicates } from '../../../helpers/array'
 import { toDict } from '../../../helpers/dict'
-import { RelationsDict, RelationType, Relation, RelationDeclarations } from '../../../relations/types'
+import { DataFormat, DataFormats } from '../../../dataFormat/types'
+import { FieldRef } from '../../../dataFormat/types/fieldRef'
+import { Relation, Relations, RelationType } from '../../../relations/types'
 import { AnyGetFunctionOptions, GetFunctionOptions } from '../types'
-import { RelatedDataInfoDict, DataNodes, UnresolvedDataNodes, FieldsInfo, DataNode, PluralDataNode, NonPluralDataNode } from './types'
+import { RelatedDataInfoDict, UnresolvedDataNodes, DataNode, FieldsInfo, DataNodes, PluralDataNode, NonPluralDataNode } from './types'
+import { quote } from '../../../helpers/string'
 
 /**
  * Determines all of the related data properties of the given `dataFormat`
@@ -13,8 +15,8 @@ import { RelatedDataInfoDict, DataNodes, UnresolvedDataNodes, FieldsInfo, DataNo
  * later in the query plan framework.
  */
 const createRelatedDataInfoDict = (
-  relations: RelationsDict,
-  dataFormats: DataFormatsDict,
+  relations: Relations,
+  dataFormats: DataFormats,
   dataFormat: DataFormat,
 ): RelatedDataInfoDict => {
   const relatedDataInfoDict: RelatedDataInfoDict = {}
@@ -24,13 +26,13 @@ const createRelatedDataInfoDict = (
     let manuallyDefinedRelatedDataPropName: string
     let isPlural: boolean
     if (r.type === RelationType.ONE_TO_ONE) {
-      if (r.fromOneField.formatName === dataFormat.name) {
+      if (r.fromOneField.dataFormat === dataFormat.name) {
         fieldRef = r.toOneField
         parentFieldRef = r.fromOneField
         manuallyDefinedRelatedDataPropName = r.relatedToOneRecordsName
         isPlural = false
       }
-      if (r.toOneField.formatName === dataFormat.name) {
+      if (r.toOneField.dataFormat === dataFormat.name) {
         fieldRef = r.fromOneField
         parentFieldRef = r.toOneField
         manuallyDefinedRelatedDataPropName = r.relatedFromOneRecordsName
@@ -38,13 +40,13 @@ const createRelatedDataInfoDict = (
       }
     }
     if (r.type === RelationType.ONE_TO_MANY) {
-      if (r.fromOneField.formatName === dataFormat.name) {
+      if (r.fromOneField.dataFormat === dataFormat.name) {
         fieldRef = r.toManyField
         parentFieldRef = r.fromOneField
         manuallyDefinedRelatedDataPropName = r.relatedToManyRecordsName
         isPlural = true
       }
-      if (r.toManyField.formatName === dataFormat.name) {
+      if (r.toManyField.dataFormat === dataFormat.name) {
         fieldRef = r.fromOneField
         parentFieldRef = r.toManyField
         manuallyDefinedRelatedDataPropName = r.relatedFromOneRecordsName
@@ -52,13 +54,13 @@ const createRelatedDataInfoDict = (
       }
     }
     if (r.type === RelationType.MANY_TO_MANY) {
-      if (r.fieldRef1.formatName === dataFormat.name) {
+      if (r.fieldRef1.dataFormat === dataFormat.name) {
         fieldRef = r.fieldRef2
         parentFieldRef = r.fieldRef1
         manuallyDefinedRelatedDataPropName = r.relatedFieldRef2RecordsName
         isPlural = true
       }
-      if (r.fieldRef2.formatName === dataFormat.name) {
+      if (r.fieldRef2.dataFormat === dataFormat.name) {
         fieldRef = r.fieldRef1
         parentFieldRef = r.fieldRef2
         manuallyDefinedRelatedDataPropName = r.relatedFieldRef1RecordsName
@@ -69,8 +71,8 @@ const createRelatedDataInfoDict = (
     if (parentFieldRef != null) {
       const relatedDataPropName = manuallyDefinedRelatedDataPropName
       ?? (isPlural
-        ? dataFormats[fieldRef.formatName].pluralizedName
-        : dataFormats[fieldRef.formatName].name
+        ? dataFormats[fieldRef.dataFormat].pluralizedName
+        : dataFormats[fieldRef.dataFormat].name
       )
       relatedDataInfoDict[relatedDataPropName] = {
         relatedDataPropName,
@@ -85,8 +87,8 @@ const createRelatedDataInfoDict = (
 }
 
 const traverseOptionsToDataNodes = (
-  relations: RelationsDict,
-  dataFormats: DataFormatsDict,
+  relations: Relations,
+  dataFormats: DataFormats,
   optionsNode: AnyGetFunctionOptions,
   dataFormat: DataFormat,
   isPlural: boolean,
@@ -111,7 +113,7 @@ const traverseOptionsToDataNodes = (
         relations,
         dataFormats,
         _options,
-        dataFormats[relatedDataInfo.fieldRef.formatName],
+        dataFormats[relatedDataInfo.fieldRef.dataFormat],
         relatedDataInfo.isPlural,
         unresolvedDataNodes,
         state,
@@ -141,12 +143,12 @@ const traverseOptionsToDataNodes = (
 const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
   const fieldsToKeepInRecord = dataNode.options.fields ?? dataNode.dataFormat.fieldNameList
   const fieldsRequiredForRelations = Object.values(dataNode.children)
-    .map(node => node.parentFieldRef.fieldName)
+    .map(node => node.parentFieldRef.field)
     // If this node has a many-to-many relation to it, then it doesn't need to include it's
     // field ref (it's side of the relation). Instead, the junction table's columns are used.
     .concat(dataNode.relation?.type === RelationType.MANY_TO_MANY || dataNode.fieldRef == null
       ? []
-      : [dataNode.fieldRef.fieldName])
+      : [dataNode.fieldRef.field])
   const fieldsToSelectFor = dataNode.options.fields != null
     ? removeDuplicates(dataNode.options.fields.concat(fieldsRequiredForRelations))
     : dataNode.dataFormat.fieldNameList
@@ -162,7 +164,7 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
     const columnAlias = `${dataNode.id}.${fName}`
     columnNameAliasToField[columnAlias] = fName
     fieldToColumnNameAlias[fName] = columnAlias
-    fieldToFullyQualifiedColumnName[fName] = `${dataNode.tableAlias}.${dataNode.dataFormat.sql.columnNames[fName]}`
+    fieldToFullyQualifiedColumnName[fName] = `${dataNode.tableAlias}.${dataNode.dataFormat.sql.cols[fName]}`
   })
 
   let joinTableAlias: string
@@ -171,16 +173,16 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
   let joinTableFullyQualifiedColumnName: string
   if (dataNode.relation?.type === RelationType.MANY_TO_MANY) {
     // TODO: Need a way to provide an alias for this
-    joinTableAlias = `${dataNode.relation.sql.joinTableName}`
-    const isFieldRefFieldRef1 = dataNode.relation.fieldRef1.formatName === dataNode.dataFormat.name
+    joinTableAlias = `${dataNode.relation.sql.unquotedJoinTableName}`
+    const isFieldRefFieldRef1 = dataNode.relation.fieldRef1.dataFormat === dataNode.dataFormat.name
     const parentJoinTableColumnName = isFieldRefFieldRef1
-      ? dataNode.relation.sql.joinTableFieldRef2ColumnName
-      : dataNode.relation.sql.joinTableFieldRef1ColumnName
+      ? dataNode.relation.sql.unquotedJoinTableFieldRef2ColumnName
+      : dataNode.relation.sql.unquotedJoinTableFieldRef1ColumnName
     joinTableParentFullyQualifiedColumnName = `"${joinTableAlias}"."${parentJoinTableColumnName}"`
     joinTableParentColumnNameAlias = `${joinTableAlias}.${parentJoinTableColumnName}`
     const joinTableColumnName = isFieldRefFieldRef1
-      ? dataNode.relation.sql.joinTableFieldRef1ColumnName
-      : dataNode.relation.sql.joinTableFieldRef2ColumnName
+      ? dataNode.relation.sql.unquotedJoinTableFieldRef1ColumnName
+      : dataNode.relation.sql.unquotedJoinTableFieldRef2ColumnName
     joinTableFullyQualifiedColumnName = `"${joinTableAlias}"."${joinTableColumnName}"`
   }
 
@@ -201,6 +203,8 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
 const resolveDataNodes = (unresolvedDataNodes: UnresolvedDataNodes): DataNodes => {
   const dataNodes: DataNodes = {}
   Object.values(unresolvedDataNodes).forEach(node => {
+    const unquotedTableAlias = node.id.toString()
+
     const dataNode: DataNode = {
       id: node.id,
       dataFormat: node.dataFormat,
@@ -210,8 +214,8 @@ const resolveDataNodes = (unresolvedDataNodes: UnresolvedDataNodes): DataNodes =
       parentFieldRef: node.parentFieldRef,
       relatedDataPropName: node.relatedDataPropName,
       relation: node.relation,
-      tableAlias: `"${node.id}"`,
-      unquotedTableAlias: node.id.toString(),
+      tableAlias: quote(unquotedTableAlias),
+      unquotedTableAlias,
       createColumnsSqlSegments: () => dataNode.fieldsInfo.fieldsToSelectFor.map(fName => (
         `${dataNode.fieldsInfo.fieldToFullyQualifiedColumnName[fName]} "${dataNode.fieldsInfo.fieldToColumnNameAlias[fName]}"`
       )),
@@ -237,16 +241,16 @@ const resolveDataNodes = (unresolvedDataNodes: UnresolvedDataNodes): DataNodes =
 }
 
 export const toDataNodes = <
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TLocalDataFormat extends DataFormat,
   TIsPlural extends boolean,
 >(
-    relations: RelationsDict<T, K>,
-    dataFormats: DataFormatsDict<T>,
-    dataFormat: DataFormat<L>,
+    relations: TRelations,
+    dataFormats: TDataFormats,
+    dataFormat: TLocalDataFormat,
     isPlural: TIsPlural,
-    options: GetFunctionOptions<T, K, L, TIsPlural>,
+    options: GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
   ): DataNodes => {
   const unresolvedDataNodes: UnresolvedDataNodes = { }
   /* Recursively traverse each node in the given `options`, adding unresolved data nodes

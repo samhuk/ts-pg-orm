@@ -1,32 +1,18 @@
-import {
-  DataFormat,
-  DataFormatDeclaration,
-  DataFormatDeclarations,
-  DataFormatField,
-  DataType,
-  DateDataSubType,
-  ExtractDataFormatFieldNames,
-  JsonDataSubType,
-  NumberDataSubType,
-  StringDataSubType,
-  ThreeStepNumberSize,
-  TwoStepNumberSize,
-} from './types'
-import { camelCaseToSnakeCase } from '../helpers/string'
-import { ReadonlyOrMutable } from '../helpers/types'
-import { Relation, RelationType } from '../relations/types'
+import { NonManyToManyRelationList, Relation, RelationType } from '../relations/types'
+import { DataType, EpochSubType, JsonSubType, NumSubType, StrSubType, ThreeStepNumberSize, TwoStepNumberSize } from './types/dataType'
+import { Field, FieldList } from './types/field'
 
 const NUMBER_SIZE_TYPE_NAME_MAPPING = {
-  [NumberDataSubType.INTEGER]: {
+  [NumSubType.INT]: {
     [ThreeStepNumberSize.SMALL]: 'smallint',
     [ThreeStepNumberSize.REGULAR]: 'integer',
     [ThreeStepNumberSize.LARGE]: 'bigint',
   },
-  [NumberDataSubType.REAL]: {
+  [NumSubType.REAL]: {
     [TwoStepNumberSize.REGULAR]: 'real',
     [TwoStepNumberSize.LARGE]: 'double precision',
   },
-  [NumberDataSubType.SERIAL]: {
+  [NumSubType.SERIAL]: {
     [ThreeStepNumberSize.SMALL]: 'smallserial',
     [ThreeStepNumberSize.REGULAR]: 'serial',
     [ThreeStepNumberSize.LARGE]: 'bigserial',
@@ -34,38 +20,44 @@ const NUMBER_SIZE_TYPE_NAME_MAPPING = {
 }
 
 const DATE_TYPE_NAME_MAPPING = {
-  [DateDataSubType.DATE_TIME_WITH_TIMEZONE]: 'timestamp with time zone',
-  [DateDataSubType.DATE_TIME]: 'timestamp',
-  [DateDataSubType.DATE]: 'date',
-  [DateDataSubType.TIME]: 'time',
+  [EpochSubType.DATE_TIME_WITH_TIMEZONE]: 'timestamp with time zone',
+  [EpochSubType.DATE_TIME]: 'timestamp',
+  [EpochSubType.DATE]: 'date',
+  [EpochSubType.TIME]: 'time',
 }
 
-const createBooleanColumnSql = (dataFormatField: DataFormatField<DataType.BOOLEAN>, isUnique: boolean): string => {
-  const columnName = camelCaseToSnakeCase(dataFormatField.name)
+const createBoolColumnSql = (field: Field<DataType.BOOL>, isUnique: boolean): string => {
+  const columnName = field.sql.columnName
 
   return [
     `${columnName} boolean`,
-    dataFormatField.allowNull ? '' : 'not null',
+    field.allowNull ? '' : 'not null',
     isUnique ? 'unique' : '',
-    dataFormatField.default != null
-      ? dataFormatField.default
+    field.default != null
+      ? field.default
         ? 'default true'
         : 'default false'
       : '',
   ].filter(s => s.length > 0).join(' ')
 }
 
-const createNumberColumnSql = (dataFormatField: DataFormatField<DataType.NUMBER>, isUnique: boolean): string => {
-  const columnName = camelCaseToSnakeCase(dataFormatField.name)
-  const isReal = dataFormatField.dataSubType === NumberDataSubType.REAL
-  const size = dataFormatField.size ?? (isReal ? TwoStepNumberSize.REGULAR : ThreeStepNumberSize.REGULAR)
-  // `dataSubType` enforces that `size` will always be correct here.
-  // @ts-ignore
-  const typeName = NUMBER_SIZE_TYPE_NAME_MAPPING[dataFormatField.dataSubType][size]
+const createNumColumnSql = (field: Field<DataType.NUM>, isUnique: boolean): string => {
+  const columnName = field.sql.columnName
+  const isReal = field.subType === NumSubType.REAL
+  const isEnum = field.subType === NumSubType.INT_ENUM
+  const size = isEnum
+    ? ThreeStepNumberSize.SMALL
+    : (field.size ?? (isReal ? TwoStepNumberSize.REGULAR : ThreeStepNumberSize.REGULAR))
 
-  const isSerial = dataFormatField.dataSubType === NumberDataSubType.SERIAL
-  const isPrimaryKey = !isReal && (dataFormatField.isPrimaryKey ?? isSerial)
-  const allowNull = !isPrimaryKey && !isSerial && (dataFormatField.allowNull ?? true)
+  const typeName = isEnum
+    ? NUMBER_SIZE_TYPE_NAME_MAPPING[NumSubType.INT][size]
+    // `subType` enforces that `size` will always be correct here.
+    // @ts-ignore
+    : NUMBER_SIZE_TYPE_NAME_MAPPING[field.subType][size]
+
+  const isSerial = field.subType === NumSubType.SERIAL
+  const isPrimaryKey = !isReal && (field.isPrimaryKey ?? isSerial)
+  const allowNull = !isPrimaryKey && !isSerial && (field.allowNull ?? true)
 
   return [
     `${columnName} ${typeName}`,
@@ -78,32 +70,32 @@ const createNumberColumnSql = (dataFormatField: DataFormatField<DataType.NUMBER>
     // Default text
     isSerial
       ? null
-      : dataFormatField.default != null
-        ? `default ${dataFormatField.default}`
+      : field.default != null
+        ? `default ${field.default}`
         : null,
   ].filter(s => s != null && s.length > 0).join(' ')
 }
 
-const getStringColumnTypeName = (field: DataFormatField<DataType.STRING>): string => {
-  switch (field.dataSubType) {
-    case StringDataSubType.VARYING_LENGTH:
-      return `character varying(${field.maxLength})`
-    case StringDataSubType.FIXED_LENGTH:
-      return `character(${field.length})`
-    case StringDataSubType.STRING_ENUM:
-      return `character varying(${field.maxLength ?? 100})`
-    case StringDataSubType.UUID_V4:
+const getStringColumnTypeName = (field: Field<DataType.STR>): string => {
+  switch (field.subType) {
+    case StrSubType.VAR_LENGTH:
+      return `character varying(${field.maxLen})`
+    case StrSubType.FIXED_LENGTH:
+      return `character(${field.len})`
+    case StrSubType.ENUM:
+      return `character varying(${field.maxLen ?? 100})`
+    case StrSubType.UUID_V4:
       return 'character(36)'
     default:
       return null
   }
 }
 
-const createStringColumnSql = (field: DataFormatField<DataType.STRING>, isUnique: boolean): string => {
-  const columnName = camelCaseToSnakeCase(field.name)
+const createStrColumnSql = (field: Field<DataType.STR>, isUnique: boolean): string => {
+  const columnName = field.sql.columnName
   const typeName = getStringColumnTypeName(field)
 
-  const isAutoGenerated = field.dataSubType === StringDataSubType.UUID_V4 && (field.autoGenerate ?? true)
+  const isAutoGenerated = field.subType === StrSubType.UUID_V4 && (field.autoGenerate ?? true)
 
   return [
     `${columnName} ${typeName}`,
@@ -119,29 +111,29 @@ const createStringColumnSql = (field: DataFormatField<DataType.STRING>, isUnique
   ].filter(s => s != null && s.length > 0).join(' ')
 }
 
-const createDateColumnSql = (dataFormatField: DataFormatField<DataType.DATE>, isUnique: boolean): string => {
-  const columnName = camelCaseToSnakeCase(dataFormatField.name)
-  const typeName = DATE_TYPE_NAME_MAPPING[dataFormatField.dataSubType]
+const createEpochColumnSql = (field: Field<DataType.EPOCH>, isUnique: boolean): string => {
+  const columnName = field.sql.columnName
+  const typeName = DATE_TYPE_NAME_MAPPING[field.subType]
 
   return [
     `${columnName} ${typeName}`,
     // Not null text
-    (dataFormatField.allowNull ?? true) ? null : 'not null',
+    (field.allowNull ?? true) ? null : 'not null',
     // Unique text
     isUnique ? 'unique' : null,
     // Default text
-    dataFormatField.defaultToCurrentEpoch
+    field.defaultToCurrentEpoch
       ? 'default CURRENT_TIMESTAMP'
-      : dataFormatField.default != null
-        ? `default ${dataFormatField.default}`
+      : field.default != null
+        ? `default ${field.default}`
         : null,
   ].filter(s => s != null && s.length > 0).join(' ')
 }
 
-const createJsonColumnSql = (dataFormatField: DataFormatField<DataType.JSON>, isUnique: boolean): string => {
-  const columnName = camelCaseToSnakeCase(dataFormatField.name)
-  const isArray = dataFormatField.dataSubType === JsonDataSubType.ARRAY
-  const allowNull = dataFormatField.allowNull ?? false
+const createJsonColumnSql = (field: Field<DataType.JSON>, isUnique: boolean): string => {
+  const columnName = field.sql.columnName
+  const isArray = field.subType === JsonSubType.ARRAY
+  const allowNull = field.allowNull ?? false
 
   return [
     `${columnName} jsonb`,
@@ -150,73 +142,64 @@ const createJsonColumnSql = (dataFormatField: DataFormatField<DataType.JSON>, is
     // Unique text
     isUnique ? 'unique' : null,
     // Default text
-    dataFormatField.default != null
-      ? `default '${JSON.stringify(dataFormatField.default)}'::jsonb`
+    field.default != null
+      ? `default '${JSON.stringify(field.default)}'::jsonb`
       : `default '${isArray ? '[]' : '{}'}'::jsonb`,
   ].filter(s => s != null && s.length > 0).join(' ')
 }
 
-const createColumnSql = (dataFormatField: DataFormatField, isUnique: boolean): string => {
-  switch (dataFormatField.dataType) {
-    case DataType.NUMBER:
-      return createNumberColumnSql(dataFormatField, isUnique)
-    case DataType.BOOLEAN:
-      return createBooleanColumnSql(dataFormatField, isUnique)
-    case DataType.STRING:
-      return createStringColumnSql(dataFormatField, isUnique)
-    case DataType.DATE:
-      return createDateColumnSql(dataFormatField, isUnique)
+const createColumnSql = (field: Field, isUnique: boolean): string => {
+  switch (field.type) {
+    case DataType.NUM:
+      return createNumColumnSql(field, isUnique)
+    case DataType.BOOL:
+      return createBoolColumnSql(field, isUnique)
+    case DataType.STR:
+      return createStrColumnSql(field, isUnique)
+    case DataType.EPOCH:
+      // @ts-ignore TODO: Not sure why this is failing
+      return createEpochColumnSql(field, isUnique)
     case DataType.JSON:
-      return createJsonColumnSql(dataFormatField, isUnique)
+      return createJsonColumnSql(field, isUnique)
     default:
       return null
   }
 }
 
 const createColumnsSql = (
-  dataFormatFields: ReadonlyOrMutable<DataFormatField[]>,
-  oneToOneRelations: Relation<DataFormatDeclarations, RelationType.ONE_TO_ONE>[],
+  fieldList: FieldList,
+  oneToOneRelations: Relation<RelationType.ONE_TO_ONE>[],
 ): string => (
-  dataFormatFields
-    .map(f => createColumnSql(f, oneToOneRelations.some(r => r.toOneField.fieldName === f.name)))
+  fieldList
+    .map(f => createColumnSql(f, oneToOneRelations.some(r => r.toOneField.field === f.name)))
     .join(',\n  ')
 )
 
 const createForeignKeysSql = (
-  relations: Relation<DataFormatDeclarations, RelationType.ONE_TO_MANY | RelationType.ONE_TO_ONE>[],
+  relations: Relation<RelationType.ONE_TO_MANY | RelationType.ONE_TO_ONE>[],
 ): string => (
   relations
     .map(r => r.sql.foreignKeySql)
     .join(',\n')
 )
 
-export const convertDataFormatDeclarationToCreateTableSql = (
-  dataFormatDeclaration: DataFormatDeclaration,
-  relations?: Relation<DataFormatDeclarations, RelationType.ONE_TO_MANY | RelationType.ONE_TO_ONE>[],
+export const createTableSql = (
+  quotedTableName: string,
+  fieldList: FieldList,
+  relations?: NonManyToManyRelationList,
 ) => {
-  const tableName = camelCaseToSnakeCase(dataFormatDeclaration.name)
-
   const oneToOneRelations = relations
-    ?.filter(r => r.type === RelationType.ONE_TO_ONE) as Relation<DataFormatDeclarations, RelationType.ONE_TO_ONE>[] ?? []
-  const columnsSql = createColumnsSql(dataFormatDeclaration.fields, oneToOneRelations)
+    ?.filter(r => r.type === RelationType.ONE_TO_ONE) as Relation<RelationType.ONE_TO_ONE>[] ?? []
+  const columnsSql = createColumnsSql(fieldList, oneToOneRelations)
   const foreignKeysSql = relations != null ? createForeignKeysSql(relations) : ''
 
-  return `create table if not exists public."${tableName}"
+  return `create table if not exists public.${quotedTableName}
 (
   ${[columnsSql, foreignKeysSql].filter(s => s != null && s.length > 0).join(',\n')}
 )
 
 tablespace pg_default;
 
-alter table if exists public."${tableName}"
+alter table if exists public.${quotedTableName}
   owner to postgres;`
 }
-
-export const createValueList = <T extends DataFormatDeclaration>(df: DataFormat<T>, options: any, fieldNames: ExtractDataFormatFieldNames<T>[]) => (
-  fieldNames.map(fieldName => {
-    const value = options[fieldName]
-    if (df.fields[fieldName].dataType === DataType.JSON)
-      return JSON.stringify(value)
-    return value
-  })
-)

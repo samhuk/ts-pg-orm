@@ -3,7 +3,7 @@ import { test } from '../../common'
 
 export const basicTest = test('basic', async (stores, assert) => {
   const result = await stores.user.getMany({
-    fields: ['name', 'email', 'dateCreated'],
+    fields: ['name', 'email'],
     query: {
       filter: {
         logic: DataFilterLogic.OR,
@@ -20,15 +20,10 @@ export const basicTest = test('basic', async (stores, assert) => {
     },
   })
 
-  // TODO: How do we handle dates?
-  result[0].dateCreated = result[0].dateCreated.toString()
-  result[1].dateCreated = result[1].dateCreated.toString()
-
   assert(result, [
     {
       name: 'User 1',
       email: 'user1@email.com',
-      dateCreated: result[0].dateCreated,
       userAddress: {
         city: 'London',
         country: 'UK',
@@ -39,7 +34,6 @@ export const basicTest = test('basic', async (stores, assert) => {
     {
       name: 'User 2',
       email: 'user2@email.com',
-      dateCreated: result[1].dateCreated,
       userAddress: {
         city: 'Madrid',
         country: 'Spain',

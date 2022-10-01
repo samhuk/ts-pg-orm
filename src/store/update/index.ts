@@ -3,7 +3,7 @@ import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormat } from '../../dataFormat/types'
 import { createParametersString } from '../../helpers/sql'
 import { objectPropsToCamelCase } from '../../helpers/string'
-import { ReturnModeRaw, ReturnMode } from '../common/types'
+import { ReturnModeRaw, ReturnMode } from '../types'
 import { UpdateFunctionOptions, UpdateFunctionResult } from './types'
 
 const determineReturnMode = (returnMode: ReturnModeRaw): ReturnMode => (
@@ -24,7 +24,7 @@ export const update = async (
   options: UpdateFunctionOptions,
 ): Promise<UpdateFunctionResult> => {
   const fieldNamesToUpdate = Object.keys(options.record)
-    .filter(fName => df.sql.columnNames[fName] != null)
+    .filter(fName => df.sql.cols[fName] != null)
 
   const returnMode = determineReturnMode(options.return)
   if (fieldNamesToUpdate.length === 0) {
@@ -43,7 +43,7 @@ export const update = async (
   const sqlParts: string[] = [`update ${df.sql.tableName} set`]
 
   const columnNamesToUpdate = fieldNamesToUpdate
-    .map(fName => df.sql.columnNames[fName])
+    .map(fName => df.sql.cols[fName])
 
   let columnsAndValuesSql: string
   if (fieldNamesToUpdate.length > 1) {
@@ -60,8 +60,8 @@ export const update = async (
   sqlParts.push(columnsAndValuesSql)
 
   const queryInfo = createDataQuery(options.query).toSql({
-    filterTransformer: node => ({ left: df.sql.columnNames[node.field] }),
-    sortingTransformer: node => ({ left: df.sql.columnNames[node.field] }),
+    filterTransformer: node => ({ left: df.sql.cols[node.field] }),
+    sortingTransformer: node => ({ left: df.sql.cols[node.field] }),
   })
 
   // If there is no OBLO, then we can do a simple form

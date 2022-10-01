@@ -1,19 +1,19 @@
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { DataFormatDeclaration, ToRecord, DataFormatDeclarations } from '../../dataFormat/types'
-import { RelationDeclarations } from '../../relations/types'
-import { ReturnModeRaw } from '../common/types'
+import { DataFormat } from '../../dataFormat/types'
+import { ToRecord } from '../../dataFormat/types/record'
+import { ReturnModeRaw } from '../types'
 
 export type UpdateFunctionOptions<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
+  TDataFormat extends DataFormat = DataFormat,
 > = {
   /**
    * The field(s) to update with their new values.
    */
-  record: Partial<ToRecord<T>>
+  record: Partial<ToRecord<TDataFormat['fields']>>
   /**
    * Data query to select the record(s) to update.
    */
-  query?: DataQueryRecord<T['fields'][number]['name']>
+  query?: DataQueryRecord<TDataFormat['fieldNameList'][number]>
   /**
    * Determines whether the updated record(s) are to be returned.
    *
@@ -29,26 +29,22 @@ export type UpdateFunctionOptions<
 }
 
 export type UpdateFunctionResult<
-  T extends DataFormatDeclarations = DataFormatDeclarations,
-  K extends RelationDeclarations<T> = RelationDeclarations<T>,
-  L extends T[number] = T[number],
-  TOptions extends UpdateFunctionOptions<L> = UpdateFunctionOptions<L>,
+  TLocalDataFormat extends DataFormat = DataFormat,
+  TOptions extends UpdateFunctionOptions<TLocalDataFormat> = UpdateFunctionOptions<TLocalDataFormat>,
 > = Promise<
   TOptions extends { return: boolean }
     ? TOptions['return'] extends true
-      ? ToRecord<L>[] | null
+      ? ToRecord<TLocalDataFormat['fields']>[] | null
       : number
     : TOptions extends { return: string }
       ? TOptions['return'] extends 'first'
-        ? ToRecord<L>
+        ? ToRecord<TLocalDataFormat['fields']>
         : number
       : number
 >
 
 export type UpdateFunction<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
-> = <TOptions extends UpdateFunctionOptions<L>>(
+  TLocalDataFormat extends DataFormat = DataFormat,
+> = <TOptions extends UpdateFunctionOptions<TLocalDataFormat>>(
   options: TOptions,
-) => UpdateFunctionResult<T, K, L, TOptions>
+) => UpdateFunctionResult<TLocalDataFormat, TOptions>

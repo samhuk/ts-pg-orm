@@ -1,15 +1,15 @@
-import { DataFormatDeclarations, ToRecord } from '../../../dataFormat/types'
+import { DataFormats } from '../../../dataFormat/types'
+import { Relation, Relations } from '../../../relations/types'
 import {
-  RelationDeclarations,
-  ExtractForeignFormatNameFromRelation,
-  RelationDeclaration,
-  ExtractRelevantRelationsWithOneToOneToOne,
-  ExtractRelevantRelationsWithOneToOneFromOne,
-  ExtractRelevantRelationsWithOneToManyFromOne,
-  ExtractRelevantRelationsWithOneToManyToMany,
   ExtractRelevantRelationsWithManyToManyFieldRef1,
   ExtractRelevantRelationsWithManyToManyFieldRef2,
-} from '../../../relations/types'
+  ExtractRelevantRelationsWithOneToManyFromOne,
+  ExtractRelevantRelationsWithOneToManyToMany,
+  ExtractRelevantRelationsWithOneToOneFromOne,
+  ExtractRelevantRelationsWithOneToOneToOne,
+  RelationToForeignRecord,
+} from '../../../relations/types/relationExtraction'
+
 import {
   ManyToManyFieldRef1Name,
   ManyToManyFieldRef2Name,
@@ -19,79 +19,76 @@ import {
   OneToOneToOneName,
 } from './relatedDataPropNames'
 
-/**
- * Gets the entity record of the foreign entity of the given relation declaration (K),
- * from the data format declarations (T), for the given (local) data format name (L).
- */
-export type ExtractRelationForeignRecord<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T>,
-  L extends T[number]['name']
-> = ToRecord<
-  Extract<
-    T[number],
-    { name: ExtractForeignFormatNameFromRelation<K, L> }
-  >
->
-
 export type OneToOneFromOneDict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
 > = {
-  [TRelation in ExtractRelevantRelationsWithOneToOneFromOne<L, K> as
-    OneToOneFromOneName<T, TRelation>
-  ]: ExtractRelationForeignRecord<T, TRelation, L>
+  [TRelation in ExtractRelevantRelationsWithOneToOneFromOne<TRelations, TDataFormatName> as
+    TRelation extends Relation
+      ? OneToOneFromOneName<TDataFormats, TRelation>
+      : never
+  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>
 }
 
 export type OneToOneToOneDict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
 > = {
-  [TRelation in ExtractRelevantRelationsWithOneToOneToOne<L, K> as
-    OneToOneToOneName<T, TRelation>
-  ]: ExtractRelationForeignRecord<T, TRelation, L>
+  [TRelation in ExtractRelevantRelationsWithOneToOneToOne<TRelations, TDataFormatName> as
+    TRelation extends Relation
+      ? OneToOneToOneName<TDataFormats, TRelation>
+      : never
+  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>
 }
 
 export type OneToManyFromOneDict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
 > = {
-  [TRelation in ExtractRelevantRelationsWithOneToManyFromOne<L, K> as
-    OneToManyFromOneName<T, TRelation>
-  ]: ExtractRelationForeignRecord<T, TRelation, L>[]
+  [TRelation in ExtractRelevantRelationsWithOneToManyFromOne<TRelations, TDataFormatName> as
+    TRelation extends Relation
+      ? OneToManyFromOneName<TDataFormats, TRelation>
+      : never
+  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>[]
 }
 
 export type OneToManyToManyDict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
 > = {
-  [TRelation in ExtractRelevantRelationsWithOneToManyToMany<L, K> as
-    OneToManyToManyName<T, TRelation>
-  ]: ExtractRelationForeignRecord<T, TRelation, L>
+  [TRelation in ExtractRelevantRelationsWithOneToManyToMany<TRelations, TDataFormatName> as
+    TRelation extends Relation
+      ? OneToManyToManyName<TDataFormats, TRelation>
+      : never
+  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>
 }
 
 export type ManyToManyFieldRef1Dict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
 > = {
-  [TRelation in ExtractRelevantRelationsWithManyToManyFieldRef1<L, K> as
-    ManyToManyFieldRef1Name<T, TRelation>
-  ]: ExtractRelationForeignRecord<T, TRelation, L>
+  [TRelation in ExtractRelevantRelationsWithManyToManyFieldRef1<TRelations, TDataFormatName> as
+    TRelation extends Relation
+      ? ManyToManyFieldRef1Name<TDataFormats, TRelation>
+      : never
+  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>[]
 }
 
 export type ManyToManyFieldRef2Dict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
 > = {
-  [TRelation in ExtractRelevantRelationsWithManyToManyFieldRef2<L, K> as
-    ManyToManyFieldRef2Name<T, TRelation>
-  ]: ExtractRelationForeignRecord<T, TRelation, L>
+  [TRelation in ExtractRelevantRelationsWithManyToManyFieldRef2<TRelations, TDataFormatName> as
+    TRelation extends Relation
+      ? ManyToManyFieldRef2Name<TDataFormats, TRelation>
+      : never
+  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>[]
 }
 
 /**
@@ -99,26 +96,26 @@ export type ManyToManyFieldRef2Dict<
  * record or list of records.
  */
 export type RelatedDataDict<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
-> = OneToOneFromOneDict<T, K, L>
-  & OneToOneToOneDict<T, K, L>
-  & OneToManyFromOneDict<T, K, L>
-  & OneToManyToManyDict<T, K, L>
-  & ManyToManyFieldRef1Dict<T, K, L>
-  & ManyToManyFieldRef2Dict<T, K, L>
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
+> = OneToOneFromOneDict<TDataFormats, TRelations, TDataFormatName>
+  & OneToOneToOneDict<TDataFormats, TRelations, TDataFormatName>
+  & OneToManyFromOneDict<TDataFormats, TRelations, TDataFormatName>
+  & OneToManyToManyDict<TDataFormats, TRelations, TDataFormatName>
+  & ManyToManyFieldRef1Dict<TDataFormats, TRelations, TDataFormatName>
+  & ManyToManyFieldRef2Dict<TDataFormats, TRelations, TDataFormatName>
 
 /**
  * All of the possible related data property names for a particular DFD.
  */
 export type RelatedDataPropertyNamesUnion<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number]['name'],
-> = keyof OneToOneFromOneDict<T, K, L>
-  | keyof OneToOneToOneDict<T, K, L>
-  | keyof OneToManyFromOneDict<T, K, L>
-  | keyof OneToManyToManyDict<T, K, L>
-  | keyof ManyToManyFieldRef1Dict<T, K, L>
-  | keyof ManyToManyFieldRef2Dict<T, K, L>
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
+  TDataFormatName extends string,
+> = (keyof OneToOneFromOneDict<TDataFormats, TRelations, TDataFormatName>
+  | keyof OneToOneToOneDict<TDataFormats, TRelations, TDataFormatName>
+  | keyof OneToManyFromOneDict<TDataFormats, TRelations, TDataFormatName>
+  | keyof OneToManyToManyDict<TDataFormats, TRelations, TDataFormatName>
+  | keyof ManyToManyFieldRef1Dict<TDataFormats, TRelations, TDataFormatName>
+  | keyof ManyToManyFieldRef2Dict<TDataFormats, TRelations, TDataFormatName>) & string
