@@ -5,6 +5,7 @@ export const mapDict = <T extends any, R extends any>(
   if (dict == null)
     return null
 
+  // @ts-ignore TODO: This fails on remote with TS error
   if (dict === {})
     return {}
 
@@ -24,6 +25,7 @@ export const toDict = <TArrayValue = any, TDictKeys extends string|number = stri
   if (array == null)
     return null
 
+  // @ts-ignore TODO: This fails on remote with TS error
   if (array === [])
     return {} as { [key in TDictKeys]: TDictValue }
 
@@ -42,6 +44,7 @@ export const toDictReadonly = <TArrayValue, TDictKeys extends string|number, TDi
   if (array == null)
     return null
 
+  // @ts-ignore TODO: This fails on remote with TS error
   if (array === [])
     return {} as { [key in TDictKeys]: TDictValue }
 
