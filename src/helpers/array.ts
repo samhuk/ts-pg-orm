@@ -10,7 +10,7 @@ export const removeDuplicates = <T>(array: T[]): T[] => {
   ), [])
 }
 
-export const removeNullAndUndefinedValues = <T>(array: T[]): T[] => {
+export const removeNullishValues = <T>(array: T[]): T[] => {
   if (array == null)
     return null
 

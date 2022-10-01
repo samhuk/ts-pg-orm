@@ -1,57 +1,89 @@
-import { setObjPropDeep } from './obj'
+import { readObjPropDeep, setObjPropDeep } from './obj'
 
-describe('setObjPropDeep', () => {
-  const fn = setObjPropDeep
+describe('common/obj', () => {
+  describe('setObjPropDeep', () => {
+    const fn = setObjPropDeep
 
-  test('basic test', () => {
-    const obj = {
-      a: {
-        b: {
-          c: {
+    test('basic test', () => {
+      const obj = {
+        a: {
+          b: {
+            c: {
 
+            },
           },
         },
-      },
-    }
+      }
 
-    const newObj = fn(obj, ['a', 'b', 'c', 'd'], 'new value')
+      const newObj = fn(obj, ['a', 'b', 'c', 'd'], 'new value')
 
-    expect(newObj).toEqual({
-      a: {
-        b: {
-          c: {
-            d: 'new value',
+      expect(newObj).toEqual({
+        a: {
+          b: {
+            c: {
+              d: 'new value',
+            },
           },
         },
-      },
+      })
+    })
+
+    test('basic test - createIfNotExists = true', () => {
+      const obj = {
+        a: { },
+      }
+
+      const newObj = fn(obj, ['a', 'b', 'c', 'd'], 'new value', true)
+
+      expect(newObj).toEqual({
+        a: {
+          b: {
+            c: {
+              d: 'new value',
+            },
+          },
+        },
+      })
+    })
+
+    test('basic test - single path segment', () => {
+      const obj = {}
+
+      const newObj = fn(obj, ['a'], 'new value', false)
+
+      expect(newObj).toEqual({
+        a: 'new value',
+      })
     })
   })
 
-  test('basic test - createIfNotExists = true', () => {
-    const obj = {
-      a: { },
-    }
+  describe('readObjPropDeep', () => {
+    const fn = readObjPropDeep
 
-    const newObj = fn(obj, ['a', 'b', 'c', 'd'], 'new value', true)
-
-    expect(newObj).toEqual({
-      a: {
-        b: {
-          c: {
-            d: 'new value',
+    test('basic test', () => {
+      const obj = {
+        a: {
+          b: {
+            c: {
+              d: 'val',
+            },
           },
         },
-      },
+      }
+
+      expect(fn(obj, ['a', 'b', 'c'])).toEqual({ d: 'val' })
+      expect(fn(obj, ['a', 'b', 'c', 'd'])).toEqual('val')
     })
-  })
 
-  test('basic test - single path segment', () => {
-    const obj = {}
+    test('basic test - single path segment', () => {
+      const obj: any = {}
+      expect(fn(obj, ['a'])).toEqual(undefined)
 
-    const newObj = fn(obj, ['a'], 'new value', false)
+      obj.a = null
+      expect(fn(obj, ['a'])).toEqual(null)
 
-    expect(newObj).toEqual({
-      a: 'new value',
+      obj.a = 'val'
+      expect(fn(obj, ['a'])).toEqual('val')
     })
   })
 })

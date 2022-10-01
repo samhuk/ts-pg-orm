@@ -1,6 +1,6 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { setObjPropDeep, readObjPropDeep } from '../../../common/obj'
-import { removeDuplicates, removeNullAndUndefinedValues } from '../../../helpers/array'
+import { removeDuplicates, removeNullishValues } from '../../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../../helpers/object'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { Relations, RelationType } from '../../../relations/types'
@@ -53,7 +53,7 @@ const createLinkedFieldToValuesDict = (
     // If the linked field values haven't been computed yet, then compute and add them to the dict
     if (linkedFieldToValuesDict[linkedField] == null) {
       const linkedFieldColumnSql = link.sourceDataNode.fieldsInfo.fieldToColumnNameAlias[linkedField]
-      linkedFieldToValuesDict[linkedField] = removeDuplicates(removeNullAndUndefinedValues(rows.map(row => row[linkedFieldColumnSql])))
+      linkedFieldToValuesDict[linkedField] = removeDuplicates(removeNullishValues(rows.map(row => row[linkedFieldColumnSql])))
     }
   })
   return { linkedFieldToValuesDict, linkIndexToLinkedField }
