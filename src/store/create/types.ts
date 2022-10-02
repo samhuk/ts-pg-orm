@@ -4,11 +4,11 @@ import { ToRecord } from '../../dataFormat/types/record'
 
 export type CreateSingleFunctionOptions<
   TDataFormat extends DataFormat = DataFormat
-> = CreateRecordOptions<TDataFormat['fields']>
+> = CreateRecordOptions<TDataFormat>
 
 export type CreateSingleFunctionResult<
   TDataFormat extends DataFormat = DataFormat
-> = Promise<ToRecord<TDataFormat['fields']>>
+> = Promise<ToRecord<TDataFormat>>
 
 export type CreateSingleFunction<
   TLocalDataFormat extends DataFormat = DataFormat,
@@ -18,11 +18,11 @@ export type CreateSingleFunction<
 
 export type CreateManualSingleFunctionOptions<
   TDataFormat extends DataFormat = DataFormat
-> = ManualCreateRecordOptions<TDataFormat['fields']>
+> = ManualCreateRecordOptions<TDataFormat>
 
 export type CreateManualSingleFunctionResult<
   TDataFormat extends DataFormat = DataFormat
-> = Promise<ToRecord<TDataFormat['fields']>>
+> = Promise<ToRecord<TDataFormat>>
 
 export type CreateManualSingleFunction<
   TLocalDataFormat extends DataFormat = DataFormat,

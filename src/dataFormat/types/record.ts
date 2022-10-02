@@ -1,3 +1,4 @@
+import { DataFormat } from '.'
 import { ExpandOneLevel, ValuesUnionFromDict } from '../../helpers/types'
 import { Fields, FieldToRecordType } from './field'
 
@@ -48,7 +49,7 @@ export type ExtractRequiredRecordFieldNames<TFields extends Fields> =
 export type ExtractOptionalRecordFieldNames<TFields extends Fields> =
   ExtractExplicitAllowNullTrueFieldNames<TFields>
 
-export type ToRecord<TFields extends Fields> = ExpandOneLevel<
+export type FieldsToRecord<TFields extends Fields> = ExpandOneLevel<
   {
     [TFieldName in keyof TFields as TFieldName extends ExtractOptionalRecordFieldNames<TFields> ? TFieldName : never]?:
       FieldToRecordType<TFields[TFieldName]>
@@ -58,3 +59,6 @@ export type ToRecord<TFields extends Fields> = ExpandOneLevel<
       FieldToRecordType<TFields[TFieldName]>
   }
 >
+
+export type ToRecord<TDataFormat extends DataFormat = DataFormat> =
+  FieldsToRecord<TDataFormat['fields']>

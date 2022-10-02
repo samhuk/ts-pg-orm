@@ -106,7 +106,7 @@ export type RelationToForeignRecord<
   TDataFormats extends DataFormats,
   TRelation extends Relation,
   TLocalDataFormatName extends string,
-> = ToRecord<RelationToForeignDataFormat<TDataFormats, TRelation, TLocalDataFormatName>['fields']>
+> = ToRecord<RelationToForeignDataFormat<TDataFormats, TRelation, TLocalDataFormatName>>
 
 export type IsForeignFormatPluralFromRelation<
   TRelation extends Relation,

@@ -6,7 +6,7 @@ import { CreateRecordOptions } from '../dataFormat/types/createRecordOptions'
 import { DataType, EpochSubType, NumSubType, StrSubType } from '../dataFormat/types/dataType'
 import { RelationType } from '../relations/types'
 import { _CreateJoinTableRecordOptions } from '../store/joinTable/types'
-import { StoresAndJoinTableStoresDict } from '../stores/types'
+import { StoresAndJoinTableStores } from '../stores/types'
 
 const BASE_FIELDS = createCommonFields({
   id: { type: DataType.NUM, subType: NumSubType.SERIAL },
@@ -81,17 +81,17 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
     },
   ] as const)
 
-export type Stores = StoresAndJoinTableStoresDict<typeof ORM['dataFormats'], typeof ORM['relations']>
+export type Stores = StoresAndJoinTableStores<typeof ORM['dataFormats'], typeof ORM['relations']>
 
-export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DF['fields']>
+export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DF>
 
-export type CreateImageRecordOptions = CreateRecordOptions<typeof IMAGE_DF['fields']>
+export type CreateImageRecordOptions = CreateRecordOptions<typeof IMAGE_DF>
 
-export type CreateArticleRecordOptions = CreateRecordOptions<typeof ARTICLE_DF['fields']>
+export type CreateArticleRecordOptions = CreateRecordOptions<typeof ARTICLE_DF>
 
-export type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADDRESS_DF['fields']>
+export type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADDRESS_DF>
 
-export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DF['fields']>
+export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DF>
 
 export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
   typeof ORM['dataFormats'],

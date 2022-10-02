@@ -4,7 +4,7 @@ import { Relations } from '../relations/types'
 import { JoinTableStoresDict } from '../store/joinTable/types'
 import { Store } from '../store/types'
 
-export type StoresAndJoinTableStoresDict<
+export type StoresAndJoinTableStores<
   TDataFormats extends DataFormats,
   TRelations extends Relations,
 > = Stores<TDataFormats, TRelations> & JoinTableStoresDict<TDataFormats, TRelations>
@@ -27,7 +27,7 @@ export type ProvisionStoresOptions<
    * @default
    * undefined // All stores will be provisioned
    */
-  provisionStores?: ((keyof StoresAndJoinTableStoresDict<TDataFormats, TRelations>) & string)[]
+  provisionStores?: ((keyof StoresAndJoinTableStores<TDataFormats, TRelations>) & string)[]
   /**
    * Optional alternative `SimplePgClient` to use, different from the one initially provided
    * to create the TsPgOrm instance.
@@ -46,7 +46,7 @@ export type UnprovisionStoresOptions<
    * @default
    * undefined // All stores will be unprovisioned
    */
-  unprovisionStores?: ((keyof StoresAndJoinTableStoresDict<TDataFormats, TRelations>) & string)[]
+  unprovisionStores?: ((keyof StoresAndJoinTableStores<TDataFormats, TRelations>) & string)[]
   /**
    * Optional alternative `SimplePgClient` to use, different from the one initially provided
    * to create the TsPgOrm instance.

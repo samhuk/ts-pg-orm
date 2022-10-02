@@ -9,7 +9,7 @@ export type UpdateFunctionOptions<
   /**
    * The field(s) to update with their new values.
    */
-  record: Partial<ToRecord<TDataFormat['fields']>>
+  record: Partial<ToRecord<TDataFormat>>
   /**
    * Data query to select the record(s) to update.
    */
@@ -34,11 +34,11 @@ export type UpdateFunctionResult<
 > = Promise<
   TOptions extends { return: boolean }
     ? TOptions['return'] extends true
-      ? ToRecord<TLocalDataFormat['fields']>[] | null
+      ? ToRecord<TLocalDataFormat>[] | null
       : number
     : TOptions extends { return: string }
       ? TOptions['return'] extends 'first'
-        ? ToRecord<TLocalDataFormat['fields']>
+        ? ToRecord<TLocalDataFormat>
         : number
       : number
 >

@@ -8,8 +8,8 @@ import { objectPropsToCamelCase } from '../../helpers/string'
 export const create = async <TDataFormat extends DataFormat>(
   db: SimplePgClient,
   df: TDataFormat,
-  options: CreateRecordOptions<TDataFormat['fields']>,
-): Promise<ToRecord<TDataFormat['fields']>> => {
+  options: CreateRecordOptions<TDataFormat>,
+): Promise<ToRecord<TDataFormat>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.createRecordFieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
 
@@ -22,8 +22,8 @@ export const create = async <TDataFormat extends DataFormat>(
 export const createManual = async <TDataFormat extends DataFormat>(
   db: SimplePgClient,
   df: TDataFormat,
-  options: ManualCreateRecordOptions<TDataFormat['fields']>,
-): Promise<ToRecord<TDataFormat['fields']>> => {
+  options: ManualCreateRecordOptions<TDataFormat>,
+): Promise<ToRecord<TDataFormat>> => {
   const fieldNamesInProvidedCreateOptions = Object.keys(options)
   const fieldNames = df.fieldNameList.filter(f => fieldNamesInProvidedCreateOptions.indexOf(f) !== -1)
 

@@ -108,9 +108,9 @@ type _GetFunctionResult<
         ? IsAny<TOptions['fields'][number]> extends true
           ? { } // So infer that as them wanting no fields of this node
           // else, it's probably a populated array (at least one field within)
-          : PickAny<ToRecord<TLocalDataFormat['fields']>, TOptions['fields'][number]>
+          : PickAny<ToRecord<TLocalDataFormat>, TOptions['fields'][number]>
         // Else (fields property is not present), then default to the full record
-        : ToRecord<TLocalDataFormat['fields']>
+        : ToRecord<TLocalDataFormat>
     )
     // child nodes
     & (

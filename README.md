@@ -29,24 +29,22 @@ Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/
 
 ## Usage Overview
 
-Define your data formats, relations, and database connectivity to create type-safe auto-completing data stores.
+Define data formats, relations, and database connectivity to create type-safe auto-completing data stores:
 
 ```typescript
-// -- Set up TsPgOrm instance and data stores
-const ORM = createTsPgOrm()
-  .loadDataFormats([...] as const)
-  .loadRelations(dfs => [...] as const)
-await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
-const stores = await ORM.createStores()
+const userDF = createDataFormat(...)
+const orm = createTsPgOrm([userDF, ...] as const).setRelations([...] as const)
+await orm.initDbClient({ host: 'localhost', port: 5432, ... })
+await orm.provisionStores()
 ```
 
-Perform CRUD operations on data stores
+Perform CRUD operations on data stores:
 
 ```typescript
 // Create
-const userCreated = await stores.user.create({ name: 'alice' })
+const userCreated = await orm.stores.user.create({ name: 'alice' })
 // Get
-const userFound = await stores.user.get({
+const userFound = await orm.stores.user.get({
   fields: ['name'],
   filter: { field: 'id', op: Operator.EQUALS, val: 1 },
   relations: { // Recursively include related data
@@ -56,7 +54,7 @@ const userFound = await stores.user.get({
   },
 })
 // Update
-const userUpdated = await stores.user.update({
+const userUpdated = await orm.stores.user.update({
   query: {
     filter: { ... },
   },
@@ -64,7 +62,7 @@ const userUpdated = await stores.user.update({
   return: true,
 })
 // Delete
-const userDeleted = await stores.user.delete({
+const userDeleted = await orm.stores.user.delete({
   query: {
     filter: { ... },
   },
@@ -72,7 +70,7 @@ const userDeleted = await stores.user.delete({
 })
 ```
 
-Create types to use throughout your application
+Create types to use throughout your application:
 
 ```typescript
 export type UserRecord = ToRecord<typeof USER_DFD>
@@ -83,22 +81,20 @@ export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
 // { id: number, name: string, ... }
 ```
 
-Use type-enforced sql information to create bespoke SQL statements
+Use type-enforced sql information to create bespoke SQL statements:
 
 ```typescript
-const sql = ORM.dataFormats.user.sql
+const sql = orm.dataFormats.user.sql
 const customUserSql = `select ${sql.columnNames.name} from ${sql.tableName}`
 ```
 
 ## Examples
 
-Examples can be found within ./src/examples, showing more complete and realistic usages.
-
 ### Integration Tests
 
 The integration test suite connects to a real PostgreSQL server at (by default) postgres@localhost:5432 and performs various ts-pg-orm queries with a set of example data formats and relations.
 
-Run `npm run integration-tests` to build and run these.
+Run `npm run integration-tests` to build and run these. The database connection configuration is at `/.env-cmdrc.json`.
 
 ---
 
