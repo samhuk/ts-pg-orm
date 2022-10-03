@@ -1,109 +1,105 @@
 import { createConsoleLogEventHandlers } from 'simple-pg-client'
 import { createTsPgOrm } from '..'
-import { createDataFormatDeclaration } from '../dataFormat'
-import { BASE_ENTITY_FIELDS, COMMON_FIELDS } from '../dataFormat/common'
-import { DataType, StringDataSubType, NumberDataSubType, CreateRecordOptions } from '../dataFormat/types'
+import { createDataFormat } from '../dataFormat'
+import { createCommonFields } from '../dataFormat/field'
+import { CreateRecordOptions } from '../dataFormat/types/createRecordOptions'
+import { DataType, EpochSubType, NumSubType, StrSubType } from '../dataFormat/types/dataType'
+import { ToRecord } from '../dataFormat/types/record'
 import { RelationType } from '../relations/types'
 import { _CreateJoinTableRecordOptions } from '../store/joinTable/types'
-import { StoresAndJoinTableStoresDict } from '../types'
+import { StoresAndJoinTableStores } from '../stores/types'
 
-const USER_DFD = createDataFormatDeclaration({
-  name: 'user',
-  fields: [
-    ...BASE_ENTITY_FIELDS,
-    COMMON_FIELDS.name50,
-    { name: 'email', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 100 },
-    { name: 'passwordHash', dataType: DataType.STRING, dataSubType: StringDataSubType.FIXED_LENGTH, length: 64 },
-  ],
-} as const)
+const BASE_FIELDS = createCommonFields({
+  id: { type: DataType.NUM, subType: NumSubType.SERIAL },
+  uuid: { type: DataType.STR, subType: StrSubType.UUID_V4, autoGenerate: true },
+  dateCreated: { type: DataType.EPOCH, subType: EpochSubType.DATE_TIME_WITH_TIMEZONE, defaultToCurrentEpoch: true },
+  dateDeleted: { type: DataType.EPOCH, subType: EpochSubType.DATE_TIME_WITH_TIMEZONE, allowNull: true, excludeFromCreateOptions: true },
+})
 
-const ARTICLE_DFD = createDataFormatDeclaration({
-  name: 'article',
-  fields: [
-    ...BASE_ENTITY_FIELDS,
-    { name: 'title', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 100 },
-    { name: 'creatorUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-    { name: 'thumbnailImageId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-  ],
-} as const)
+const USER_DF = createDataFormat('user', {
+  ...BASE_FIELDS,
+  name: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 50 },
+  email: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
+  passwordHash: { type: DataType.STR, subType: StrSubType.FIXED_LENGTH, len: 64 },
+})
 
-const IMAGE_DFD = createDataFormatDeclaration({
-  name: 'image',
-  fields: [
-    ...BASE_ENTITY_FIELDS,
-    { name: 'fileName', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200 },
-    { name: 'creatorUserId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-  ],
-} as const)
+const ARTICLE_DF = createDataFormat('article', {
+  ...BASE_FIELDS,
+  title: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
+  creatorUserId: { type: DataType.NUM, subType: NumSubType.INT },
+  thumbnailImageId: { type: DataType.NUM, subType: NumSubType.INT },
+})
 
-const USER_ADDRESS_DFD = createDataFormatDeclaration({
-  name: 'userAddress',
-  fields: [
-    ...BASE_ENTITY_FIELDS,
-    { name: 'userId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER },
-    { name: 'postCode', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 10 },
-    { name: 'streetAddress', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 200 },
-    { name: 'city', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 100 },
-    { name: 'country', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 100 },
-  ],
-} as const)
+const IMAGE_DF = createDataFormat('image', {
+  ...BASE_FIELDS,
+  fileName: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 200 },
+  creatorUserId: { type: DataType.NUM, subType: NumSubType.INT },
+})
 
-const USER_GROUP_DFD = createDataFormatDeclaration({
-  name: 'userGroup',
-  fields: [
-    ...BASE_ENTITY_FIELDS,
-    { name: 'name', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 100 },
-    { name: 'description', dataType: DataType.STRING, dataSubType: StringDataSubType.VARYING_LENGTH, maxLength: 300, allowNull: true },
-    { name: 'imageId', dataType: DataType.NUMBER, dataSubType: NumberDataSubType.INTEGER, allowNull: true },
-  ],
-} as const)
+const USER_ADDRESS_DF = createDataFormat('userAddress', {
+  ...BASE_FIELDS,
+  postCode: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 10 },
+  streetAddress: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 200 },
+  city: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
+  country: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
+  userId: { type: DataType.NUM, subType: NumSubType.INT },
+})
 
-export const ORM = createTsPgOrm()
-  .loadDataFormats([USER_DFD, IMAGE_DFD, ARTICLE_DFD, USER_ADDRESS_DFD, USER_GROUP_DFD] as const)
-  .loadRelations(dfs => [
+const USER_GROUP_DF = createDataFormat('userGroup', {
+  ...BASE_FIELDS,
+  name: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
+  description: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 300, allowNull: true },
+  imageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
+})
+
+export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF] as const)
+  .setRelations([
     {
       type: RelationType.ONE_TO_MANY,
-      fromOneField: dfs.user.fieldRefs.id,
-      toManyField: dfs.article.fieldRefs.creatorUserId,
+      fromOneField: USER_DF.fieldRefs.id,
+      toManyField: ARTICLE_DF.fieldRefs.creatorUserId,
     },
     {
       type: RelationType.ONE_TO_MANY,
-      fromOneField: dfs.image.fieldRefs.id,
-      toManyField: dfs.article.fieldRefs.thumbnailImageId,
+      fromOneField: IMAGE_DF.fieldRefs.id,
+      toManyField: ARTICLE_DF.fieldRefs.thumbnailImageId,
     },
     {
       type: RelationType.ONE_TO_MANY,
-      fromOneField: dfs.user.fieldRefs.id,
-      toManyField: dfs.image.fieldRefs.creatorUserId,
+      fromOneField: USER_DF.fieldRefs.id,
+      toManyField: IMAGE_DF.fieldRefs.creatorUserId,
     },
     {
       type: RelationType.ONE_TO_ONE,
-      fromOneField: dfs.user.fieldRefs.id,
-      toOneField: dfs.userAddress.fieldRefs.userId,
+      fromOneField: USER_DF.fieldRefs.id,
+      toOneField: USER_ADDRESS_DF.fieldRefs.userId,
     },
     {
       type: RelationType.MANY_TO_MANY,
-      fieldRef1: dfs.user.fieldRefs.id,
-      fieldRef2: dfs.userGroup.fieldRefs.id,
+      fieldRef1: USER_DF.fieldRefs.id,
+      fieldRef2: USER_GROUP_DF.fieldRefs.id,
       includeDateCreated: true,
     },
   ] as const)
 
-export type Stores = StoresAndJoinTableStoresDict<typeof ORM['dataFormatDeclarations'], typeof ORM['relationDeclarations']>
+export type Stores = StoresAndJoinTableStores<typeof ORM['dataFormats'], typeof ORM['relations']>
 
-export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DFD>
+export type UserRecord = ToRecord<typeof USER_DF>
 
-export type CreateImageRecordOptions = CreateRecordOptions<typeof IMAGE_DFD>
+export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DF>
 
-export type CreateArticleRecordOptions = CreateRecordOptions<typeof ARTICLE_DFD>
+export type CreateImageRecordOptions = CreateRecordOptions<typeof IMAGE_DF>
 
-export type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADDRESS_DFD>
+export type CreateArticleRecordOptions = CreateRecordOptions<typeof ARTICLE_DF>
 
-export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DFD>
+export type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADDRESS_DF>
+
+export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DF>
 
 export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
-  typeof ORM['dataFormatDeclarations'],
-  typeof ORM['relations']['user.id <<-->> userGroup.id']
+  typeof ORM['dataFormats'],
+  // @ts-ignore TODO: This seems to be failing only on remote build
+  typeof ORM['relations']['userIdToUserGroupId']
 >
 
 export const provisionOrm = async (): Promise<Stores> => {
@@ -123,7 +119,8 @@ export const provisionOrm = async (): Promise<Stores> => {
     },
   })
 
-  const stores = await ORM.createStores({ unprovisionStores: true })
+  await ORM.unprovisionStores()
+  await ORM.provisionStores()
 
-  return stores
+  return ORM.stores
 }

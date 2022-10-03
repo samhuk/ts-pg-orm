@@ -1,4 +1,6 @@
-import { DataFormatDeclarations } from '../dataFormat/types'
+import { capitalize, quote } from '../helpers/string'
+import { DataFormat, DataFormats } from '../dataFormat/types'
+import { Field } from '../dataFormat/types/field'
 import {
   createManyToManyJoinTableFieldRefColumnName,
   createManyToManyJoinTableName,
@@ -6,81 +8,99 @@ import {
   createOneToManyForeignKeySql,
   createOneToOneForeignKeySql,
 } from './sql'
-import { RelationType, RelationDeclaration, Relation, ToRelationName } from './types'
+import { Relation, RelationOptions, RelationType } from './types'
 
-const relationTypeToArrowText = {
-  [RelationType.MANY_TO_MANY]: '<<-->>',
-  [RelationType.ONE_TO_MANY]: '<-->>',
-  [RelationType.ONE_TO_ONE]: '<-->',
+type ResovledRelationInfo = {
+  leftDataFormat: DataFormat
+  rightDataFormat: DataFormat
+  leftField: Field
+  rightField: Field
 }
 
-/**
- * Creates the unique name for a relation.
- */
-export const createRelationName = <
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T>
->(d: K): ToRelationName<K> => {
-  switch (d.type) {
-    case RelationType.MANY_TO_MANY:
-      return `${d.fieldRef1.formatName}.${d.fieldRef1.fieldName} ${relationTypeToArrowText[RelationType.MANY_TO_MANY]} ${d.fieldRef2.formatName}.${d.fieldRef2.fieldName}` as ToRelationName<K>
-    case RelationType.ONE_TO_MANY:
-      return `${d.fromOneField.formatName}.${d.fromOneField.fieldName} ${relationTypeToArrowText[RelationType.ONE_TO_MANY]} ${d.toManyField.formatName}.${d.toManyField.fieldName}` as ToRelationName<K>
-    case RelationType.ONE_TO_ONE:
-      return `${d.fromOneField.formatName}.${d.fromOneField.fieldName} ${relationTypeToArrowText[RelationType.ONE_TO_ONE]} ${d.toOneField.formatName}.${d.toOneField.fieldName}` as ToRelationName<K>
+const createRelationName = (resolvedInfo: ResovledRelationInfo) => (
+  // E.g. "userIdToArticleCreatorUserId"
+  `${resolvedInfo.leftDataFormat.name}${capitalize(resolvedInfo.leftField.name)}To${capitalize(resolvedInfo.rightDataFormat.name)}${capitalize(resolvedInfo.rightField.name)}`
+)
+
+const resolveRelationDataFormatsAndFields = (
+  options: RelationOptions,
+  dataFormats: DataFormats,
+) => {
+  switch (options.type) {
+    case RelationType.ONE_TO_ONE: {
+      return {
+        leftDataFormat: dataFormats[options.fromOneField.dataFormat],
+        rightDataFormat: dataFormats[options.toOneField.dataFormat],
+        leftField: dataFormats[options.fromOneField.dataFormat].fields[options.fromOneField.field],
+        rightField: dataFormats[options.toOneField.dataFormat].fields[options.toOneField.field],
+      }
+    }
+    case RelationType.ONE_TO_MANY: {
+      return {
+        leftDataFormat: dataFormats[options.fromOneField.dataFormat],
+        rightDataFormat: dataFormats[options.toManyField.dataFormat],
+        leftField: dataFormats[options.fromOneField.dataFormat].fields[options.fromOneField.field],
+        rightField: dataFormats[options.toManyField.dataFormat].fields[options.toManyField.field],
+      }
+    }
+    case RelationType.MANY_TO_MANY: {
+      return {
+        leftDataFormat: dataFormats[options.fieldRef1.dataFormat],
+        rightDataFormat: dataFormats[options.fieldRef2.dataFormat],
+        leftField: dataFormats[options.fieldRef1.dataFormat].fields[options.fieldRef1.field],
+        rightField: dataFormats[options.fieldRef2.dataFormat].fields[options.fieldRef2.field],
+      }
+    }
     default:
       return null
   }
 }
 
-export const createRelation = <
-  T extends DataFormatDeclarations,
-  K extends RelationType,
-  L extends RelationDeclaration<T, K>,
->(d: L, relationName: ToRelationName<L>): Relation<T, K, L> => {
-  if (d.type === RelationType.MANY_TO_MANY) {
-    const _d = d as RelationDeclaration<T, RelationType.MANY_TO_MANY>
-    const joinTableName = createManyToManyJoinTableName(_d)
-    const relation: Relation<T, RelationType.MANY_TO_MANY, RelationDeclaration<T, RelationType.MANY_TO_MANY>> = {
-      ..._d,
-      sql: {
-        createJoinTableSql: createManyToManyJoinTableSql(_d),
-        joinTableName,
-        joinTableFieldRef1ColumnName: createManyToManyJoinTableFieldRefColumnName(_d.fieldRef1),
-        joinTableFieldRef2ColumnName: createManyToManyJoinTableFieldRefColumnName(_d.fieldRef2),
-        dropJoinTableSql: `drop table if exists ${joinTableName};`,
-      },
-      relationName: relationName as any,
-    }
-    // @ts-ignore
-    return relation
-  }
+export const createRelation = (
+  options: RelationOptions,
+  dataFormats: DataFormats,
+): Relation => {
+  const resolvedInfo = resolveRelationDataFormatsAndFields(options, dataFormats)
 
-  if (d.type === RelationType.ONE_TO_MANY) {
-    const _d = d as RelationDeclaration<T, RelationType.ONE_TO_MANY>
-    const relation: Relation<T, RelationType.ONE_TO_MANY, RelationDeclaration<T, RelationType.ONE_TO_MANY>> = {
-      ..._d,
-      sql: {
-        foreignKeySql: createOneToManyForeignKeySql(_d),
-      },
-      relationName: relationName as any,
+  switch (options.type) {
+    case RelationType.ONE_TO_ONE: {
+      const relation: Relation<RelationType.ONE_TO_ONE> = {
+        ...options,
+        name: createRelationName(resolvedInfo) as any,
+        sql: { foreignKeySql: createOneToOneForeignKeySql(options) },
+      }
+      return relation
     }
-    // @ts-ignore
-    return relation
-  }
-
-  if (d.type === RelationType.ONE_TO_ONE) {
-    const _d = d as RelationDeclaration<T, RelationType.ONE_TO_ONE>
-    const relation: Relation<T, RelationType.ONE_TO_ONE, RelationDeclaration<T, RelationType.ONE_TO_ONE>> = {
-      ..._d,
-      sql: {
-        foreignKeySql: createOneToOneForeignKeySql(_d),
-      },
-      relationName: relationName as any,
+    case RelationType.ONE_TO_MANY: {
+      const relation: Relation<RelationType.ONE_TO_MANY> = {
+        ...options,
+        name: createRelationName(resolvedInfo) as any,
+        sql: { foreignKeySql: createOneToManyForeignKeySql(options) },
+      }
+      return relation
     }
-    // @ts-ignore
-    return relation
-  }
+    case RelationType.MANY_TO_MANY: {
+      const unquotedJoinTableName = createManyToManyJoinTableName(options)
+      const unquotedJoinTableFieldRef1ColumnName = createManyToManyJoinTableFieldRefColumnName(options.fieldRef1)
+      const unquotedJoinTableFieldRef2ColumnName = createManyToManyJoinTableFieldRefColumnName(options.fieldRef2)
 
-  return null
+      const relation: Relation<RelationType.MANY_TO_MANY> = {
+        ...options,
+        name: createRelationName(resolvedInfo) as any,
+        sql: {
+          createJoinTableSql: createManyToManyJoinTableSql(options),
+          dropJoinTableSql: `drop table if exists "${unquotedJoinTableName}";`,
+          unquotedJoinTableFieldRef1ColumnName,
+          joinTableFieldRef1ColumnName: quote(unquotedJoinTableFieldRef1ColumnName),
+          unquotedJoinTableFieldRef2ColumnName,
+          joinTableFieldRef2ColumnName: quote(unquotedJoinTableFieldRef2ColumnName),
+          unquotedJoinTableName,
+          joinTableName: quote(unquotedJoinTableName),
+        },
+      }
+      return relation
+    }
+    default:
+      return null
+  }
 }

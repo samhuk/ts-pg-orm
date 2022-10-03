@@ -4,7 +4,7 @@ import { test } from '../../common'
 export const basicTest = test('basic', async (stores, assert) => {
   const user3Id = (await stores.user.get({ fields: ['id'], filter: { field: 'name', op: Operator.EQUALS, val: 'User 3' } })).id
   const userGroup1Id = (await stores.userGroup.get({ fields: ['id'], filter: { field: 'name', op: Operator.EQUALS, val: 'User Group 1' } })).id
-  const result = await stores['user.id <<-->> userGroup.id'].create({
+  const result = await stores.userIdToUserGroupId.create({
     userId: user3Id,
     userGroupId: userGroup1Id,
   })

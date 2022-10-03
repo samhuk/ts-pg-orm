@@ -1,13 +1,13 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { readObjPropDeep, setObjPropDeep } from '../../../common/obj'
-import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../../dataFormat/types'
-import { removeDuplicates, removeNullAndUndefinedValues } from '../../../helpers/array'
+import { setObjPropDeep, readObjPropDeep } from '../../../common/obj'
+import { removeDuplicates, removeNullishValues } from '../../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../../helpers/object'
-import { RelationDeclarations, RelationsDict, RelationType } from '../../../relations/types'
+import { DataFormat, DataFormats } from '../../../dataFormat/types'
+import { Relations, RelationType } from '../../../relations/types'
 import { GetFunctionOptions } from '../types'
 import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
-import { DataNode, QueryNode, QueryNodes, QueryNodeSql, QueryPlan } from './types'
+import { QueryNode, QueryNodeSql, DataNode, QueryNodes, QueryPlan } from './types'
 
 const createQueryNodeSql = (
   queryNode: QueryNode,
@@ -46,14 +46,14 @@ const createLinkedFieldToValuesDict = (
 ): { linkedFieldToValuesDict: { [fieldName: string]: any[] }, linkIndexToLinkedField: string[] } => {
   const linkedFieldToValuesDict: { [fieldName: string]: any[] } = {}
   const linkIndexToLinkedField = queryNode.childQueryNodeLinks.map(link => (
-    link.childQueryNode.rootDataNode.parentFieldRef.fieldName
+    link.childQueryNode.rootDataNode.parentFieldRef.field
   ))
   queryNode.childQueryNodeLinks.forEach((link, i) => {
     const linkedField = linkIndexToLinkedField[i]
     // If the linked field values haven't been computed yet, then compute and add them to the dict
     if (linkedFieldToValuesDict[linkedField] == null) {
-      const linkedFieldColumnSql = `${link.sourceDataNode.id}.${link.sourceDataNode.dataFormat.sql.columnNames[linkedField]}`
-      linkedFieldToValuesDict[linkedField] = removeDuplicates(removeNullAndUndefinedValues(rows.map(row => row[linkedFieldColumnSql])))
+      const linkedFieldColumnSql = link.sourceDataNode.fieldsInfo.fieldToColumnNameAlias[linkedField]
+      linkedFieldToValuesDict[linkedField] = removeDuplicates(removeNullishValues(rows.map(row => row[linkedFieldColumnSql])))
     }
   })
   return { linkedFieldToValuesDict, linkIndexToLinkedField }
@@ -160,8 +160,8 @@ const determineIfRowWasActuallyFound = (
   dataNode: DataNode,
   row: any,
 ) => {
-  const parentLinkedFieldColumnAlias = dataNode.parent.fieldsInfo.fieldToColumnNameAlias[dataNode.parentFieldRef.fieldName]
-  const linkedFieldColumnAlias = dataNode.fieldsInfo.fieldToColumnNameAlias[dataNode.fieldRef.fieldName]
+  const parentLinkedFieldColumnAlias = dataNode.parent.fieldsInfo.fieldToColumnNameAlias[dataNode.parentFieldRef.field]
+  const linkedFieldColumnAlias = dataNode.fieldsInfo.fieldToColumnNameAlias[dataNode.fieldRef.field]
   return row[parentLinkedFieldColumnAlias] === row[linkedFieldColumnAlias]
 }
 
@@ -215,12 +215,12 @@ const foldResultsRowIteration = (
     if (childQueryNodeResults != null) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const foldedChildQueryNodeResults = foldResults(childQueryNode, queryNodeIdToResultsDict)
-      const linkedFieldName = rootDataNodeOfChildQueryNode.parentFieldRef.fieldName
+      const linkedFieldName = rootDataNodeOfChildQueryNode.parentFieldRef.field
       let childLinkedFieldName: string
       if (rootDataNodeOfChildQueryNode.relation.type === RelationType.MANY_TO_MANY)
         childLinkedFieldName = `$$${rootDataNodeOfChildQueryNode.fieldsInfo.joinTableParentColumnNameAlias}`
       else
-        childLinkedFieldName = rootDataNodeOfChildQueryNode.fieldRef.fieldName
+        childLinkedFieldName = rootDataNodeOfChildQueryNode.fieldRef.field
 
       const relatedDataPropNamePath = []
       let currentDataNode = rootDataNodeOfChildQueryNode
@@ -306,18 +306,19 @@ const execute = async (
  * those functions *do* work correctly, this isn't too much of a concern.
  */
 export const createQueryPlan = <
-  T extends DataFormatDeclarations = DataFormatDeclarations,
-  K extends RelationDeclarations<T> = RelationDeclarations<T>,
-  L extends T[number] = T[number],
+  TDataFormats extends DataFormats = DataFormats,
+  TRelations extends Relations = Relations,
+  TLocalDataFormat extends DataFormat = DataFormat,
   TIsPlural extends boolean = boolean,
-  TOptions extends GetFunctionOptions<T, K, L, TIsPlural> = GetFunctionOptions<T, K, L, TIsPlural>,
+  TOptions extends GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural> =
+    GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
 >(
-    relations: RelationsDict<T, K>,
-    dataFormats: DataFormatsDict<T>,
-    dataFormat: DataFormat<L>,
+    relations: TRelations,
+    dataFormats: TDataFormats,
+    dataFormat: TLocalDataFormat,
     isPlural: TIsPlural,
     options: TOptions,
-  ): QueryPlan<T, K, L, TIsPlural, TOptions> => {
+  ): QueryPlan<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions> => {
   // Create data nodes, converting the recursive options object into a graph
   const dataNodes = toDataNodes(relations, dataFormats, dataFormat, isPlural, options)
   // Create query nodes, grouping data nodes together into single queries

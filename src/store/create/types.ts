@@ -1,34 +1,31 @@
-import { CreateRecordOptions, DataFormatDeclaration, DataFormatDeclarations, ManualCreateRecordOptions, ToRecord } from '../../dataFormat/types'
-import { RelationDeclarations } from '../../relations/types'
+import { DataFormat } from '../../dataFormat/types'
+import { CreateRecordOptions, ManualCreateRecordOptions } from '../../dataFormat/types/createRecordOptions'
+import { ToRecord } from '../../dataFormat/types/record'
 
 export type CreateSingleFunctionOptions<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
-> = CreateRecordOptions<T>
+  TDataFormat extends DataFormat = DataFormat
+> = CreateRecordOptions<TDataFormat>
 
 export type CreateSingleFunctionResult<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
-> = Promise<ToRecord<T>>
+  TDataFormat extends DataFormat = DataFormat
+> = Promise<ToRecord<TDataFormat>>
 
 export type CreateSingleFunction<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
-> = <TOptions extends CreateSingleFunctionOptions<L>>(
+  TLocalDataFormat extends DataFormat = DataFormat,
+> = <TOptions extends CreateSingleFunctionOptions<TLocalDataFormat>>(
   options: TOptions,
-) => CreateSingleFunctionResult<L>
+) => CreateSingleFunctionResult<TLocalDataFormat>
 
 export type CreateManualSingleFunctionOptions<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
-> = ManualCreateRecordOptions<T>
+  TDataFormat extends DataFormat = DataFormat
+> = ManualCreateRecordOptions<TDataFormat>
 
 export type CreateManualSingleFunctionResult<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
-> = Promise<ToRecord<T>>
+  TDataFormat extends DataFormat = DataFormat
+> = Promise<ToRecord<TDataFormat>>
 
 export type CreateManualSingleFunction<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
-> = <TOptions extends CreateManualSingleFunctionOptions<L>>(
+  TLocalDataFormat extends DataFormat = DataFormat,
+> = <TOptions extends CreateManualSingleFunctionOptions<TLocalDataFormat>>(
   options: TOptions,
-) => CreateManualSingleFunctionResult<L>
+) => CreateManualSingleFunctionResult<TLocalDataFormat>

@@ -62,5 +62,5 @@ export const addSampleData = async (stores: Stores) => {
     { userId: users[0].id, userGroupId: userGroups[1].id },
     { userId: users[0].id, userGroupId: userGroups[2].id },
   ]
-  await Promise.all(createUserToUserGroupLinkOptions.map(stores['user.id <<-->> userGroup.id'].create))
+  await Promise.all(createUserToUserGroupLinkOptions.map(stores.userIdToUserGroupId.create))
 }

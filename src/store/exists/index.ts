@@ -10,8 +10,8 @@ export const exists = async (
 ): ExistsFunctionResult => {
   const queryInfo = options != null
     ? createDataQuery(options).toSql({
-      filterTransformer: node => ({ left: df.sql.columnNames[node.field] }),
-      sortingTransformer: node => ({ left: df.sql.columnNames[node.field] }),
+      filterTransformer: node => ({ left: df.sql.cols[node.field] }),
+      sortingTransformer: node => ({ left: df.sql.cols[node.field] }),
     })
     : null
 

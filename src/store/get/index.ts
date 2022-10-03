@@ -1,8 +1,8 @@
 import { createDataFilter } from '@samhuk/data-filter'
 import { createDataQuery } from '@samhuk/data-query'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { DataFormat } from '../../dataFormat/types'
 import { objectPropsToCamelCase } from '../../helpers/string'
+import { DataFormat } from '../../dataFormat/types'
 import { TsPgOrm } from '../../types'
 import { createQueryPlan } from './queryPlan/queryPlan'
 import { AnyGetFunctionOptions, AnyGetFunctionResult } from './types'
@@ -11,7 +11,7 @@ const createColumnsSqlForGetWithNoRelations = (
   options: AnyGetFunctionOptions<false>,
   dataFormat: DataFormat,
 ) => (options.fields ?? dataFormat.fieldNameList)
-  .map(fName => dataFormat.sql.columnNames[fName])
+  .map(fName => dataFormat.sql.cols[fName])
   .filter(cName => cName != null)
   .join(', ')
 
@@ -22,7 +22,7 @@ const createGetSingleWithNoRelationsSql = (
   const columnsSql = createColumnsSqlForGetWithNoRelations(options, dataFormat)
 
   const whereClause = options.filter != null
-    ? createDataFilter(options.filter).toSql({ transformer: node => ({ left: dataFormat.sql.columnNames[node.field] }) })
+    ? createDataFilter(options.filter).toSql({ transformer: node => ({ left: dataFormat.sql.cols[node.field] }) })
     : null
   const rootSelectSql = `select ${columnsSql} from ${dataFormat.sql.tableName}`
   if (whereClause == null)
@@ -51,8 +51,8 @@ const createGetMultipleWithNoRelationsSql = (
 
   const querySql = options.query != null
     ? createDataQuery(options.query).toSql({
-      filterTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
-      sortingTransformer: node => ({ left: dataFormat.sql.columnNames[node.field] }),
+      filterTransformer: node => ({ left: dataFormat.sql.cols[node.field] }),
+      sortingTransformer: node => ({ left: dataFormat.sql.cols[node.field] }),
     })
     : null
   const rootSelectSql = `select ${columnsSql} from ${dataFormat.sql.tableName}`
@@ -86,7 +86,7 @@ export const getSingle = async (
     return result
   }
 
-  const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, df, false, options)
+  const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, df, false, options as any)
   const result = await queryPlan.execute(db)
   return result
 }
@@ -103,7 +103,7 @@ export const getMultiple = async (
     return result
   }
 
-  const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, df, true, options)
+  const queryPlan = createQueryPlan(tsPgOrm.relations, tsPgOrm.dataFormats, df, true, options as any)
   const result = await queryPlan.execute(db)
   return result
 }

@@ -1,7 +1,7 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
-import { DataFormat, DataFormatDeclarations, DataFormatsDict } from '../../dataFormat/types'
+import { DataFormats } from '../../dataFormat/types'
 import { capitalize, objectPropsToCamelCase } from '../../helpers/string'
-import { Relation, RelationDeclarations, RelationType } from '../../relations/types'
+import { Relation, Relations, RelationType } from '../../relations/types'
 import { deleteBase } from '../delete'
 import {
   DeleteLinkByIdFunctionOptions,
@@ -13,14 +13,14 @@ import {
   _DeleteLinkByIdFunction,
 } from './types'
 
-const createCreateLinkFieldsInfo = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
-  dataFormats: DataFormatsDict<T>,
-  relation: K,
+const createCreateLinkFieldsInfo = (
+  dataFormats: DataFormats,
+  relation: Relation<RelationType.MANY_TO_MANY>,
 ) => {
-  const fieldRef1DataFormat = (dataFormats as any)[relation.fieldRef1.formatName] as DataFormat
-  const fieldRef2DataFormat = (dataFormats as any)[relation.fieldRef2.formatName] as DataFormat
-  const fieldRef1Field = fieldRef1DataFormat.fields[relation.fieldRef1.fieldName]
-  const fieldRef2Field = fieldRef2DataFormat.fields[relation.fieldRef2.fieldName]
+  const fieldRef1DataFormat = dataFormats[relation.fieldRef1.dataFormat]
+  const fieldRef2DataFormat = dataFormats[relation.fieldRef2.dataFormat]
+  const fieldRef1Field = fieldRef1DataFormat.fields[relation.fieldRef1.field]
+  const fieldRef2Field = fieldRef2DataFormat.fields[relation.fieldRef2.field]
   const fieldRef1JoinTableFieldName = `${fieldRef1DataFormat.name}${capitalize(fieldRef1Field.name)}`
   const fieldRef2JoinTableFieldName = `${fieldRef2DataFormat.name}${capitalize(fieldRef2Field.name)}`
 
@@ -31,21 +31,21 @@ const createCreateLinkFieldsInfo = <T extends DataFormatDeclarations, K extends 
 }
 
 const createCreateLinkFieldSql = (
-  relation: Relation<DataFormatDeclarations, RelationType.MANY_TO_MANY>,
+  relation: Relation<RelationType.MANY_TO_MANY>,
   i: number = 1,
 ): string => `insert into ${relation.sql.joinTableName}
 (${relation.sql.joinTableFieldRef1ColumnName}, ${relation.sql.joinTableFieldRef2ColumnName})
 values ($${i}, $${i + 1}) returning *`
 
-const createCreateLinkFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
-  dataFormats: DataFormatsDict<T>,
-  relation: K,
+const createCreateLinkFunction = (
+  dataFormats: DataFormats,
+  relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
-): _CreateLinkFunction<T, K> => {
+): _CreateLinkFunction => {
   const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
   const sql = createCreateLinkFieldSql(relation)
 
-  return async (options: _CreateJoinTableRecordOptions<T, K>) => {
+  return async (options: _CreateJoinTableRecordOptions) => {
     const fieldRef1FieldValue = (options as any)[fieldsInfo.fieldRef1JoinTableFieldName]
     const fieldRef2FieldValue = (options as any)[fieldsInfo.fieldRef2JoinTableFieldName]
     const row = await db.queryGetFirstRow(sql, [fieldRef1FieldValue, fieldRef2FieldValue])
@@ -53,14 +53,14 @@ const createCreateLinkFunction = <T extends DataFormatDeclarations, K extends Re
   }
 }
 
-const createCreateLinksFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
-  dataFormats: DataFormatsDict<T>,
-  relation: K,
+const createCreateLinksFunction = (
+  dataFormats: DataFormats,
+  relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
-): _CreateLinksFunction<T, K> => {
+): _CreateLinksFunction => {
   const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
 
-  return async (options: _CreateJoinTableRecordOptions<T, K>[]) => {
+  return async (options: _CreateJoinTableRecordOptions[]) => {
     const sqlLines: string[] = []
     for (let i = 1; i < options.length * 2; i += 2)
       sqlLines.push(createCreateLinkFieldSql(relation, i))
@@ -77,10 +77,10 @@ const createCreateLinksFunction = <T extends DataFormatDeclarations, K extends R
   }
 }
 
-const createDeleteLinkbyIdFunction = <T extends DataFormatDeclarations, K extends Relation<T, RelationType.MANY_TO_MANY>>(
-  relation: K,
+const createDeleteLinkbyIdFunction = (
+  relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
-): _DeleteLinkByIdFunction<T, K> => {
+): _DeleteLinkByIdFunction => {
   const baseSql = `delete from ${relation.sql.joinTableName} where id = $1`
 
   return async (options: DeleteLinkByIdFunctionOptions) => {
@@ -91,9 +91,9 @@ const createDeleteLinkbyIdFunction = <T extends DataFormatDeclarations, K extend
   }
 }
 
-const createJoinTableStore = <T extends DataFormatDeclarations>(
-  dataFormats: DataFormatsDict<T>,
-  relation: Relation<T, RelationType.MANY_TO_MANY>,
+const createJoinTableStore = (
+  dataFormats: DataFormats,
+  relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
 ): JoinTableStore => {
   const createLink = createCreateLinkFunction(dataFormats, relation, db)
@@ -109,8 +109,6 @@ const createJoinTableStore = <T extends DataFormatDeclarations>(
   }
 
   return {
-    provision: () => db.query(relation.sql.createJoinTableSql).then(() => true as any),
-    unprovision: () => db.query(relation.sql.dropJoinTableSql).then(() => true as any),
     create: options => createLink(options as any) as any,
     createMultiple: options => createLinks(options as any),
     deleteById: options => deleteLink(options) as any,
@@ -119,17 +117,16 @@ const createJoinTableStore = <T extends DataFormatDeclarations>(
 }
 
 export const createJoinTableStoresDict = <
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>
+  TDataFormats extends DataFormats,
+  TRelations extends Relations,
 >(
-    dataFormats: DataFormatsDict<T>,
-    manyToManyRelationsList: Relation<T, RelationType.MANY_TO_MANY>[],
+    dataFormats: TDataFormats,
+    manyToManyRelationList: Relation<RelationType.MANY_TO_MANY>[],
     db: SimplePgClient,
-  ): JoinTableStoresDict<T, K> => {
-  const joinTableStoresDict: JoinTableStoresDict<T, K> = {} as any
-  manyToManyRelationsList.forEach(r => {
-    const storeName = r.joinTableStoreName ?? r.relationName;
-    (joinTableStoresDict as any)[storeName] = createJoinTableStore(dataFormats, r, db)
+  ): JoinTableStoresDict<TDataFormats, TRelations> => {
+  const joinTableStoresDict: JoinTableStoresDict<TDataFormats, TRelations> = {} as any
+  manyToManyRelationList.forEach(r => {
+    (joinTableStoresDict as any)[r.name] = createJoinTableStore(dataFormats, r, db)
   })
   return joinTableStoresDict
 }

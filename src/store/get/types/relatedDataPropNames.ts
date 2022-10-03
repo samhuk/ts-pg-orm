@@ -1,44 +1,44 @@
-import { DataFormat, DataFormatDeclarations } from '../../../dataFormat/types'
-import { RelationDeclaration, RelationType } from '../../../relations/types'
+import { DataFormats } from '../../../dataFormat/types'
+import { Relation, RelationType } from '../../../relations/types'
 
 export type OneToOneFromOneName<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T, RelationType.ONE_TO_ONE>
-> = K extends { relatedToOneRecordsName: string }
-  ? K['relatedToOneRecordsName']
-  : Extract<T[number], { name: K['toOneField']['formatName'] }>['name']
+  TDataFormats extends DataFormats,
+  TRelation extends Relation<RelationType.ONE_TO_ONE>,
+> = TRelation extends { relatedToOneRecordsName: string }
+  ? TRelation['relatedToOneRecordsName']
+  : TDataFormats[TRelation['toOneField']['dataFormat']]['name']
 
 export type OneToOneToOneName<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T, RelationType.ONE_TO_ONE>
-> = K extends { relatedFromOneRecordsName: string }
-  ? K['relatedFromOneRecordsName']
-  : Extract<T[number], { name: K['fromOneField']['formatName'] }>['name']
+  TDataFormats extends DataFormats,
+  TRelation extends Relation<RelationType.ONE_TO_ONE>,
+> = TRelation extends { relatedFromOneRecordsName: string }
+  ? TRelation['relatedToOneRecordsName']
+  : TDataFormats[TRelation['fromOneField']['dataFormat']]['name']
 
 export type OneToManyFromOneName<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T, RelationType.ONE_TO_MANY>
-> = K extends { relatedToManyRecordsName: string }
-  ? K['relatedToManyRecordsName']
-  : DataFormat<Extract<T[number], { name: K['toManyField']['formatName'] }>>['pluralizedName']
+  TDataFormats extends DataFormats,
+  TRelation extends Relation<RelationType.ONE_TO_MANY>,
+> = TRelation extends { relatedToManyRecordsName: string }
+  ? TRelation['relatedToManyRecordsName']
+  : TDataFormats[TRelation['toManyField']['dataFormat']]['pluralizedName']
 
 export type OneToManyToManyName<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T, RelationType.ONE_TO_MANY>
-> = K extends { relatedFromOneRecordsName: string }
-  ? K['relatedFromOneRecordsName']
-  : Extract<T[number], { name: K['fromOneField']['formatName'] }>['name']
+  TDataFormats extends DataFormats,
+  TRelation extends Relation<RelationType.ONE_TO_MANY>,
+> = TRelation extends { relatedFromOneRecordsName: string }
+  ? TRelation['relatedFromOneRecordsName']
+  : TDataFormats[TRelation['fromOneField']['dataFormat']]['name']
 
 export type ManyToManyFieldRef1Name<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T, RelationType.MANY_TO_MANY>
-> = K extends { relatedFieldRef2RecordsName: string }
-  ? K['relatedFieldRef2RecordsName']
-  : DataFormat<Extract<T[number], { name: K['fieldRef2']['formatName'] }>>['pluralizedName']
+  TDataFormats extends DataFormats,
+  TRelation extends Relation<RelationType.MANY_TO_MANY>,
+> = TRelation extends { relatedFieldRef2RecordsName: string }
+  ? TRelation['relatedFieldRef2RecordsName']
+  : TDataFormats[TRelation['fieldRef2']['dataFormat']]['pluralizedName']
 
 export type ManyToManyFieldRef2Name<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclaration<T, RelationType.MANY_TO_MANY>
-> = K extends { relatedFieldRef1RecordsName: string }
-  ? K['relatedFieldRef1RecordsName']
-  : DataFormat<Extract<T[number], { name: K['fieldRef1']['formatName'] }>>['pluralizedName']
+  TDataFormats extends DataFormats,
+  TRelation extends Relation<RelationType.MANY_TO_MANY>,
+> = TRelation extends { relatedFieldRef1RecordsName: string }
+  ? TRelation['relatedFieldRef1RecordsName']
+  : TDataFormats[TRelation['fieldRef1']['dataFormat']]['pluralizedName']

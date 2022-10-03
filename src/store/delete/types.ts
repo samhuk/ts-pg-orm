@@ -1,15 +1,15 @@
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { DataFormatDeclaration, DataFormatDeclarations, ToRecord } from '../../dataFormat/types'
-import { RelationDeclarations } from '../../relations/types'
-import { ReturnModeRaw } from '../common/types'
+import { ReturnModeRaw } from '../types'
+import { DataFormat } from '../../dataFormat/types'
+import { ToRecord } from '../../dataFormat/types/record'
 
 export type DeleteFunctionOptions<
-  T extends DataFormatDeclaration = DataFormatDeclaration,
+  TDataFormat extends DataFormat = DataFormat,
 > = {
   /**
    * Data query to select the record(s) to delete.
    */
-   query?: DataQueryRecord<T['fields'][number]['name']>
+   query?: DataQueryRecord<TDataFormat['fieldNameList'][number]>
   /**
    * Determines whether the deleted record(s) are to be returned.
    *
@@ -25,26 +25,22 @@ export type DeleteFunctionOptions<
 }
 
 export type DeleteFunctionResult<
-  T extends DataFormatDeclarations = DataFormatDeclarations,
-  K extends RelationDeclarations<T> = RelationDeclarations<T>,
-  L extends T[number] = T[number],
-  TOptions extends DeleteFunctionOptions<L> = DeleteFunctionOptions<L>,
+  TLocalDataFormat extends DataFormat = DataFormat,
+  TOptions extends DeleteFunctionOptions<TLocalDataFormat> = DeleteFunctionOptions<TLocalDataFormat>,
 > = Promise<
   TOptions extends { return: boolean }
     ? TOptions['return'] extends true
-      ? ToRecord<L>[] | null
+      ? ToRecord<TLocalDataFormat>[] | null
       : number
     : TOptions extends { return: string }
       ? TOptions['return'] extends 'first'
-        ? ToRecord<L>
+        ? ToRecord<TLocalDataFormat>
         : number
       : number
 >
 
 export type DeleteFunction<
-  T extends DataFormatDeclarations,
-  K extends RelationDeclarations<T>,
-  L extends T[number],
-> = <TOptions extends DeleteFunctionOptions<L>>(
+  TLocalDataFormat extends DataFormat = DataFormat,
+> = <TOptions extends DeleteFunctionOptions<TLocalDataFormat>>(
   options?: TOptions,
-) => DeleteFunctionResult<T, K, L, TOptions>
+) => DeleteFunctionResult<TLocalDataFormat, TOptions>
