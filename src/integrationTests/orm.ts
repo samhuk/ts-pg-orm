@@ -4,6 +4,7 @@ import { createDataFormat } from '../dataFormat'
 import { createCommonFields } from '../dataFormat/field'
 import { CreateRecordOptions } from '../dataFormat/types/createRecordOptions'
 import { DataType, EpochSubType, NumSubType, StrSubType } from '../dataFormat/types/dataType'
+import { ToRecord } from '../dataFormat/types/record'
 import { RelationType } from '../relations/types'
 import { _CreateJoinTableRecordOptions } from '../store/joinTable/types'
 import { StoresAndJoinTableStores } from '../stores/types'
@@ -82,6 +83,8 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
   ] as const)
 
 export type Stores = StoresAndJoinTableStores<typeof ORM['dataFormats'], typeof ORM['relations']>
+
+export type UserRecord = ToRecord<typeof USER_DF>
 
 export type CreateUserRecordOptions = CreateRecordOptions<typeof USER_DF>
 
