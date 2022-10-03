@@ -1,6 +1,13 @@
-<h1 align="center">ts-pg-orm</h1>
 <p align="center">
-    <em>Delightful Typescript PostgreSQL ORM</em>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./images/wordmark-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./images/wordmark-light.png">
+    <img alt="esbuild: An extremely fast JavaScript bundler" src="./images/wordmark-light.svg">
+  </picture>
+</p>
+
+<p align="center">
+  <em>Delightful Typescript PostgreSQL ORM</em>
 </p>
 
 <p align="center">
