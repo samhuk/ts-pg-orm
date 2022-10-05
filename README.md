@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./images/wordmark-dark.png">
     <source media="(prefers-color-scheme: light)" srcset="./images/wordmark-light.png">
-    <img alt="esbuild: An extremely fast JavaScript bundler" src="./images/wordmark-light.svg">
+    <img alt="ts-pg-orm" src="./images/wordmark-light.svg">
   </picture>
 </p>
 
