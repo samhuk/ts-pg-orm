@@ -33,7 +33,7 @@ export const count = async (
 
   const sql = sqlParts.filter(s => s != null).join('\n')
 
-  const row = await db.queryGetFirstRow(sql)
+  const row = await db.queryGetFirstRow(sql, queryInfo?.values)
   const countRaw = (row as any).exact_count
   if (countRaw == null)
     return null

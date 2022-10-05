@@ -1,6 +1,6 @@
 {
   "name": "ts-pg-orm",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Typescript PostgreSQL ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -53,8 +53,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@samhuk/data-filter": "^1.0.10",
-    "@samhuk/data-query": "^1.1.7",
+    "@samhuk/data-filter": "^1.1.1",
+    "@samhuk/data-query": "^1.2.1",
     "simple-pg-client": "^1.0.5"
   },
   "devDependencies": {

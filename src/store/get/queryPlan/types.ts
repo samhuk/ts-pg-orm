@@ -178,6 +178,10 @@ export type QueryNodeSql<
    */
   sql: string
   /**
+   * The values for any numbered parameters (as part of a prepared statement)
+   */
+  values: any[]
+  /**
    * Updates the linked field values-dependant part of the SQL query text.
    */
   updateLinkedFieldValues: (values: any[]) => void

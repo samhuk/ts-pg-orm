@@ -18,17 +18,17 @@ const createColumnsSqlForGetWithNoRelations = (
 const createGetSingleWithNoRelationsSql = (
   options: AnyGetFunctionOptions<false>,
   dataFormat: DataFormat,
-): string => {
+): { sql: string, values: any[] } => {
   const columnsSql = createColumnsSqlForGetWithNoRelations(options, dataFormat)
 
   const whereClause = options.filter != null
     ? createDataFilter(options.filter).toSql({ transformer: node => ({ left: dataFormat.sql.cols[node.field] }) })
     : null
   const rootSelectSql = `select ${columnsSql} from ${dataFormat.sql.tableName}`
-  if (whereClause == null)
-    return `${rootSelectSql} limit 1`
+  if (whereClause?.sql == null)
+    return { sql: `${rootSelectSql} limit 1`, values: [] }
 
-  return `${rootSelectSql} where ${whereClause} limit 1`
+  return { sql: `${rootSelectSql} where ${whereClause.sql} limit 1`, values: whereClause.values }
 }
 
 const getSingleWithNoRelations = async (
@@ -38,7 +38,7 @@ const getSingleWithNoRelations = async (
 ): Promise<any> => {
   const sql = createGetSingleWithNoRelationsSql(options, dataFormat)
 
-  const row = await db.queryGetFirstRow(sql)
+  const row = await db.queryGetFirstRow(sql.sql, sql.values)
 
   return objectPropsToCamelCase(row)
 }
@@ -46,20 +46,21 @@ const getSingleWithNoRelations = async (
 const createGetMultipleWithNoRelationsSql = (
   options: AnyGetFunctionOptions<true>,
   dataFormat: DataFormat,
-): string => {
+): { sql: string, values: any[] } => {
   const columnsSql = createColumnsSqlForGetWithNoRelations(options, dataFormat)
 
   const querySql = options.query != null
     ? createDataQuery(options.query).toSql({
+      includeWhereWord: true,
       filterTransformer: node => ({ left: dataFormat.sql.cols[node.field] }),
       sortingTransformer: node => ({ left: dataFormat.sql.cols[node.field] }),
     })
     : null
   const rootSelectSql = `select ${columnsSql} from ${dataFormat.sql.tableName}`
-  if (querySql == null)
-    return `${rootSelectSql} limit 1`
+  if (querySql?.whereOrderByLimitOffset == null)
+    return { sql: rootSelectSql, values: [] }
 
-  return `${rootSelectSql} ${querySql.whereOrderByLimitOffset}`
+  return { sql: `${rootSelectSql} ${querySql.whereOrderByLimitOffset}`, values: querySql.values }
 }
 
 const getMultipleWithNoRelations = async (
@@ -69,9 +70,9 @@ const getMultipleWithNoRelations = async (
 ): Promise<any> => {
   const sql = createGetMultipleWithNoRelationsSql(options, dataFormat)
 
-  const rows = await db.queryGetRows(sql)
+  const rows = await db.queryGetRows(sql.sql)
 
-  return rows.map(r => objectPropsToCamelCase(r))
+  return rows.map(r => objectPropsToCamelCase(r), sql.values)
 }
 
 export const getSingle = async (

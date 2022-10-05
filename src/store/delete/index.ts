@@ -52,7 +52,7 @@ export const deleteBase = async (
 
   const sql = sqlParts.filter(s => s != null).join('\n')
 
-  const result = await db.query(sql)
+  const result = await db.query(sql, queryInfo?.values)
 
   switch (returnMode) {
     case ReturnMode.RETURN_COUNT:

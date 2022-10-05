@@ -9,6 +9,7 @@ import { QueryNode, DataNode, QueryNodeSql } from './types'
 type DataNodeQueryInfo = {
   whereClause?: string
   orderByLimitOffset?: string
+  values: any[]
 }
 
 const isQueryNodeRangeConstrained = (queryNode: QueryNode) => {
@@ -26,11 +27,14 @@ const isQueryNodeRangeConstrained = (queryNode: QueryNode) => {
  *
  * If the data node does not have any filter, this will return `null`.
  */
-const createWhereClauseOfDataNode = (dataNode: DataNode<false>): string | null => {
+const createWhereClauseOfDataNode = (dataNode: DataNode<false>, parameterStartIndex: number): { sql: string | null, values: any[] } | null => {
   const dataFilterNodeOrGroup = dataNode.options.filter
   return dataFilterNodeOrGroup != null
     ? createDataFilter(dataFilterNodeOrGroup)
-      .toSql({ transformer: node => ({ left: dataNode.fieldsInfo.fieldToFullyQualifiedColumnName[node.field] }) })
+      .toSql({
+        transformer: node => ({ left: dataNode.fieldsInfo.fieldToFullyQualifiedColumnName[node.field] }),
+        parameterStartIndex,
+      })
     : null
 }
 
@@ -44,30 +48,36 @@ const createWhereClauseOfDataNode = (dataNode: DataNode<false>): string | null =
  * If the data node has a query, but is missing certain parts of the data query, then the where
  * clause and/or the order-by-limit-offset statement can be null.
  */
-const createQueryInfoOfDataNode = (dataNode: DataNode<true>): DataNodeQueryInfo | null => {
+const createQueryInfoOfDataNode = (dataNode: DataNode<true>, parameterStartIndex: number): DataNodeQueryInfo | null => {
   const dataQueryRecord = dataNode.options.query
   if (dataQueryRecord != null) {
     const dataQuerySql = createDataQuery(dataQueryRecord).toSql({
       sortingTransformer: node => ({ left: dataNode.fieldsInfo.fieldToFullyQualifiedColumnName[node.field] }),
       filterTransformer: node => ({ left: dataNode.fieldsInfo.fieldToFullyQualifiedColumnName[node.field] }),
       includeWhereWord: false,
+      parameterStartIndex,
     })
     return {
       whereClause: dataQuerySql.where,
       orderByLimitOffset: dataQuerySql.orderByLimitOffset,
+      values: dataQuerySql.values,
     }
   }
   return null
 }
 
-const createDataNodeQueryInfo = (dataNode: DataNode): DataNodeQueryInfo | null => (
-  dataNode.isPlural
-    ? createQueryInfoOfDataNode(dataNode as DataNode<true>)
-    : {
-      whereClause: createWhereClauseOfDataNode(dataNode as DataNode<false>),
-      orderByLimitOffset: 'limit 1',
-    }
-)
+const createDataNodeQueryInfo = (dataNode: DataNode, parameterStartIndex: number): DataNodeQueryInfo | null => {
+  if (dataNode.isPlural)
+    return createQueryInfoOfDataNode(dataNode as DataNode<true>, parameterStartIndex)
+
+  const whereClause = createWhereClauseOfDataNode(dataNode as DataNode<false>, parameterStartIndex)
+
+  return {
+    whereClause: whereClause?.sql,
+    orderByLimitOffset: 'limit 1',
+    values: whereClause?.values ?? [],
+  }
+}
 
 /**
  * Converts all of the non-root (therefore *non-plural*) data nodes within `queryNode` into a
@@ -75,17 +85,27 @@ const createDataNodeQueryInfo = (dataNode: DataNode): DataNodeQueryInfo | null =
  * alongside each left join as a where clause (minus the actual "where" word since joins just
  * need an " and " separator).
  */
-const createLeftJoinsSql = (queryNode: QueryNode) => (
-  Object.values(queryNode.nonRootDataNodes).map(dataNode => {
+const createLeftJoinsSql = (queryNode: QueryNode, parameterStartIndex: number): { sql: string, values: any[] } => {
+  const values: any[] = []
+  let _parameterStartIndex = parameterStartIndex
+
+  const sql = Object.values(queryNode.nonRootDataNodes).map(dataNode => {
     const linkedColumnName = dataNode.dataFormat.sql.cols[dataNode.fieldRef.field]
     const parentLinkedColumnName = dataNode.parent.dataFormat.sql.cols[dataNode.parentFieldRef.field]
-    const whereClause = createWhereClauseOfDataNode(dataNode)
+    const whereClause = createWhereClauseOfDataNode(dataNode, _parameterStartIndex)
+    if (whereClause != null) {
+      _parameterStartIndex += whereClause.values.length
+      values.push(...whereClause.values)
+    }
     // E.g. left join "userImage" "1" on "1"."user_id" = "0"."id" and "1"."date_deleted" is not null\n
     return filterForNotNullAndEmpty([
       `left join ${dataNode.dataFormat.sql.tableName} ${dataNode.tableAlias} on ${dataNode.tableAlias}.${linkedColumnName} = ${dataNode.parent.tableAlias}.${parentLinkedColumnName}`,
-      whereClause,
+      whereClause?.sql,
     ]).join(' and ')
-  }).join('\n'))
+  }).join('\n')
+
+  return { sql, values }
+}
 
 const createLinkedFieldWhereClause = (
   queryNode: QueryNode,
@@ -141,6 +161,8 @@ const createLinkedFieldWhereClause = (
 export const toSql = (queryNode: QueryNode, linkedFieldValues: any[]) => {
   const isManyToMany = queryNode.rootDataNode.relation?.type === RelationType.MANY_TO_MANY
   const isRangeConstrained = isQueryNodeRangeConstrained(queryNode) && linkedFieldValues?.length > 0
+  const values: any[] = []
+  let parameterStartIndex = 1
 
   const sqlParts: string[] = ['select']
 
@@ -272,11 +294,16 @@ export const toSql = (queryNode: QueryNode, linkedFieldValues: any[]) => {
     }
 
     // -- Root data node query SQL
-    const rootDataNodeQueryInfo = createDataNodeQueryInfo(rootDataNode)
+    const rootDataNodeQueryInfo = createDataNodeQueryInfo(rootDataNode, parameterStartIndex)
     if (rootDataNodeQueryInfo?.whereClause != null)
       sqlParts.push(`and ${rootDataNodeQueryInfo.whereClause}`)
     if (rootDataNodeQueryInfo?.orderByLimitOffset != null)
       sqlParts.push(rootDataNodeQueryInfo.orderByLimitOffset)
+
+    if (rootDataNodeQueryInfo != null) {
+      parameterStartIndex += rootDataNodeQueryInfo.values.length
+      values.push(...rootDataNodeQueryInfo.values)
+    }
 
     // -- As ... sql
     let asSql: string
@@ -291,9 +318,12 @@ export const toSql = (queryNode: QueryNode, linkedFieldValues: any[]) => {
   // ----------------------------------------------------------------------------------
   // -- To-one related data left joins
   // ----------------------------------------------------------------------------------
-  const leftJoinsSql = createLeftJoinsSql(queryNode)
-  if (leftJoinsSql != null && leftJoinsSql.length > 0)
-    sqlParts.push(leftJoinsSql)
+  const leftJoinsSql = createLeftJoinsSql(queryNode, parameterStartIndex)
+  if (leftJoinsSql != null && leftJoinsSql.sql.length > 0)
+    sqlParts.push(leftJoinsSql.sql)
+
+  parameterStartIndex += leftJoinsSql.values.length
+  values.push(...leftJoinsSql.values)
 
   // ----------------------------------------------------------------------------------
   // -- Linked field values where clause and (possibly) root data node query
@@ -304,7 +334,7 @@ export const toSql = (queryNode: QueryNode, linkedFieldValues: any[]) => {
       sqlParts.push(`where ${linkedFieldValuesWhereClause}`)
   }
   else {
-    const rootDataNodeQueryInfo = createDataNodeQueryInfo(rootDataNode)
+    const rootDataNodeQueryInfo = createDataNodeQueryInfo(rootDataNode, parameterStartIndex)
     const rootDataNodeTotalWhereClauseSegments = [linkedFieldValuesWhereClause, rootDataNodeQueryInfo?.whereClause].filter(s => s != null)
     if (rootDataNodeTotalWhereClauseSegments.length > 0) {
       const rootDataNodeTotalWhereClause = rootDataNodeTotalWhereClauseSegments.join(' and ')
@@ -313,9 +343,14 @@ export const toSql = (queryNode: QueryNode, linkedFieldValues: any[]) => {
 
     if (rootDataNodeQueryInfo?.orderByLimitOffset != null)
       sqlParts.push(rootDataNodeQueryInfo.orderByLimitOffset)
+
+    if (rootDataNodeQueryInfo != null) {
+      parameterStartIndex += rootDataNodeQueryInfo.values.length
+      values.push(...rootDataNodeQueryInfo.values)
+    }
   }
 
-  return sqlParts.join('\n')
+  return { sql: sqlParts.join('\n'), values }
 }
 
 export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
@@ -325,11 +360,21 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
   let queryNodeSql: QueryNodeSql
   let currentLinkedFieldValues = linkedFieldValues
 
+  const initialSql = toSql(queryNode, currentLinkedFieldValues)
+
+  const updateSql = () => {
+    const newSql = toSql(queryNode, currentLinkedFieldValues)
+    queryNodeSql.sql = newSql.sql
+    queryNodeSql.values = newSql.values
+  }
+
   return queryNodeSql = {
-    sql: toSql(queryNode, currentLinkedFieldValues),
+    sql: initialSql.sql,
+    values: initialSql.values,
     updateLinkedFieldValues: (newLinkedFieldValues: any[] | null) => {
       currentLinkedFieldValues = newLinkedFieldValues
-      queryNodeSql.sql = toSql(queryNode, currentLinkedFieldValues)
+
+      updateSql()
     },
     modifyRootDataNodeDataFilter: newDataFilter => {
       if (queryNode.rootDataNode.isPlural)
@@ -337,7 +382,8 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
 
       const _nonPluralRootDataNode = queryNode.rootDataNode as DataNode<false>
       _nonPluralRootDataNode.options.filter = newDataFilter
-      queryNodeSql.sql = toSql(queryNode, currentLinkedFieldValues)
+
+      updateSql()
     },
     modifyRootDataNodeDataQuery: newDataQuery => {
       if (!queryNode.rootDataNode.isPlural)
@@ -345,7 +391,8 @@ export const queryNodeToSql = <TIsPlural extends boolean = boolean>(
 
       const _pluralRootDataNode = queryNode.rootDataNode as DataNode<true>
       _pluralRootDataNode.options.query = newDataQuery
-      queryNodeSql.sql = toSql(queryNode, currentLinkedFieldValues)
+
+      updateSql()
     },
   }
 }
