@@ -13,7 +13,7 @@ const createQueryNodeSql = (
   queryNode: QueryNode,
   linkedFieldValues: any[] | null,
   queryNodeSqlDict: { [queryNodeId: number]: QueryNodeSql },
-): string => {
+): { sql: string, values: any[] } => {
   /* Try and find any pre-existing QueryNodeSql for the current node.
    * If it exists, update the linked field values-dependant part of it
    * and then return the SQL text.
@@ -21,7 +21,7 @@ const createQueryNodeSql = (
   const preExistingQueryNodeSql = queryNodeSqlDict[queryNode.id]
   if (preExistingQueryNodeSql != null) {
     preExistingQueryNodeSql.updateLinkedFieldValues(linkedFieldValues)
-    return preExistingQueryNodeSql.sql
+    return { sql: preExistingQueryNodeSql.sql, values: [] } // TODO This is not used anymore, for now.
   }
 
   /* Else (if pre-existing QueryNodeSql does not exist), then convert
@@ -30,7 +30,7 @@ const createQueryNodeSql = (
    */
   const queryNodeSqlObj = queryNode.toSql(linkedFieldValues)
   queryNodeSqlDict[queryNode.id] = queryNodeSqlObj
-  return queryNodeSqlObj.sql
+  return { sql: queryNodeSqlObj.sql, values: queryNodeSqlObj.values }
 }
 
 /**
@@ -71,7 +71,7 @@ const executeQueryNode = async (
    */
   const queryNodeSql = createQueryNodeSql(queryNode, linkedFieldValues, queryNodeSqlDict)
   // Execute sql with db service
-  const _rows: any[] = await db.queryGetRows(queryNodeSql)
+  const _rows: any[] = await db.queryGetRows(queryNodeSql.sql, queryNodeSql.values)
   const rows = _rows ?? []
   // Store the results in the state object
   results[queryNode.id] = rows

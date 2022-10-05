@@ -25,6 +25,6 @@ export const exists = async (
 
   const sql = sqlParts.filter(s => s != null).join('\n')
 
-  const row = await db.queryGetFirstRow(sql)
+  const row = await db.queryGetFirstRow(sql, queryInfo?.values)
   return (row as any).exists === true
 }

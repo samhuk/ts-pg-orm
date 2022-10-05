@@ -26,6 +26,8 @@ export const update = async (
   const fieldNamesToUpdate = Object.keys(options.record)
     .filter(fName => df.sql.cols[fName] != null)
 
+  const values = fieldNamesToUpdate.map(fName => options.record[fName])
+
   const returnMode = determineReturnMode(options.return)
   if (fieldNamesToUpdate.length === 0) {
     switch (returnMode) {
@@ -62,7 +64,10 @@ export const update = async (
   const queryInfo = createDataQuery(options.query).toSql({
     filterTransformer: node => ({ left: df.sql.cols[node.field] }),
     sortingTransformer: node => ({ left: df.sql.cols[node.field] }),
+    parameterStartIndex: fieldNamesToUpdate.length + 1,
   })
+
+  values.push(...queryInfo.values)
 
   // If there is no OBLO, then we can do a simple form
   if (queryInfo?.orderByLimitOffset == null) {
@@ -80,8 +85,6 @@ export const update = async (
   // -- Returning statement
   if (returnMode !== ReturnMode.RETURN_COUNT)
     sqlParts.push('returning *')
-
-  const values = fieldNamesToUpdate.map(fName => options.record[fName])
 
   const sql = sqlParts.filter(s => s != null).join('\n')
 
