@@ -1,9 +1,9 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { benchmarkAsyncFn, test } from '../../common'
-import { ORM } from '../../orm'
 import { generateRandomUserName, USER_ADDRESS_SQL } from './basicPerformance'
 
-const getUserWithAddressWithUserControlFn = async (userName: string) => {
+const getUserWithAddressWithUserControlFn = async (db: SimplePgClient, userName: string) => {
   const sql = `select
 "u1"."id" "u1.id", "u1"."name" "u1.name", "u1"."email" "u1.email",
 ${USER_ADDRESS_SQL},
@@ -12,7 +12,7 @@ from "user" "u1"
 left join "user_address" on "user_address"."user_id" = "u1"."id" and "user_address"."date_deleted" is null
 left join "user" "u2" on "user_address"."user_id" = "u2"."id" and "u2"."date_deleted" is null
 where "u1"."name" = $1 and "u1"."date_deleted" is null`
-  const result = await ORM.db.query(sql, [userName]) as any
+  const result = await db.query(sql, [userName]) as any
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return {
     id: result['u1.id'],
@@ -31,10 +31,10 @@ where "u1"."name" = $1 and "u1"."date_deleted" is null`
   }
 }
 
-export const deepRelatedDataPerformanceTest = test('deep related data - performance', async (stores, assert) => {
+export const deepRelatedDataPerformanceTest = test('deep related data - performance', async (orm, assert) => {
   await benchmarkAsyncFn(async () => {
     const userName = generateRandomUserName()
-    await stores.user.get({
+    await orm.stores.user.get({
       fields: ['name', 'email'],
       filter: {
         logic: DataFilterLogic.AND,
@@ -77,16 +77,16 @@ export const deepRelatedDataPerformanceTest = test('deep related data - performa
     })
   }, async () => {
     const userName = generateRandomUserName()
-    const userWithAddressWithUser = await getUserWithAddressWithUserControlFn(userName)
+    const userWithAddressWithUser = await getUserWithAddressWithUserControlFn(orm.db, userName)
     const userId = userWithAddressWithUser.id
     const articlesOfUserSql = 'select "article"."title" from "article" where "article"."creator_user_id" = $1 and "article"."date_deleted" is null'
-    const articlesOfUser = await ORM.db.queryGetRows(articlesOfUserSql, [userId])
+    const articlesOfUser = await orm.db.queryGetRows(articlesOfUserSql, [userId])
 
     // eslint-disable-next-line max-len
     const userGroupsOfUserSql = `select "user_group"."name" from "user_to_user_group"
 join "user_group" on "user_group"."id" = "user_to_user_group"."user_group_id"
 where "user_to_user_group"."user_id" = $1
 and "user_group"."date_deleted" is null`
-    const userGroupsOfUser = await ORM.db.queryGetRows(userGroupsOfUserSql, [userId])
+    const userGroupsOfUser = await orm.db.queryGetRows(userGroupsOfUserSql, [userId])
   })
 })

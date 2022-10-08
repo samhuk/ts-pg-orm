@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import assert from 'assert'
-import { Stores } from './orm'
+import { ConnectedOrm, Stores } from './orm'
 import { addSampleData } from './sampleData'
 
-type TestGroup = (stores: Stores) => Promise<void>
-type Test = (stores: Stores) => Promise<void>
+type TestGroup = (orm: ConnectedOrm) => Promise<void>
+type Test = (orm: ConnectedOrm) => Promise<void>
 
 const formatPerformanceDtToMs = (dt: number) => parseFloat(dt.toPrecision(5))
 
@@ -69,13 +69,13 @@ export const timedFn = async <T>(fn: () => Promise<T> | T): Promise<{ dt: number
 
 export const test = (
   name: string,
-  fn: (stores: Stores, assert: (actual: any, expected: any, message?: string) => void) => Promise<void>,
-): Test => async (stores: Stores) => {
+  fn: (orm: ConnectedOrm, assert: (actual: any, expected: any, message?: string) => void) => Promise<void>,
+): Test => async (orm: ConnectedOrm) => {
   console.log(`Running test: ${name}`)
   const _assert = (actual: any, expected: any, message?: string): any => {
     assert.deepStrictEqual(actual, expected, message)
   }
-  const timedFnResult = await timedFn(() => fn(stores, _assert))
+  const timedFnResult = await timedFn(() => fn(orm, _assert))
   console.log('Done. Dt (ms):', formatPerformanceDtToMs(timedFnResult.dt))
 }
 
@@ -88,12 +88,12 @@ export const deleteAllSampleData = async (stores: Stores) => {
   await stores.user.delete()
 }
 
-const executeTest = async (stores: Stores, tests: Test[], onComplete: () => void, i: number = 0) => {
-  await deleteAllSampleData(stores)
-  await addSampleData(stores)
-  await tests[i](stores)
+const executeTest = async (orm: ConnectedOrm, tests: Test[], onComplete: () => void, i: number = 0) => {
+  await deleteAllSampleData(orm.stores)
+  await addSampleData(orm.stores)
+  await tests[i](orm)
   if (i < tests.length - 1)
-    await executeTest(stores, tests, onComplete, i + 1)
+    await executeTest(orm, tests, onComplete, i + 1)
   else
     onComplete()
 }
@@ -101,21 +101,21 @@ const executeTest = async (stores: Stores, tests: Test[], onComplete: () => void
 export const testGroup = (
   name: string,
   ...tests: Test[]
-): TestGroup => (stores: Stores) => {
+): TestGroup => (orm: ConnectedOrm) => {
   console.log(`Running test group: ${name}`)
   return new Promise((res, rej) => {
-    executeTest(stores, tests, () => res())
+    executeTest(orm, tests, () => res())
   })
 }
 
-const executeTestGroup = async (stores: Stores, testGroups: TestGroup[], onComplete: () => void, i: number = 0) => {
-  await testGroups[i](stores)
+const executeTestGroup = async (orm: ConnectedOrm, testGroups: TestGroup[], onComplete: () => void, i: number = 0) => {
+  await testGroups[i](orm)
   if (i < testGroups.length - 1)
-    await executeTestGroup(stores, testGroups, onComplete, i + 1)
+    await executeTestGroup(orm, testGroups, onComplete, i + 1)
   else
     onComplete()
 }
 
-export const executeTestGroups = (stores: Stores, ...testGroups: TestGroup[]) => new Promise((res, rej) => {
-  executeTestGroup(stores, testGroups, () => res(null))
+export const executeTestGroups = (orm: ConnectedOrm, ...testGroups: TestGroup[]) => new Promise((res, rej) => {
+  executeTestGroup(orm, testGroups, () => res(null))
 })

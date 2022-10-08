@@ -1,10 +1,10 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic', async (stores, assert) => {
-  const user3Id = (await stores.user.get({ fields: ['id'], filter: { field: 'name', op: Operator.EQUALS, val: 'User 3' } })).id
-  const userGroup1Id = (await stores.userGroup.get({ fields: ['id'], filter: { field: 'name', op: Operator.EQUALS, val: 'User Group 1' } })).id
-  const result = await stores.userIdToUserGroupId.create({
+export const basicTest = test('basic', async (orm, assert) => {
+  const user3Id = (await orm.stores.user.get({ fields: ['id'], filter: { field: 'name', op: Operator.EQUALS, val: 'User 3' } })).id
+  const userGroup1Id = (await orm.stores.userGroup.get({ fields: ['id'], filter: { field: 'name', op: Operator.EQUALS, val: 'User Group 1' } })).id
+  const result = await orm.stores.userIdToUserGroupId.create({
     userId: user3Id,
     userGroupId: userGroup1Id,
   })
@@ -19,7 +19,7 @@ export const basicTest = test('basic', async (stores, assert) => {
     dateCreated: result.dateCreated,
   })
 
-  const userGroupsOfUser3 = (await stores.user.get({
+  const userGroupsOfUser3 = (await orm.stores.user.get({
     fields: [],
     filter: { field: 'name', op: Operator.EQUALS, val: 'User 3' },
     relations: {

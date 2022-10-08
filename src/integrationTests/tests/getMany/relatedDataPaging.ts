@@ -22,8 +22,8 @@ export const getResult = (stores: Stores) => stores.user.getMany({
   },
 })
 
-export const relatedDataPagingTest = test('related data paging', async (stores, assert) => {
-  const result = await getResult(stores)
+export const relatedDataPagingTest = test('related data paging', async (orm, assert) => {
+  const result = await getResult(orm.stores)
 
   assert(result, [
     {

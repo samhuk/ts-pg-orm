@@ -1,8 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic', async (stores, assert) => {
-  const result = await stores.user.getMany({
+export const basicTest = test('basic', async (orm, assert) => {
+  const result = await orm.stores.user.getMany({
     fields: ['name', 'email'],
     query: {
       filter: {

@@ -1,8 +1,8 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic', async (stores, assert) => {
-  const result = await stores.user.get({
+export const basicTest = test('basic', async (orm, assert) => {
+  const result = await orm.stores.user.get({
     fields: ['name', 'email'],
     filter: {
       field: 'name', op: Operator.EQUALS, val: 'User 1',

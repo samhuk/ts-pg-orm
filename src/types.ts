@@ -1,57 +1,125 @@
 import { SimplePgClient, SimplePgClientFromClientOptions, SimplePgClientOptions } from 'simple-pg-client/dist/types'
-import { DataFormatList, DataFormats } from './dataFormat/types'
+import { DataFormats } from './dataFormat/types'
 import { RelationOptionsList, Relations } from './relations/types'
 import { ProvisionStoresOptions, StoresAndJoinTableStores, UnprovisionStoresOptions } from './stores/types'
+import { VersionTransforms, VersionTransformsOptions } from './versioning/types'
 
-export type TsPgOrmWithNoRelations<TDataFormatList extends DataFormatList> = {
-  dataFormats: DataFormats<TDataFormatList>
-  setRelations: <TRelationOptionsList extends RelationOptionsList<DataFormats<TDataFormatList>>>(
-    relationOptionsList: TRelationOptionsList
-  ) => TsPgOrm<DataFormats<TDataFormatList>, Relations<DataFormats<TDataFormatList>, TRelationOptionsList>>
-}
+type IsObjectNonEmpty<Obj extends Record<PropertyKey, unknown>> = [keyof Obj] extends [never] ? false : true
+
+type IncludeIfObjectIsEmpty<Obj extends Record<PropertyKey, unknown>, ObjToInclude> =
+  IsObjectNonEmpty<Obj> extends true ? {} : ObjToInclude
+
+type IncludeIfObjectIsNotEmpty<Obj extends Record<PropertyKey, unknown>, ObjToInclude>
+  = IsObjectNonEmpty<Obj> extends true ? ObjToInclude : {}
+
+type IncludeIfTrue<TBool extends boolean, ObjToInclude> = TBool extends true ? ObjToInclude : {}
+
+export type ConnectedTsPgOrm<TTsPgOrm extends TsPgOrm = TsPgOrm> =
+  TsPgOrm<TTsPgOrm['dataFormats'], TTsPgOrm['relations'], TTsPgOrm['versionTransforms'], true>
 
 export type TsPgOrm<
-  TDataFormats extends DataFormats = DataFormats,
-  TRelations extends Relations = Relations,
-> = {
+  TDataFormats extends DataFormats | {} = DataFormats,
+  TRelations extends Relations | {} = Relations,
+  TVersionTransforms extends VersionTransforms | {} = VersionTransforms,
+  TConnected extends boolean = boolean,
+> =
+// Initially, only data formats and their order are present.
+{
   /**
-   * The default `SimplePgClient` that will be used for all database-related
-   * functionality. This can optionally be overridden in functions like `createStore`
-   * and `createJoinTables`.
+   * The order that the Data Formats were defined for the ORM.
    */
-  db?: SimplePgClient
-  /**
-   * Creates an instance of `SimplePgClient` from the given `SimplePgClientOptions`,
-   * setting it to the current instance of `TsPgOrm`, becoming the default DB client
-   * that is used for database-related functionality, e.g. functions like `createStore`
-   * and `createJoinTables`.
-   */
-  initDbClient: (options: SimplePgClientOptions) => Promise<SimplePgClient>
-  /**
-   * Sets the `SimplePgClient` instance to use, setting it to the current `TsPgOrm`
-   * instance, becoming the default DB client that is used for database-related
-   * functionality, e.g. functions like `createStore` and `createJoinTables`.
-   */
-  setDbClient: (newDbClient: SimplePgClient) => void
-  /**
-   * Creates an instance of `SimplePgClient` from the given `SimplePgClientFromClientOptions`,
-   * setting it to the current instance of `TsPgOrm`, becoming the default DB client
-   * that is used for database-related functionality, e.g. functions like `createStore`
-   * and `createJoinTables`.
-   *
-   * This is an alternative to `setDbClient`, where the `Client` instance (from `pg`) can
-   * be directly provided, instead of `SimplePgClientOptions`.
-   *
-   * This is useful for if you already have a connected and ready-to-use `Client` instance
-   * available to give to `TsPgOrm`.
-   */
-  setDbClientByClient: (newDbClient: SimplePgClientFromClientOptions) => void
   dataFormatOrder: ((keyof TDataFormats) & string)[]
-  dataFormats: TDataFormats,
-  relations: TRelations,
-  stores: StoresAndJoinTableStores<TDataFormats, TRelations>
-  provisionStores: (options?: ProvisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
-  createProvisionStoresSql: (options?: ProvisionStoresOptions<TDataFormats, TRelations>) => string
-  unprovisionStores: (stores?: UnprovisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
-  createUnprovisionStoresSql: (options?: UnprovisionStoresOptions<TDataFormats, TRelations>) => string
+  /**
+   * The currently defined Data Formats of the ORM.
+   */
+  dataFormats: TDataFormats
 }
+/* Before relations are defined, the function to set them is present.
+ * After they are defined, that function goes away and instead the set
+ * relations are present, along with functions to create store
+ * provisioning sql.
+ */
+& IncludeIfObjectIsNotEmpty<TRelations, {
+  /**
+   * The currently defined Relations of the ORM.
+   */
+  relations: TRelations
+  /**
+   * Creates the sql necessary to provision the data stores.
+   */
+  createProvisionStoresSql: (options?: ProvisionStoresOptions<TDataFormats, TRelations>) => string
+  /**
+   * Creates the sql necessary to unprovision the data stores.
+   */
+  createUnprovisionStoresSql: (options?: UnprovisionStoresOptions<TDataFormats, TRelations>) => string
+}>
+& IncludeIfObjectIsEmpty<TRelations, {
+  /**
+   * Defines the relations of the ORM.
+   */
+  setRelations: <TRelationOptionsList extends RelationOptionsList<TDataFormats>>(
+    relationOptionsList: TRelationOptionsList
+  ) => TsPgOrm<TDataFormats, Relations<TDataFormats, TRelationOptionsList>, TVersionTransforms, TConnected>
+}>
+/* Once relations are defined, properties that are reliant on both data formats
+ * and relations are present.
+ */
+& IncludeIfObjectIsNotEmpty<TRelations, (
+  {
+    /**
+     * Connects the ORM instance to the defined PostgreSQL database server.
+     */
+    connect: (simplePgClientOptions: SimplePgClientOptions) => Promise<TsPgOrm<TDataFormats, TRelations, TVersionTransforms, true>>
+    /**
+     * Connects the ORM instance to the defined PostgreSQL database server using the
+     * provided `Client` instance from the `pg` npm package.
+     *
+     * This is for when you already have a connected and ready-to-use `SimplePgClient` instance
+     * (from the `simple-pg-client` package) available to provide.
+     */
+    provideDbClient: (ngSimplePgClient: SimplePgClient) => TsPgOrm<TDataFormats, TRelations, TVersionTransforms, true>
+    /**
+     * For use when you already have a connected and ready-to-use `Client` instance
+     * (from the `pg` package) available to provide.
+     */
+    providePgClient: (options: SimplePgClientFromClientOptions) => TsPgOrm<TDataFormats, TRelations, TVersionTransforms, true>
+  }
+  /* Once one of the db-connecting functions have been run, the db client instead is present
+    * along with the stores dict and store provisioning/unprovisioning functions.
+    */
+  & IncludeIfTrue<TConnected, {
+    /**
+     * The currently defined database client instance.
+     */
+    db: SimplePgClient
+    /**
+     * The available data stores to perform CRUD operations on.
+     */
+    stores: StoresAndJoinTableStores<TDataFormats, TRelations>
+    /**
+     * Creates the sql tables and other artifacts required for the data stores.
+     */
+    provisionStores: (options?: ProvisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
+    /**
+     * Removes (i.e. drops) the sql tables and other artifacts required for the data stores.
+     */
+    unprovisionStores: (stores?: UnprovisionStoresOptions<TDataFormats, TRelations>) => Promise<void>
+  }>
+  /* Once relations are defined but before version transforms are defined, a function
+    * to set them appears. Once version transforms are set, they are present.
+    */
+  & IncludeIfObjectIsNotEmpty<TVersionTransforms, {
+    /**
+     * The currently defined version transforms of the ORM.
+     */
+    versionTransforms: TVersionTransforms
+  }>
+  & IncludeIfObjectIsEmpty<TVersionTransforms, {
+    /**
+     * Defines the version transforms of the ORM.
+     */
+    setVersionTransforms: <TVersionTransformsOptions extends VersionTransformsOptions>(
+      options: TVersionTransformsOptions
+    ) => TsPgOrm<TDataFormats, TRelations, VersionTransforms<TVersionTransformsOptions>, TConnected>
+  }>
+)>

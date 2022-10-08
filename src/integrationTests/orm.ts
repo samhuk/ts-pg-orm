@@ -8,6 +8,7 @@ import { ToRecord } from '../dataFormat/types/record'
 import { RelationType } from '../relations/types'
 import { _CreateJoinTableRecordOptions } from '../store/joinTable/types'
 import { StoresAndJoinTableStores } from '../stores/types'
+import { ConnectedTsPgOrm } from '../types'
 
 const BASE_FIELDS = createCommonFields({
   id: { type: DataType.NUM, subType: NumSubType.SERIAL },
@@ -52,7 +53,7 @@ const USER_GROUP_DF = createDataFormat('userGroup', {
   imageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
 })
 
-export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF] as const)
+export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF] as const, 1)
   .setRelations([
     {
       type: RelationType.ONE_TO_MANY,
@@ -81,6 +82,13 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
       includeDateCreated: true,
     },
   ] as const)
+  .setVersionTransforms({
+    2: { sql: 'UPGRADE SQL TO VERSION 2' },
+    3: { sql: 'UPGRADE SQL TO VERSION 3' },
+  })
+
+// @ts-ignore TODO: Not sure why this is complaining.
+export type ConnectedOrm = ConnectedTsPgOrm<typeof ORM>
 
 export type Stores = StoresAndJoinTableStores<typeof ORM['dataFormats'], typeof ORM['relations']>
 
@@ -102,8 +110,8 @@ export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
   typeof ORM['relations']['userIdToUserGroupId']
 >
 
-export const provisionOrm = async (): Promise<Stores> => {
-  await ORM.initDbClient({
+export const provisionOrm = async (): Promise<ConnectedOrm> => {
+  const connectedOrm = await ORM.connect({
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT),
     user: process.env.DATABASE_USER,
@@ -119,8 +127,8 @@ export const provisionOrm = async (): Promise<Stores> => {
     },
   })
 
-  await ORM.unprovisionStores()
-  await ORM.provisionStores()
+  await connectedOrm.unprovisionStores()
+  await connectedOrm.provisionStores()
 
-  return ORM.stores
+  return connectedOrm
 }

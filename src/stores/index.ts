@@ -3,7 +3,7 @@ import { toDict } from '../helpers/dict'
 import { NonManyToManyRelationList, Relation, Relations, RelationType } from '../relations/types'
 import { createStore } from '../store'
 import { createJoinTableStoresDict } from '../store/joinTable'
-import { TsPgOrm } from '../types'
+import { ConnectedTsPgOrm, TsPgOrm } from '../types'
 import { ProvisionStoresOptions, UnprovisionStoresOptions } from './types'
 
 const determineJoinTableStoreNameList = (relations: Relations): string[] => Object.values(relations)
@@ -52,7 +52,7 @@ export const createProvisionStoresSql = (
 }
 
 export const provisionStores = async (
-  tsPgOrm: TsPgOrm,
+  tsPgOrm: ConnectedTsPgOrm,
   options?: ProvisionStoresOptions,
 ) => {
   const db = options?.db ?? tsPgOrm.db
@@ -82,7 +82,7 @@ export const createUnprovisionStoresSql = (
 }
 
 export const unprovisionStores = async (
-  tsPgOrm: TsPgOrm,
+  tsPgOrm: ConnectedTsPgOrm,
   options?: UnprovisionStoresOptions,
 ) => {
   const db = options?.db ?? tsPgOrm.db

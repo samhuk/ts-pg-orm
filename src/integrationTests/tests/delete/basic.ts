@@ -1,8 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic', async (stores, assert) => {
-  const result = await stores.userAddress.delete({
+export const basicTest = test('basic', async (orm, assert) => {
+  const result = await orm.stores.userAddress.delete({
     query: {
       filter: {
         logic: DataFilterLogic.AND,
@@ -16,7 +16,7 @@ export const basicTest = test('basic', async (stores, assert) => {
 
   assert(result, 1)
 
-  const userAddressRecord = await stores.userAddress.get({
+  const userAddressRecord = await orm.stores.userAddress.get({
     filter: {
       logic: DataFilterLogic.AND,
       nodes: [

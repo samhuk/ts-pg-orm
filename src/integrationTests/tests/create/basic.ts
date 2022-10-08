@@ -1,8 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic', async (stores, assert) => {
-  const result = await stores.user.create({
+export const basicTest = test('basic', async (orm, assert) => {
+  const result = await orm.stores.user.create({
     email: 'newUser@email.com',
     name: 'newUser',
     passwordHash: '123',
@@ -23,7 +23,7 @@ export const basicTest = test('basic', async (stores, assert) => {
     passwordHash: '123                                                             ',
   })
 
-  const userRecord = await stores.user.get({
+  const userRecord = await orm.stores.user.get({
     fields: ['name'],
     filter: {
       logic: DataFilterLogic.AND,
