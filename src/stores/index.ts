@@ -4,7 +4,7 @@ import { toDict } from '../helpers/dict'
 import { NonManyToManyRelationList, Relation, Relations, RelationType } from '../relations/types'
 import { createStore } from '../store'
 import { createJoinTableStoresDict } from '../store/joinTable'
-import { ConnectedTsPgOrm, TsPgOrm } from '../types'
+import { ConnectedTsPgOrm, TsPgOrm } from '../tsPgOrm/types'
 import { ProvisionStoresOptions, UnprovisionStoresOptions } from './types'
 
 const determineJoinTableStoreNameList = (relations: Relations): string[] => Object.values(relations)
@@ -44,7 +44,7 @@ export const createProvisionStoresSql = (
 
   const dataFormatToRelevantNonManyToManyRelationList = toDict(
     provisionOrder.filter(storeName => tsPgOrm.dataFormats[storeName] != null),
-    storeName => ({ key: storeName, value: determineRelevantNonManyToManyRelationList(tsPgOrm.relations, storeName) }),
+    storeName => ({ key: storeName, value: determineRelevantNonManyToManyRelationList(tsPgOrm.relations, storeName as string) }),
   )
 
   const createTablesSql = provisionOrder

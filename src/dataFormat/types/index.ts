@@ -1,3 +1,4 @@
+import { StringKeysOf } from '../../helpers/types'
 import { FieldsOptions, Fields, FieldList } from './field'
 import { FieldRefs } from './fieldRef'
 import { FieldSubSets, FieldSubSetsOptions } from './fieldSubSet'
@@ -7,7 +8,8 @@ type _DataFormat<
   TName extends string = string,
   TNamePluralized extends string = `${TName}s`,
   TFieldsOptions extends FieldsOptions = FieldsOptions,
-  TFieldSubSetsOptions extends FieldSubSetsOptions<(keyof TFieldsOptions) & string> = FieldSubSetsOptions<(keyof TFieldsOptions) & string>,
+  TFieldNames extends string = string,
+  TFieldSubSetsOptions extends FieldSubSetsOptions<TFieldNames> = FieldSubSetsOptions<TFieldNames>,
   TFields extends Fields<TFieldsOptions> = Fields<TFieldsOptions>
 > = {
   name: TName
@@ -16,10 +18,10 @@ type _DataFormat<
   capitalizedPluralizedName: Capitalize<TNamePluralized>
   fields: TFields
   fieldList: FieldList<TFields>
-  fieldNameList: ((keyof TFields) & string)[]
-  fieldSubSets: FieldSubSets<(keyof TFieldsOptions) & string, TFieldSubSetsOptions>
+  fieldNameList: TFieldNames[]
+  fieldSubSets: FieldSubSets<TFieldNames, TFieldSubSetsOptions>
   fieldRefs: FieldRefs<TFields, TName>
-  createRecordFieldNameList: ((keyof TFields) & string)[]
+  createRecordFieldNameList: TFieldNames[]
   sql: DataFormatSql<TFields>
   // TODO: Figure out how to nicely do field sub sets, when needed.
   // setFieldSubSets: <TNewFieldSubSetsOptions extends FieldSubSetsOptions<(keyof TFieldsOptions) & string>>(
@@ -31,8 +33,8 @@ export type DataFormat<
   TName extends string = string,
   TNamePluralized extends string = `${TName}s`,
   TFieldsOptions extends FieldsOptions = FieldsOptions,
-  TFieldSubSetsOptions extends FieldSubSetsOptions<(keyof TFieldsOptions) & string> = FieldSubSetsOptions<(keyof TFieldsOptions) & string>,
-> = _DataFormat<TName, TNamePluralized, TFieldsOptions, TFieldSubSetsOptions, Fields<TFieldsOptions>>
+  TFieldSubSetsOptions extends FieldSubSetsOptions<StringKeysOf<TFieldsOptions>> = FieldSubSetsOptions<StringKeysOf<TFieldsOptions>>,
+> = _DataFormat<TName, TNamePluralized, TFieldsOptions, StringKeysOf<TFieldsOptions>, TFieldSubSetsOptions, Fields<TFieldsOptions>>
 
 export type MutableDataFormatList = DataFormat[]
 
@@ -40,7 +42,7 @@ export type DataFormatList = Readonly<MutableDataFormatList>
 
 export type DataFormats<TDataFormatList extends DataFormatList = DataFormatList> = {
   [K in keyof TDataFormatList & `${bigint}` as TDataFormatList[K] extends { name: infer TName }
-    ? `${TName & string}`
+    ? TName extends string ? TName : never
     : never
   ]: TDataFormatList[K] extends DataFormat ? TDataFormatList[K] : never
 }

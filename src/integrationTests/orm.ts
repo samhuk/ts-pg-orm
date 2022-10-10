@@ -1,14 +1,20 @@
 import { createConsoleLogEventHandlers } from 'simple-pg-client'
-import { createTsPgOrm } from '..'
-import { createDataFormat } from '../dataFormat'
-import { createCommonFields } from '../dataFormat/field'
-import { CreateRecordOptions } from '../dataFormat/types/createRecordOptions'
-import { DataType, EpochSubType, NumSubType, StrSubType } from '../dataFormat/types/dataType'
-import { ToRecord } from '../dataFormat/types/record'
-import { RelationType } from '../relations/types'
-import { _CreateJoinTableRecordOptions } from '../store/joinTable/types'
-import { StoresAndJoinTableStores } from '../stores/types'
-import { ConnectedTsPgOrm } from '../types'
+import {
+  createTsPgOrm,
+  createDataFormat,
+  createCommonFields,
+  CreateRecordOptions,
+  DataType,
+  EpochSubType,
+  NumSubType,
+  StrSubType,
+  ToRecord,
+  RelationType,
+  ToStores,
+  ConnectedTsPgOrm,
+  TsPgOrm,
+  CreateJoinTableRecordOptions,
+} from '..'
 
 const BASE_FIELDS = createCommonFields({
   id: { type: DataType.NUM, subType: NumSubType.SERIAL },
@@ -93,10 +99,11 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
     3: { sql: 'UPGRADE SQL TO VERSION 3' },
   })
 
-// @ts-ignore TODO: Not sure why this is complaining.
-export type ConnectedOrm = ConnectedTsPgOrm<typeof ORM>
+type Orm = typeof ORM
 
-export type Stores = StoresAndJoinTableStores<typeof ORM['dataFormats'], typeof ORM['relations']>
+export type ConnectedOrm = ConnectedTsPgOrm<typeof ORM['dataFormats'], typeof ORM['relations'], typeof ORM['versionTransforms']>
+
+export type Stores = ToStores<typeof ORM>
 
 export type UserRecord = ToRecord<typeof USER_DF>
 
@@ -110,7 +117,7 @@ export type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADD
 
 export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DF>
 
-export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
+export type CreateUserToUserGroupLinkOptions = CreateJoinTableRecordOptions<
   typeof ORM['dataFormats'],
   // @ts-ignore TODO: This seems to be failing only on remote build
   typeof ORM['relations']['userIdToUserGroupId']

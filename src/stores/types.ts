@@ -1,20 +1,24 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormats } from '../dataFormat/types'
+import { StringKeysOf } from '../helpers/types'
 import { Relations } from '../relations/types'
 import { JoinTableStoresDict } from '../store/joinTable/types'
 import { Store } from '../store/types'
+import { DataFormatsAndRelationsObj } from '../tsPgOrm/types'
 
-export type StoresAndJoinTableStores<
+export type DataFormatStores<
   TDataFormats extends DataFormats,
   TRelations extends Relations,
-> = Stores<TDataFormats, TRelations> & JoinTableStoresDict<TDataFormats, TRelations>
+> = {
+  [TName in StringKeysOf<TDataFormats>]: Store<TDataFormats, TRelations, TName>
+}
 
 export type Stores<
   TDataFormats extends DataFormats,
   TRelations extends Relations,
-> = {
-  [TName in keyof TDataFormats]: Store<TDataFormats, TRelations, TName & string>
-}
+> = DataFormatStores<TDataFormats, TRelations> & JoinTableStoresDict<TDataFormats, TRelations>
+
+export type ToStores<TTsPgOrm extends DataFormatsAndRelationsObj> = Stores<TTsPgOrm['dataFormats'], TTsPgOrm['relations']>
 
 export type ProvisionStoresOptions<
   TDataFormats extends DataFormats = DataFormats,
@@ -27,7 +31,7 @@ export type ProvisionStoresOptions<
    * @default
    * undefined // All stores will be provisioned
    */
-  provisionStores?: ((keyof StoresAndJoinTableStores<TDataFormats, TRelations>) & string)[]
+  provisionStores?: StringKeysOf<Stores<TDataFormats, TRelations>>[]
   /**
    * Optional alternative `SimplePgClient` to use, different from the one initially provided
    * to create the TsPgOrm instance.
@@ -46,7 +50,7 @@ export type UnprovisionStoresOptions<
    * @default
    * undefined // All stores will be unprovisioned
    */
-  unprovisionStores?: ((keyof StoresAndJoinTableStores<TDataFormats, TRelations>) & string)[]
+  unprovisionStores?: StringKeysOf<Stores<TDataFormats, TRelations>>[]
   /**
    * Optional alternative `SimplePgClient` to use, different from the one initially provided
    * to create the TsPgOrm instance.

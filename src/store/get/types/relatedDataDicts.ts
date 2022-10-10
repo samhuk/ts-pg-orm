@@ -1,4 +1,5 @@
 import { DataFormats } from '../../../dataFormat/types'
+import { StringKeysOf } from '../../../helpers/types'
 import { Relation, Relations } from '../../../relations/types'
 import {
   ExtractRelevantRelationsWithManyToManyFieldRef1,
@@ -113,9 +114,9 @@ export type RelatedDataPropertyNamesUnion<
   TDataFormats extends DataFormats,
   TRelations extends Relations,
   TDataFormatName extends string,
-> = (keyof OneToOneFromOneDict<TDataFormats, TRelations, TDataFormatName>
-  | keyof OneToOneToOneDict<TDataFormats, TRelations, TDataFormatName>
-  | keyof OneToManyFromOneDict<TDataFormats, TRelations, TDataFormatName>
-  | keyof OneToManyToManyDict<TDataFormats, TRelations, TDataFormatName>
-  | keyof ManyToManyFieldRef1Dict<TDataFormats, TRelations, TDataFormatName>
-  | keyof ManyToManyFieldRef2Dict<TDataFormats, TRelations, TDataFormatName>) & string
+> = StringKeysOf<OneToOneFromOneDict<TDataFormats, TRelations, TDataFormatName>>
+  | StringKeysOf<OneToOneToOneDict<TDataFormats, TRelations, TDataFormatName>>
+  | StringKeysOf<OneToManyFromOneDict<TDataFormats, TRelations, TDataFormatName>>
+  | StringKeysOf<OneToManyToManyDict<TDataFormats, TRelations, TDataFormatName>>
+  | StringKeysOf<ManyToManyFieldRef1Dict<TDataFormats, TRelations, TDataFormatName>>
+  | StringKeysOf<ManyToManyFieldRef2Dict<TDataFormats, TRelations, TDataFormatName>>

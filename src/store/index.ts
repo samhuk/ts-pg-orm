@@ -1,7 +1,7 @@
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { DataFormats } from '../dataFormat/types'
 import { Relations } from '../relations/types'
-import { TsPgOrm } from '../types'
+import { TsPgOrm } from '../tsPgOrm/types'
 import { count } from './count'
 import { create, createManual } from './create'
 import { _delete } from './delete'
