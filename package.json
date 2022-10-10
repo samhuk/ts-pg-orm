@@ -1,6 +1,6 @@
 {
   "name": "ts-pg-orm",
-  "version": "5.0.1",
+  "version": "5.1.0-beta1",
   "description": "Typescript PostgreSQL ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
