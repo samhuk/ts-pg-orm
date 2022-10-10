@@ -1,8 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const basicTest = test('basic', async (stores, assert) => {
-  const result = await stores.user.count({
+export const basicTest = test('basic', async (orm, assert) => {
+  const result = await orm.stores.user.count({
     filter: {
       logic: DataFilterLogic.OR,
       nodes: [
@@ -14,7 +14,7 @@ export const basicTest = test('basic', async (stores, assert) => {
 
   assert(result, 2)
 
-  const result2 = await stores.user.count({
+  const result2 = await orm.stores.user.count({
     filter: {
       logic: DataFilterLogic.AND,
       nodes: [

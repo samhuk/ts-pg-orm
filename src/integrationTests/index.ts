@@ -1,18 +1,18 @@
 import { executeTestGroups } from './common'
-import { ORM, provisionOrm } from './orm'
+import { provisionOrm } from '../test/orm'
 import { countTests } from './tests/count'
 import { createTests } from './tests/create'
 import { deleteTests } from './tests/delete'
 import { existsTests } from './tests/exists'
-import { getTests } from './tests/get'
-import { getManyTests } from './tests/getMany'
+import { getPerformanceTests, getTests } from './tests/get'
+import { getManyPerformanceTests, getManyTests } from './tests/getMany'
 import { joinTableTests } from './tests/joinTable'
 import { updateTests } from './tests/update'
 
 const init = async () => {
-  const stores = await provisionOrm()
+  const orm = await provisionOrm()
   await executeTestGroups(
-    stores,
+    orm,
     getTests,
     getManyTests,
     updateTests,
@@ -21,8 +21,11 @@ const init = async () => {
     countTests,
     existsTests,
     joinTableTests,
+    // Performance tests last
+    getPerformanceTests,
+    getManyPerformanceTests,
   )
-  await ORM.db.client.end()
+  await orm.db.client.end()
 }
 
 init().then(() => undefined)

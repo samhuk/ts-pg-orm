@@ -51,6 +51,10 @@ export type DataTypeToSubType = {
   [DataType.JSON]: JsonSubType
 }
 
+export type AnySubType = StrSubType | NumSubType | EpochSubType | JsonSubType
+
+export type AnyDataType = DataType.STR | DataType.NUM | DataType.BOOL | DataType.EPOCH | DataType.JSON
+
 export enum ThreeStepNumberSize {
   SMALL,
   REGULAR,

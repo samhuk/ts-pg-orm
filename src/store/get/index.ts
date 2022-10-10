@@ -3,7 +3,7 @@ import { createDataQuery } from '@samhuk/data-query'
 import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { objectPropsToCamelCase } from '../../helpers/string'
 import { DataFormat } from '../../dataFormat/types'
-import { TsPgOrm } from '../../types'
+import { TsPgOrm } from '../../tsPgOrm/types'
 import { createQueryPlan } from './queryPlan/queryPlan'
 import { AnyGetFunctionOptions, AnyGetFunctionResult } from './types'
 

@@ -1,5 +1,5 @@
 import { DataFormat, DataFormats } from '.'
-import { ValuesUnionFromDict } from '../../helpers/types'
+import { StringKeysOf, ValuesUnionFromDict } from '../../helpers/types'
 import { Fields } from './field'
 
 export type FieldRef<TFieldName extends string = string, TDataFormatName extends string = string> = {
@@ -8,7 +8,7 @@ export type FieldRef<TFieldName extends string = string, TDataFormatName extends
 }
 
 export type FieldRefs<TFields extends Fields = Fields, TDataFormatName extends string = string> = {
-  [TFieldName in keyof TFields]: FieldRef<TFieldName & string, TDataFormatName>
+  [TFieldName in StringKeysOf<TFields>]: FieldRef<TFieldName, TDataFormatName>
 }
 
 export type FieldRefsOfDataFormat<TDataFormat extends DataFormat = DataFormat> = FieldRefs<TDataFormat['fields'], TDataFormat['name']>

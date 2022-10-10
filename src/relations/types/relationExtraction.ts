@@ -1,5 +1,5 @@
 import { Relation, Relations, RelationType } from '.'
-import { ValuesUnionFromDict } from '../../helpers/types'
+import { Cast, ValuesUnionFromDict } from '../../helpers/types'
 import { DataFormats } from '../../dataFormat/types'
 import { ToRecord } from '../../dataFormat/types/record'
 import { RelationToName } from './name'

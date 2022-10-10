@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import { Operator } from '@samhuk/data-filter/dist/types'
+import { SimplePgClient } from 'simple-pg-client/dist/types'
 import { benchmarkAsyncFn, test } from '../../common'
-import { ORM } from '../../orm'
 
 export const generateRandomUserName = () => {
   const userNumber = Math.ceil((Math.random() * 3)) // Random number between 1 and 3
@@ -11,14 +11,14 @@ export const generateRandomUserName = () => {
 const USER_COLUMNS_SQL = '"user"."id" "user.id", "user"."uuid" "user.uuid", "user"."name" "user.name", "user"."email" "user.email", "user"."password_hash" "user.password_hash", "user"."date_created" "user.date_created", "user"."date_deleted" "user.date_deleted",'
 export const USER_ADDRESS_SQL = '"user_address"."city" "user_address.city", "user_address"."country" "user_address.country", "user_address"."post_code" "user_address.post_code", "user_address"."street_address" "user_address.street_address"'
 
-const getUserWithUserAddressControlFn = async (userName: string) => {
+const getUserWithUserAddressControlFn = async (db: SimplePgClient, userName: string) => {
   const sql = `select
 ${USER_COLUMNS_SQL}
 ${USER_ADDRESS_SQL}
 from "user"
 left join "user_address" on "user_address"."user_id" = "user".id
 where "user"."name" = $1`
-  const result = await ORM.db.query(sql, [userName]) as any
+  const result = await db.query(sql, [userName]) as any
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return {
     id: result['user.id'],
@@ -37,10 +37,10 @@ where "user"."name" = $1`
   }
 }
 
-export const basicPerformanceTest = test('basic - performance', async (stores, assert) => {
+export const basicPerformanceTest = test('basic - performance', async (orm, assert) => {
   await benchmarkAsyncFn(async () => {
     const userName = generateRandomUserName()
-    await stores.user.get({
+    await orm.stores.user.get({
       filter: {
         field: 'name', op: Operator.EQUALS, val: userName,
       },
@@ -52,6 +52,6 @@ export const basicPerformanceTest = test('basic - performance', async (stores, a
     })
   }, async () => {
     const userName = generateRandomUserName()
-    await getUserWithUserAddressControlFn(userName)
+    await getUserWithUserAddressControlFn(orm.db, userName)
   })
 })

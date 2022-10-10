@@ -1,5 +1,5 @@
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { ExpandRecursively } from '../../helpers/types'
+import { Access, Cast, ExpandRecursively, StringKeysOf } from '../../helpers/types'
 import { ReturnModeRaw } from '../types'
 import { DataFormat, DataFormats } from '../../dataFormat/types'
 import { Field, FieldToRecordType } from '../../dataFormat/types/field'
@@ -35,37 +35,37 @@ type JoinTableRecord<
     : {})
 >
 
-type CreateJoinTableRecordOptions<
+type _CreateJoinTableRecordOptions<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
   TFieldRef2Field extends Field,
 > = JoinTableRecordLinkedFields<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
 
-export type _CreateJoinTableRecordOptions<
+export type CreateJoinTableRecordOptions<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = CreateJoinTableRecordOptions<
+> = _CreateJoinTableRecordOptions<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
   TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']]
 >
 
-type CreateLinkFunction<
+type _CreateLinkFunction<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
   TFieldRef2Field extends Field,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = (options: CreateJoinTableRecordOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>) => (
+> = (options: _CreateJoinTableRecordOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>) => (
   Promise<JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>>
 )
 
-export type _CreateLinkFunction<
+export type CreateLinkFunction<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = CreateLinkFunction<
+> = _CreateLinkFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
@@ -73,19 +73,19 @@ export type _CreateLinkFunction<
   TRelation
 >
 
-type CreateLinksFunction<
+type _CreateLinksFunction<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
   TFieldRef2Field extends Field
-> = (options: CreateJoinTableRecordOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>[]) => (
+> = (options: _CreateJoinTableRecordOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>[]) => (
   Promise<void>
 )
 
-export type _CreateLinksFunction<
+export type CreateLinksFunction<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = CreateLinksFunction<
+> = _CreateLinksFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
@@ -110,7 +110,7 @@ type DeleteLinkByIdFunctionResult<
     : boolean
   : boolean
 
-type DeleteLinkByIdFunction<
+type _DeleteLinkByIdFunction<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
@@ -122,17 +122,17 @@ type DeleteLinkByIdFunction<
   DeleteLinkByIdFunctionResult<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TOptions, TRelation>
 >
 
-export type _DeleteLinkByIdFunction<
+export type DeleteLinkByIdFunction<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = DeleteLinkByIdFunction<
+> = _DeleteLinkByIdFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
   TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']]
 >
 
-export type DeleteFunctionOptions<
+export type _DeleteFunctionOptions<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
@@ -143,7 +143,7 @@ export type DeleteFunctionOptions<
    * Data query to select the record(s) to delete.
    */
   query?: DataQueryRecord<
-    (keyof JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) & string
+    StringKeysOf<JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>>
   >
   /**
    * Determines whether the deleted record(s) are to be returned.
@@ -159,10 +159,10 @@ export type DeleteFunctionOptions<
    return?: ReturnModeRaw
 }
 
-export type _DeleteFunctionOptions<
+export type DeleteFunctionOptions<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = DeleteFunctionOptions<
+> = _DeleteFunctionOptions<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
@@ -170,28 +170,28 @@ export type _DeleteFunctionOptions<
   TRelation
 >
 
-export type DeleteFunctionResult<
+export type _DeleteFunctionResult<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
   TFieldRef2Field extends Field,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-  TOptions extends DeleteFunctionOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
-    = DeleteFunctionOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>,
+  TOptions extends _DeleteFunctionOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
+    = _DeleteFunctionOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>,
 > = TOptions extends { return: boolean }
 ? TOptions['return'] extends true
-  ? (keyof JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) & string[] | null
+  ? (keyof JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) | null
   : number
 : TOptions extends { return: string }
   ? TOptions['return'] extends 'first'
-    ? (keyof JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>) & string
+    ? (keyof JoinTableRecord<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>)
     : number
   : number
 
-export type _DeleteFunctionResult<
+export type DeleteFunctionResult<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = DeleteFunctionResult<
+> = _DeleteFunctionResult<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
@@ -199,20 +199,20 @@ export type _DeleteFunctionResult<
   TRelation
 >
 
-export type DeleteFunction<
+export type _DeleteFunction<
   TFieldRef1DataFormat extends DataFormat,
   TFieldRef2DataFormat extends DataFormat,
   TFieldRef1Field extends Field,
   TFieldRef2Field extends Field,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = <TOptions extends DeleteFunctionOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>>(
+> = <TOptions extends _DeleteFunctionOptions<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>>(
   options?: TOptions,
-) => DeleteFunctionResult<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation, TOptions>
+) => _DeleteFunctionResult<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation, TOptions>
 
-export type _DeleteFunction<
+export type DeleteFunction<
   TDataFormats extends DataFormats = DataFormats,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
-> = DeleteFunction<
+> = _DeleteFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
   TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
@@ -227,10 +227,10 @@ export type _JoinTableStore<
   TFieldRef2Field extends Field,
   TRelation extends Relation<RelationType.MANY_TO_MANY> = Relation<RelationType.MANY_TO_MANY>,
 > = {
-  create: CreateLinkFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
-  createMultiple: CreateLinksFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
-  delete: DeleteFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
-  deleteById: DeleteLinkByIdFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
+  create: _CreateLinkFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
+  createMultiple: _CreateLinksFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field>
+  delete: _DeleteFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
+  deleteById: _DeleteLinkByIdFunction<TFieldRef1DataFormat, TFieldRef2DataFormat, TFieldRef1Field, TFieldRef2Field, TRelation>
 }
 
 export type JoinTableStore<
@@ -248,6 +248,6 @@ export type JoinTableStoresDict<
   TDataFormats extends DataFormats = DataFormats,
   TRelations extends Relations = Relations,
 > = {
-  // @ts-ignore
-  [TRelationName in ExtractManyToManyRelationNames<TRelations, TDataFormats>]: JoinTableStore<TDataFormats, TRelations[TRelationName]>
+  [TRelationName in ExtractManyToManyRelationNames<TRelations, TDataFormats>]:
+    JoinTableStore<TDataFormats, Access<TRelations, TRelationName>>
 }

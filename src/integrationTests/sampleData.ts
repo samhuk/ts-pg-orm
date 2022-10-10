@@ -6,7 +6,7 @@ import {
   CreateUserAddressRecordOptions,
   CreateUserGroupRecordOptions,
   CreateUserToUserGroupLinkOptions,
-} from './orm'
+} from '../test/orm'
 
 export const addSampleData = async (stores: Stores) => {
   // Add users

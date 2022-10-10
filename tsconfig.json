@@ -11,8 +11,6 @@
 		"strict": true,
 		"isolatedModules": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "experimentalDecorators": true
+    "sourceMap": true
 	}
 }

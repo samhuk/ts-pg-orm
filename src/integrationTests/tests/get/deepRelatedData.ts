@@ -1,8 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const deepRelatedDataTest = test('deep related data', async (stores, assert) => {
-  const result = await stores.user.get({
+export const deepRelatedDataTest = test('deep related data', async (orm, assert) => {
+  const result = await orm.stores.user.get({
     fields: ['name', 'email'],
     filter: {
       logic: DataFilterLogic.AND,

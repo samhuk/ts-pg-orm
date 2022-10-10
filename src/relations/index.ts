@@ -1,31 +1,16 @@
-import { capitalize, quote } from '../helpers/string'
-import { DataFormat, DataFormats } from '../dataFormat/types'
-import { Field } from '../dataFormat/types/field'
+import { DataFormats } from '../dataFormat/types'
 import {
-  createManyToManyJoinTableFieldRefColumnName,
-  createManyToManyJoinTableName,
-  createManyToManyJoinTableSql,
-  createOneToManyForeignKeySql,
-  createOneToOneForeignKeySql,
+  createManyToManyRelationSql,
+  createOneToManyRelationSql,
+  createOneToOneRelationSql,
 } from './sql'
-import { Relation, RelationOptions, RelationType } from './types'
-
-type ResovledRelationInfo = {
-  leftDataFormat: DataFormat
-  rightDataFormat: DataFormat
-  leftField: Field
-  rightField: Field
-}
-
-const createRelationName = (resolvedInfo: ResovledRelationInfo) => (
-  // E.g. "userIdToArticleCreatorUserId"
-  `${resolvedInfo.leftDataFormat.name}${capitalize(resolvedInfo.leftField.name)}To${capitalize(resolvedInfo.rightDataFormat.name)}${capitalize(resolvedInfo.rightField.name)}`
-)
+import { Relation, RelationOptions, RelationType, ResovledRelationInfo } from './types'
+import { createRelationName } from './name'
 
 const resolveRelationDataFormatsAndFields = (
   options: RelationOptions,
   dataFormats: DataFormats,
-) => {
+): ResovledRelationInfo => {
   switch (options.type) {
     case RelationType.ONE_TO_ONE: {
       return {
@@ -57,46 +42,34 @@ const resolveRelationDataFormatsAndFields = (
 }
 
 export const createRelation = (
-  options: RelationOptions,
+  relationOptions: RelationOptions,
   dataFormats: DataFormats,
 ): Relation => {
-  const resolvedInfo = resolveRelationDataFormatsAndFields(options, dataFormats)
+  const resolvedInfo = resolveRelationDataFormatsAndFields(relationOptions, dataFormats)
+  const name = createRelationName(resolvedInfo)
 
-  switch (options.type) {
+  switch (relationOptions.type) {
     case RelationType.ONE_TO_ONE: {
       const relation: Relation<RelationType.ONE_TO_ONE> = {
-        ...options,
-        name: createRelationName(resolvedInfo) as any,
-        sql: { foreignKeySql: createOneToOneForeignKeySql(options) },
+        ...relationOptions,
+        name,
+        sql: createOneToOneRelationSql(dataFormats, relationOptions),
       }
       return relation
     }
     case RelationType.ONE_TO_MANY: {
       const relation: Relation<RelationType.ONE_TO_MANY> = {
-        ...options,
-        name: createRelationName(resolvedInfo) as any,
-        sql: { foreignKeySql: createOneToManyForeignKeySql(options) },
+        ...relationOptions,
+        name,
+        sql: createOneToManyRelationSql(dataFormats, relationOptions),
       }
       return relation
     }
     case RelationType.MANY_TO_MANY: {
-      const unquotedJoinTableName = createManyToManyJoinTableName(options)
-      const unquotedJoinTableFieldRef1ColumnName = createManyToManyJoinTableFieldRefColumnName(options.fieldRef1)
-      const unquotedJoinTableFieldRef2ColumnName = createManyToManyJoinTableFieldRefColumnName(options.fieldRef2)
-
       const relation: Relation<RelationType.MANY_TO_MANY> = {
-        ...options,
-        name: createRelationName(resolvedInfo) as any,
-        sql: {
-          createJoinTableSql: createManyToManyJoinTableSql(options),
-          dropJoinTableSql: `drop table if exists "${unquotedJoinTableName}";`,
-          unquotedJoinTableFieldRef1ColumnName,
-          joinTableFieldRef1ColumnName: quote(unquotedJoinTableFieldRef1ColumnName),
-          unquotedJoinTableFieldRef2ColumnName,
-          joinTableFieldRef2ColumnName: quote(unquotedJoinTableFieldRef2ColumnName),
-          unquotedJoinTableName,
-          joinTableName: quote(unquotedJoinTableName),
-        },
+        ...relationOptions,
+        name,
+        sql: createManyToManyRelationSql(relationOptions, resolvedInfo),
       }
       return relation
     }

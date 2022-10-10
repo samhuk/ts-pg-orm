@@ -1,3 +1,5 @@
+import { StringKeysOf } from '../../helpers/types'
+
 type FieldSubSetOptions<FieldNames extends string = string> = {
   fields: FieldNames[]
 }
@@ -19,5 +21,5 @@ export type FieldSubSets<
   TFieldNames extends string,
   TFieldSubSetsOptions extends FieldSubSetsOptions<TFieldNames>
 > = {
-  [TFieldSubSetName in keyof TFieldSubSetsOptions]: FieldSubSet<TFieldSubSetName & string, TFieldNames, TFieldSubSetsOptions[TFieldSubSetName]>
+  [TFieldSubSetName in StringKeysOf<TFieldSubSetsOptions>]: FieldSubSet<TFieldSubSetName, TFieldNames, TFieldSubSetsOptions[TFieldSubSetName]>
 }

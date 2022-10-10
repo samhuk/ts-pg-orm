@@ -1,7 +1,9 @@
 import { DataFilterNodeOrGroup } from '@samhuk/data-filter/dist/types'
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
 import {
+  Access,
   ArrayTernary,
+  Cast,
   ExpandRecursivelyWithAdditionalLeafNodes,
   IsAny,
   PickAny,
@@ -9,7 +11,7 @@ import {
 } from '../../../helpers/types'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { ToRecord } from '../../../dataFormat/types/record'
-import { Relations } from '../../../relations/types'
+import { Relation, Relations } from '../../../relations/types'
 import { IsForeignFormatPluralFromRelation } from '../../../relations/types/relationExtraction'
 import { RelatedDataPropertyNamesUnion } from './relatedDataDicts'
 import { RelatedDataPropertyNameToForeignDataFormatDict } from './relatedDataPropNameToForeignDataFormatDict'
@@ -59,11 +61,17 @@ export type GetFunctionOptions<
         GetFunctionOptions<
           TDataFormats,
           TRelations,
-          // @ts-ignore
-          RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
+          Cast<
+            Access<
+              RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
+            >,
+            DataFormat
+          >,
           IsForeignFormatPluralFromRelation<
-            // @ts-ignore
-            RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
+            Cast<
+              Access<RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName>,
+              Relation
+            >,
             TLocalDataFormat['name']
           >,
           Prev[D]
@@ -120,11 +128,19 @@ type _GetFunctionResult<
             _GetFunctionResult<
               TDataFormats,
               TRelations,
-              // @ts-ignore
-              RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
+              Cast<
+                Access<
+                  RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
+                >,
+                DataFormat
+              >,
               IsForeignFormatPluralFromRelation<
-                // @ts-ignore
-                RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>[TRelatedDataPropertyName],
+                Cast<
+                  Access<
+                    RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
+                  >,
+                  Relation
+                >,
                 TLocalDataFormat['name']
               >,
               TOptions['relations'][TRelatedDataPropertyName],

@@ -7,10 +7,10 @@ import {
   DeleteLinkByIdFunctionOptions,
   JoinTableStore,
   JoinTableStoresDict,
-  _CreateJoinTableRecordOptions,
-  _CreateLinkFunction,
-  _CreateLinksFunction,
-  _DeleteLinkByIdFunction,
+  CreateJoinTableRecordOptions,
+  CreateLinkFunction,
+  CreateLinksFunction,
+  DeleteLinkByIdFunction,
 } from './types'
 
 const createCreateLinkFieldsInfo = (
@@ -41,11 +41,11 @@ const createCreateLinkFunction = (
   dataFormats: DataFormats,
   relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
-): _CreateLinkFunction => {
+): CreateLinkFunction => {
   const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
   const sql = createCreateLinkFieldSql(relation)
 
-  return async (options: _CreateJoinTableRecordOptions) => {
+  return async (options: CreateJoinTableRecordOptions) => {
     const fieldRef1FieldValue = (options as any)[fieldsInfo.fieldRef1JoinTableFieldName]
     const fieldRef2FieldValue = (options as any)[fieldsInfo.fieldRef2JoinTableFieldName]
     const row = await db.queryGetFirstRow(sql, [fieldRef1FieldValue, fieldRef2FieldValue])
@@ -57,10 +57,10 @@ const createCreateLinksFunction = (
   dataFormats: DataFormats,
   relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
-): _CreateLinksFunction => {
+): CreateLinksFunction => {
   const fieldsInfo = createCreateLinkFieldsInfo(dataFormats, relation)
 
-  return async (options: _CreateJoinTableRecordOptions[]) => {
+  return async (options: CreateJoinTableRecordOptions[]) => {
     const sqlLines: string[] = []
     for (let i = 1; i < options.length * 2; i += 2)
       sqlLines.push(createCreateLinkFieldSql(relation, i))
@@ -80,7 +80,7 @@ const createCreateLinksFunction = (
 const createDeleteLinkbyIdFunction = (
   relation: Relation<RelationType.MANY_TO_MANY>,
   db: SimplePgClient,
-): _DeleteLinkByIdFunction => {
+): DeleteLinkByIdFunction => {
   const baseSql = `delete from ${relation.sql.joinTableName} where id = $1`
 
   return async (options: DeleteLinkByIdFunctionOptions) => {

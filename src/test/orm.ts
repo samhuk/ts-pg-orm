@@ -1,13 +1,19 @@
 import { createConsoleLogEventHandlers } from 'simple-pg-client'
-import { createTsPgOrm } from '..'
-import { createDataFormat } from '../dataFormat'
-import { createCommonFields } from '../dataFormat/field'
-import { CreateRecordOptions } from '../dataFormat/types/createRecordOptions'
-import { DataType, EpochSubType, NumSubType, StrSubType } from '../dataFormat/types/dataType'
-import { ToRecord } from '../dataFormat/types/record'
-import { RelationType } from '../relations/types'
-import { _CreateJoinTableRecordOptions } from '../store/joinTable/types'
-import { StoresAndJoinTableStores } from '../stores/types'
+import {
+  createTsPgOrm,
+  createDataFormat,
+  createCommonFields,
+  CreateRecordOptions,
+  DataType,
+  EpochSubType,
+  NumSubType,
+  StrSubType,
+  ToRecord,
+  RelationType,
+  ToStores,
+  TsPgOrm,
+  CreateJoinTableRecordOptions,
+} from '..'
 
 const BASE_FIELDS = createCommonFields({
   id: { type: DataType.NUM, subType: NumSubType.SERIAL },
@@ -21,6 +27,7 @@ const USER_DF = createDataFormat('user', {
   name: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 50 },
   email: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
   passwordHash: { type: DataType.STR, subType: StrSubType.FIXED_LENGTH, len: 64 },
+  profileImageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
 })
 
 const ARTICLE_DF = createDataFormat('article', {
@@ -52,7 +59,7 @@ const USER_GROUP_DF = createDataFormat('userGroup', {
   imageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
 })
 
-export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF] as const)
+export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF] as const, 1)
   .setRelations([
     {
       type: RelationType.ONE_TO_MANY,
@@ -80,9 +87,20 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
       fieldRef2: USER_GROUP_DF.fieldRefs.id,
       includeDateCreated: true,
     },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: IMAGE_DF.fieldRefs.id,
+      toManyField: USER_DF.fieldRefs.profileImageId,
+    },
   ] as const)
+  .setVersionTransforms({
+    2: { sql: 'UPGRADE SQL TO VERSION 2' },
+    3: { sql: 'UPGRADE SQL TO VERSION 3' },
+  })
 
-export type Stores = StoresAndJoinTableStores<typeof ORM['dataFormats'], typeof ORM['relations']>
+export type ConnectedOrm = TsPgOrm<typeof ORM['dataFormats'], typeof ORM['relations'], typeof ORM['versionTransforms'], true>
+
+export type Stores = ToStores<typeof ORM>
 
 export type UserRecord = ToRecord<typeof USER_DF>
 
@@ -96,31 +114,31 @@ export type CreateUserAddressRecordOptions = CreateRecordOptions<typeof USER_ADD
 
 export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP_DF>
 
-export type CreateUserToUserGroupLinkOptions = _CreateJoinTableRecordOptions<
+export type CreateUserToUserGroupLinkOptions = CreateJoinTableRecordOptions<
   typeof ORM['dataFormats'],
-  // @ts-ignore TODO: This seems to be failing only on remote build
+  // @ts-ignore TODO: This fails on remote with TS error
   typeof ORM['relations']['userIdToUserGroupId']
 >
 
-export const provisionOrm = async (): Promise<Stores> => {
-  await ORM.initDbClient({
-    host: process.env.DATABASE_HOST,
-    port: parseInt(process.env.DATABASE_PORT),
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    db: process.env.DATABASE_NAME,
+export const provisionOrm = async (): Promise<ConnectedOrm> => {
+  const connectedOrm = await ORM.connect({
+    host: process.env.DATABASE_HOST ?? 'localhost',
+    port: parseInt(process.env.DATABASE_PORT ?? '5432'),
+    user: process.env.DATABASE_USER ?? 'postgres',
+    password: process.env.DATABASE_PASSWORD ?? 'postgres',
+    db: process.env.DATABASE_NAME ?? 'ts-pg-orm-default',
     createDbIfNotExists: true,
     extensions: ['uuid-ossp'],
     events: {
       ...createConsoleLogEventHandlers(),
       // This can cause a lot of console noise if enabled
       // onQuery: (q, m, sql, p) => console.log(m, p),
-      onQueryError: (q, m, sql, p) => console.log(m),
+      onQueryError: (q, m, sql, p) => console.log(m, '\nSQL:\n', sql, '\nPARAMETERS:\n', p),
     },
   })
 
-  await ORM.unprovisionStores()
-  await ORM.provisionStores()
+  await connectedOrm.unprovisionStores()
+  await connectedOrm.provisionStores()
 
-  return ORM.stores
+  return connectedOrm
 }

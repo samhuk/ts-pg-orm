@@ -175,14 +175,6 @@ const createColumnsSql = (
     .join(',\n  ')
 )
 
-const createForeignKeysSql = (
-  relations: Relation<RelationType.ONE_TO_MANY | RelationType.ONE_TO_ONE>[],
-): string => (
-  relations
-    .map(r => r.sql.foreignKeySql)
-    .join(',\n')
-)
-
 export const createTableSql = (
   quotedTableName: string,
   fieldList: FieldList,
@@ -191,11 +183,10 @@ export const createTableSql = (
   const oneToOneRelations = relations
     ?.filter(r => r.type === RelationType.ONE_TO_ONE) as Relation<RelationType.ONE_TO_ONE>[] ?? []
   const columnsSql = createColumnsSql(fieldList, oneToOneRelations)
-  const foreignKeysSql = relations != null ? createForeignKeysSql(relations) : ''
 
   return `create table if not exists public.${quotedTableName}
 (
-  ${[columnsSql, foreignKeysSql].filter(s => s != null && s.length > 0).join(',\n')}
+  ${columnsSql}
 )
 
 tablespace pg_default;

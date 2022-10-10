@@ -2,6 +2,7 @@
 /build
 /dist
 /build-test
+/build-ts
 /build-integration-test
 .DS_Store
 /debug.log

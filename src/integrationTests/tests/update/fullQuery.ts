@@ -1,8 +1,8 @@
 import { DataFilterLogic, Operator } from '@samhuk/data-filter/dist/types'
 import { test } from '../../common'
 
-export const fullQueryTest = test('full query', async (stores, assert) => {
-  const result = await stores.user.update({
+export const fullQueryTest = test('full query', async (orm, assert) => {
+  const result = await orm.stores.user.update({
     record: {
       email: 'user1NewEmail@email.com',
     },
@@ -21,7 +21,7 @@ export const fullQueryTest = test('full query', async (stores, assert) => {
 
   assert(result, 1)
 
-  const userRecord = await stores.user.get({
+  const userRecord = await orm.stores.user.get({
     filter: {
       logic: DataFilterLogic.AND,
       nodes: [

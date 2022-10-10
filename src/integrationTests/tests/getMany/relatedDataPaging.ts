@@ -1,7 +1,7 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { SortingDirection } from '@samhuk/data-query/dist/sorting/types'
+import { Stores } from '../../../test/orm'
 import { test } from '../../common'
-import { Stores } from '../../orm'
 
 export const getResult = (stores: Stores) => stores.user.getMany({
   fields: ['name', 'email'],
@@ -22,8 +22,8 @@ export const getResult = (stores: Stores) => stores.user.getMany({
   },
 })
 
-export const relatedDataPagingTest = test('related data paging', async (stores, assert) => {
-  const result = await getResult(stores)
+export const relatedDataPagingTest = test('related data paging', async (orm, assert) => {
+  const result = await getResult(orm.stores)
 
   assert(result, [
     {

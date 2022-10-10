@@ -7,5 +7,9 @@ export const getManyTests = testGroup(
   'get many',
   basicTest,
   relatedDataPagingTest,
+)
+
+export const getManyPerformanceTests = testGroup(
+  'get many (performance)',
   relatedDataPagingPerformanceTest,
 )

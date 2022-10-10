@@ -1,5 +1,6 @@
 import { mapDict, toDict } from '../helpers/dict'
 import { camelCaseToSnakeCase, capitalize, quote } from '../helpers/string'
+import { StringKeysOf } from '../helpers/types'
 import { NonManyToManyRelationList } from '../relations/types'
 import { filterForCreateRecordField } from './createRecord'
 import { createField } from './field'
@@ -18,7 +19,7 @@ export const createDataFormat = <
     fieldsOptions: TFieldsOptions,
     pluralizedName?: TPluralizedName,
     tableName?: string,
-  ): DataFormat<TName, TPluralizedName, TFieldsOptions, FieldSubSetsOptions<(keyof TFieldsOptions) & string>> => {
+  ): DataFormat<TName, TPluralizedName, TFieldsOptions, FieldSubSetsOptions<StringKeysOf<TFieldsOptions>>> => {
   const unquotedCols = mapDict(fieldsOptions, (f, fName) => f.columnName ?? camelCaseToSnakeCase(fName))
   const cols = mapDict(unquotedCols, unquotedColName => quote(unquotedColName))
   const unquotedTableName = tableName ?? camelCaseToSnakeCase(name)
@@ -36,10 +37,10 @@ export const createDataFormat = <
     capitalizedPluralizedName: capitalize(_pluralizedName) as any,
     fields: fields as any,
     fieldList: fieldList as any,
-    fieldNameList: Object.keys(fieldsOptions),
+    fieldNameList: Object.keys(fieldsOptions) as any,
     fieldSubSets: {}, // TODO later
     fieldRefs: fieldRefs as any,
-    createRecordFieldNameList: createRecordFields.map(f => f.name),
+    createRecordFieldNameList: createRecordFields.map(f => f.name) as any,
     sql: {
       cols: cols as any,
       unquotedCols: unquotedCols as any,
@@ -48,7 +49,7 @@ export const createDataFormat = <
       tableName: _tableName,
       unquotedTableName,
       createRecordCols: toDict(createRecordFields, item => ({ key: item.name, value: item.sql.columnName })) as any,
-      createRecordColumnNameList: createRecordFields.map(f => name),
+      createRecordColumnNameList: createRecordFields.map(f => f.sql.columnName),
       createTableSql: (relations: NonManyToManyRelationList) => createTableSql(_tableName, fieldList, relations),
       dropTableSql: `drop table if exists ${_tableName};`,
     },
