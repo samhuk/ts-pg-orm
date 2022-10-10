@@ -101,7 +101,7 @@ export const createUnprovisionStoresSql = (
         .map(r => ({ tableNameOfConstraint: tsPgOrm.dataFormats[dataFormatName].sql.tableName, constraintName: r.sql.foreignKeyName }))
     ))
     .flat()
-    .map(info => `alter table ${info.tableNameOfConstraint} if exists drop constraint if exists "${info.constraintName}";`)
+    .map(info => `alter table if exists ${info.tableNameOfConstraint} drop constraint if exists "${info.constraintName}";`)
     .join('\n')
 
   const dropTablesSql = unprovisionOrder
