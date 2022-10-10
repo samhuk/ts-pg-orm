@@ -49,7 +49,7 @@ export const createDataFormat = <
       tableName: _tableName,
       unquotedTableName,
       createRecordCols: toDict(createRecordFields, item => ({ key: item.name, value: item.sql.columnName })) as any,
-      createRecordColumnNameList: createRecordFields.map(f => name),
+      createRecordColumnNameList: createRecordFields.map(f => f.sql.columnName),
       createTableSql: (relations: NonManyToManyRelationList) => createTableSql(_tableName, fieldList, relations),
       dropTableSql: `drop table if exists ${_tableName};`,
     },

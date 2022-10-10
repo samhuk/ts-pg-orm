@@ -11,7 +11,6 @@ import {
   ToRecord,
   RelationType,
   ToStores,
-  ConnectedTsPgOrm,
   TsPgOrm,
   CreateJoinTableRecordOptions,
 } from '..'
@@ -99,9 +98,7 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
     3: { sql: 'UPGRADE SQL TO VERSION 3' },
   })
 
-type Orm = typeof ORM
-
-export type ConnectedOrm = ConnectedTsPgOrm<typeof ORM['dataFormats'], typeof ORM['relations'], typeof ORM['versionTransforms']>
+export type ConnectedOrm = TsPgOrm<typeof ORM['dataFormats'], typeof ORM['relations'], typeof ORM['versionTransforms'], true>
 
 export type Stores = ToStores<typeof ORM>
 

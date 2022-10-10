@@ -132,7 +132,7 @@ export type Fields<TFieldsOptions extends FieldsOptions = FieldsOptions> = {
       ? TFieldsOptions[TFieldName]['subType']
       : undefined,
     TFieldsOptions[TFieldName],
-    TFieldName & string
+    TFieldName
   >
 }
 
