@@ -1,7 +1,7 @@
 import { Operator } from '@samhuk/data-filter/dist/types'
 import { SortingDirection } from '@samhuk/data-query/dist/sorting/types'
+import { Stores } from '../../../test/orm'
 import { test } from '../../common'
-import { Stores } from '../../orm'
 
 export const getResult = (stores: Stores) => stores.user.getMany({
   fields: ['name', 'email'],

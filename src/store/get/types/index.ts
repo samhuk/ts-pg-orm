@@ -12,12 +12,10 @@ import {
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { ToRecord } from '../../../dataFormat/types/record'
 import { Relation, Relations } from '../../../relations/types'
-import { ExtractRelevantRelationsWithOneToOneFromOne, IsForeignFormatPluralFromRelation } from '../../../relations/types/relationExtraction'
-import { OneToOneFromOneDict, RelatedDataPropertyNamesUnion } from './relatedDataDicts'
+import { IsForeignFormatPluralFromRelation } from '../../../relations/types/relationExtraction'
+import { RelatedDataPropertyNamesUnion } from './relatedDataDicts'
 import { RelatedDataPropertyNameToForeignDataFormatDict } from './relatedDataPropNameToForeignDataFormatDict'
 import { RelatedDataPropertyNameToRelationDict } from './relatedDataPropNameToRelationDict.ts'
-import { ORM } from '../../../integrationTests/orm'
-import { OneToOneFromOneName } from './relatedDataPropNames'
 
 /**
  * `MaxDepth` specifies how deep the type compilation

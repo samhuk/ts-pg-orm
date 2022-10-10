@@ -1,10 +1,11 @@
 /* eslint-disable no-await-in-loop */
 import assert from 'assert'
-import { ConnectedOrm, Stores } from './orm'
+import { ConnectedOrm, Stores } from '../test/orm'
 import { addSampleData } from './sampleData'
 
 type TestGroup = (orm: ConnectedOrm) => Promise<void>
 type Test = (orm: ConnectedOrm) => Promise<void>
+type BenchmarkResult = { itsPerSec: number, msPerIt: number, itsPerSecControl?: number, percentOfControl?: number }
 
 const formatPerformanceDtToMs = (dt: number) => parseFloat(dt.toPrecision(5))
 
@@ -12,16 +13,18 @@ const calculateItsPerSec = (numIts: number, dtMs: number) => parseFloat((numIts 
 
 const calculateMsPerIt = (numIts: number, dtMs: number) => parseFloat((dtMs / numIts).toPrecision(3))
 
-export const reportBenchmark = (numIts: number, fnDtMs: number, controlFnDtMs?: number) => {
-  const itsPerSecFn = calculateItsPerSec(numIts, fnDtMs)
-  const msPerItFn = calculateMsPerIt(numIts, fnDtMs)
-  console.log('its/sec: ', itsPerSecFn)
-  console.log('ms/It: ', msPerItFn)
-  if (controlFnDtMs != null) {
-    const itsPerSecControlFn = calculateItsPerSec(numIts, controlFnDtMs)
-    const percentOfControl = (controlFnDtMs / fnDtMs) * 100
-    console.log('% of control:', parseFloat(percentOfControl.toPrecision(3)), '%  (control =', itsPerSecControlFn, 'its/sec)')
-  }
+export const createBenchmarkResult = (numIts: number, fnDtMs: number, controlFnDtMs?: number): BenchmarkResult => ({
+  itsPerSec: calculateItsPerSec(numIts, fnDtMs),
+  msPerIt: calculateMsPerIt(numIts, fnDtMs),
+  itsPerSecControl: controlFnDtMs != null ? calculateItsPerSec(numIts, controlFnDtMs) : null,
+  percentOfControl: controlFnDtMs != null ? (controlFnDtMs / fnDtMs) * 100 : null,
+})
+
+export const reportBenchmarkResult = (result: BenchmarkResult) => {
+  console.log('its/sec: ', result.itsPerSec)
+  console.log('ms/It: ', result.msPerIt)
+  if (result.itsPerSecControl != null)
+    console.log('% of control:', parseFloat(result.percentOfControl.toPrecision(3)), '%  (control =', result.itsPerSecControl, 'its/sec)')
 }
 
 const _benchmarkAsyncFn = async (fn: () => Promise<void>, onComplete: () => void, numIterations: number, i: number = 0) => {
@@ -38,22 +41,24 @@ export const benchmarkAsyncFn = (
   fn: () => Promise<void>,
   controlFn?: () => Promise<void>,
   numIterations: number = 5000,
-) => new Promise((res, rej) => {
+) => new Promise<BenchmarkResult>((res, rej) => {
   if (controlFn != null) {
     const controlFnStart = performance.now()
     _benchmarkAsyncFn(controlFn, () => {
       const fnStart = performance.now()
       _benchmarkAsyncFn(fn, () => {
-        reportBenchmark(numIterations, performance.now() - fnStart, fnStart - controlFnStart)
-        res(undefined)
+        const result = createBenchmarkResult(numIterations, performance.now() - fnStart, fnStart - controlFnStart)
+        reportBenchmarkResult(result)
+        res(result)
       }, numIterations)
     }, numIterations)
   }
   else {
     const start = performance.now()
     _benchmarkAsyncFn(fn, () => {
-      reportBenchmark(numIterations, performance.now() - start)
-      res(undefined)
+      const result = createBenchmarkResult(numIterations, performance.now() - start)
+      reportBenchmarkResult(result)
+      res(result)
     }, numIterations)
   }
 })

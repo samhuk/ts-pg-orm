@@ -1,5 +1,5 @@
 import { executeTestGroups } from './common'
-import { provisionOrm } from './orm'
+import { provisionOrm } from '../test/orm'
 import { countTests } from './tests/count'
 import { createTests } from './tests/create'
 import { deleteTests } from './tests/delete'
