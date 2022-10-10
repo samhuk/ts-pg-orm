@@ -14,6 +14,15 @@ export const basicTest = test('basic', async (orm, assert) => {
     },
   })
 
+  const result2 = await orm.stores.article.get({
+    fields: ['id', 'uuid'],
+    relations: {
+      image: {
+        fields: ['id', 'fileName'],
+      },
+    },
+  })
+
   assert(result, {
     name: 'User 1',
     email: 'user1@email.com',

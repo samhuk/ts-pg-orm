@@ -1,6 +1,6 @@
 {
   "$schema": "http://json.schemastore.org/tsconfig",
-  "include": ["./src/**/*"],
+  "include": [],
 	"compilerOptions": {
     "module": "CommonJS",
     "target": "es6",
