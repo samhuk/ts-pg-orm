@@ -96,7 +96,7 @@ const setRelations = (
 
 export const createTsPgOrm = <TDataFormatList extends DataFormatList>(
   dataFormatList: TDataFormatList,
-  version: number,
+  version: number = 1,
 // eslint-disable-next-line arrow-body-style
 ): TsPgOrm<DataFormats<TDataFormatList>, {}, {}, false> => {
   let tsPgOrm: TsPgOrm<DataFormats, {}, {}, false>
