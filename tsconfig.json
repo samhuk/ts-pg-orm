@@ -1,6 +1,6 @@
 {
   "$schema": "http://json.schemastore.org/tsconfig",
-  "include": [],
+  "include": ["./src/**/*"],
 	"compilerOptions": {
     "module": "CommonJS",
     "target": "es6",
@@ -11,8 +11,6 @@
 		"strict": true,
 		"isolatedModules": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "experimentalDecorators": true
+    "sourceMap": true
 	}
 }

@@ -75,7 +75,8 @@ const setRelations = (
   const manyToManyRelationList: Relation<RelationType.MANY_TO_MANY>[] = []
   relationOptionsList.forEach(relationOptions => {
     const relation = createRelation(relationOptions as any, tsPgOrm.dataFormats)
-    relations[relation.name] = relation
+    const _relations = relations as any
+    _relations[relation.name] = relation
     if (relation.type === RelationType.MANY_TO_MANY)
       manyToManyRelationList.push(relation)
   })

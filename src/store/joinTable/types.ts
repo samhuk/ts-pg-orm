@@ -1,5 +1,5 @@
 import { DataQueryRecord } from '@samhuk/data-query/dist/types'
-import { ExpandRecursively, StringKeysOf } from '../../helpers/types'
+import { Access, Cast, ExpandRecursively, StringKeysOf } from '../../helpers/types'
 import { ReturnModeRaw } from '../types'
 import { DataFormat, DataFormats } from '../../dataFormat/types'
 import { Field, FieldToRecordType } from '../../dataFormat/types/field'
@@ -248,6 +248,6 @@ export type JoinTableStoresDict<
   TDataFormats extends DataFormats = DataFormats,
   TRelations extends Relations = Relations,
 > = {
-  // @ts-ignore
-  [TRelationName in ExtractManyToManyRelationNames<TRelations, TDataFormats>]: JoinTableStore<TDataFormats, TRelations[TRelationName]>
+  [TRelationName in ExtractManyToManyRelationNames<TRelations, TDataFormats>]:
+    JoinTableStore<TDataFormats, Access<TRelations, TRelationName>>
 }

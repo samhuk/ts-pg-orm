@@ -137,8 +137,9 @@ export type Relation<
   TRelationType extends RelationType = RelationType,
   TDataFormats extends DataFormats = DataFormats,
   TRelationOptions extends RelationOptions<TRelationType, TDataFormats> = RelationOptions<TRelationType, TDataFormats>,
+  TName extends string = string,
 > = TRelationOptions & {
-  name: RelationOptionsToName<TRelationOptions, TDataFormats>
+  name: TName
 } & RelationSql<TRelationType>
 
 export type Relations<
@@ -151,7 +152,7 @@ export type Relations<
       : never
     : never
   ]: TRelationOptionsList[K] extends RelationOptions<RelationType, TDataFormats>
-    ? Relation<TRelationOptionsList[K]['type'], TDataFormats, TRelationOptionsList[K]>
+    ? Relation<TRelationOptionsList[K]['type'], TDataFormats, TRelationOptionsList[K], RelationOptionsToName<TRelationOptionsList[K], TDataFormats>>
     : never
 }
 

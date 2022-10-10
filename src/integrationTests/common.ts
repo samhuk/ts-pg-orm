@@ -60,7 +60,7 @@ export const benchmarkAsyncFn = (
 
 export const timedFn = async <T>(fn: () => Promise<T> | T): Promise<{ dt: number, result: T }> => {
   const start = performance.now()
-  let end: number = null
+  let end: number = 0
   const result = await fn()
   end = performance.now()
   const dt = end - start

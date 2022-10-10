@@ -1,5 +1,6 @@
 import { TypeDependantBaseIntersection, ValuesUnionFromDict } from '../../helpers/types'
 import {
+  AnySubType,
   DataType,
   DataTypeToDefaultValueType,
   DataTypeToSubType,
@@ -20,7 +21,7 @@ type FieldToDefaultValueType<TField extends Field> = TField extends { type: Data
   : DataTypeToDefaultValueType[TField['type']]
 
 type DataTypeToOptions<
-  TSubType extends ValuesUnionFromDict<DataTypeToSubType> = ValuesUnionFromDict<DataTypeToSubType>
+  TSubType extends AnySubType = AnySubType
 > = {
   // -- Str
   [DataType.STR]: TypeDependantBaseIntersection<StrSubType, {

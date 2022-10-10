@@ -116,17 +116,17 @@ export type CreateUserGroupRecordOptions = CreateRecordOptions<typeof USER_GROUP
 
 export type CreateUserToUserGroupLinkOptions = CreateJoinTableRecordOptions<
   typeof ORM['dataFormats'],
-  // @ts-ignore TODO: This seems to be failing only on remote build
+  // @ts-ignore TODO: This fails on remote with TS error
   typeof ORM['relations']['userIdToUserGroupId']
 >
 
 export const provisionOrm = async (): Promise<ConnectedOrm> => {
   const connectedOrm = await ORM.connect({
-    host: process.env.DATABASE_HOST,
-    port: parseInt(process.env.DATABASE_PORT),
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    db: process.env.DATABASE_NAME,
+    host: process.env.DATABASE_HOST ?? 'localhost',
+    port: parseInt(process.env.DATABASE_PORT ?? '5432'),
+    user: process.env.DATABASE_USER ?? 'postgres',
+    password: process.env.DATABASE_PASSWORD ?? 'postgres',
+    db: process.env.DATABASE_NAME ?? 'ts-pg-orm-default',
     createDbIfNotExists: true,
     extensions: ['uuid-ossp'],
     events: {

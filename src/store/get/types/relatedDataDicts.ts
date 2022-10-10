@@ -1,5 +1,5 @@
 import { DataFormats } from '../../../dataFormat/types'
-import { StringKeysOf } from '../../../helpers/types'
+import { Cast, StringKeysOf } from '../../../helpers/types'
 import { Relation, Relations } from '../../../relations/types'
 import {
   ExtractRelevantRelationsWithManyToManyFieldRef1,
@@ -26,9 +26,7 @@ export type OneToOneFromOneDict<
   TDataFormatName extends string,
 > = {
   [TRelation in ExtractRelevantRelationsWithOneToOneFromOne<TRelations, TDataFormatName> as
-    TRelation extends Relation
-      ? OneToOneFromOneName<TDataFormats, TRelation>
-      : never
+    OneToOneFromOneName<TDataFormats, Cast<TRelation, Relation>>
   ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>
 }
 
@@ -89,7 +87,7 @@ export type ManyToManyFieldRef2Dict<
     TRelation extends Relation
       ? ManyToManyFieldRef2Name<TDataFormats, TRelation>
       : never
-  ]: RelationToForeignRecord<TDataFormats, TRelation & Relation, TDataFormatName>[]
+  ]: RelationToForeignRecord<TDataFormats, Cast<TRelation, Relation>, TDataFormatName>[]
 }
 
 /**

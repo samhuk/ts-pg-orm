@@ -135,3 +135,7 @@ type IfAny<T, Y, N> = 0 extends (1 & T) ? Y : N
 export type IsAny<T> = IfAny<T, true, false>
 
 export type StringKeysOf<T> = Extract<keyof T, string>
+
+export type Cast<T, TCast> = T extends TCast ? T : never
+
+export type Access<T, TAccessor> = TAccessor extends keyof T ? T[TAccessor] : never
