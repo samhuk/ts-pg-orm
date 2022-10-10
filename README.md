@@ -39,9 +39,10 @@ Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/
 Define data formats, relations, and database connectivity to create type-safe auto-completing data stores:
 
 ```typescript
+import { createDataFormat, createTsPgOrm, ... } from 'ts-pg-orm'
 const userDF = createDataFormat(...)
-const orm = createTsPgOrm([userDF, ...] as const).setRelations([...] as const)
-await orm.initDbClient({ host: 'localhost', port: 5432, ... })
+const ORM = createTsPgOrm([userDF, ...] as const).setRelations([...] as const)
+const orm = await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
 await orm.provisionStores()
 ```
 
@@ -57,6 +58,7 @@ const userFound = await orm.stores.user.get({
   relations: { // Recursively include related data
     userGroups: {
       query: { ... },
+      relations: { ... }
     },
   },
 })
@@ -91,8 +93,8 @@ export type UserGroupRecord = ToRecord<typeof USER_GROUP_DFD>
 Use type-enforced sql information to create bespoke SQL statements:
 
 ```typescript
-const sql = orm.dataFormats.user.sql
-const customUserSql = `select ${sql.columnNames.name} from ${sql.tableName}`
+const userSql = ORM.dataFormats.user.sql
+const customUserSql = `select ${userSql.columnNames.name} from ${userSql.tableName}`
 ```
 
 ## Examples

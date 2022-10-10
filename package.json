@@ -30,12 +30,11 @@
     "lint": "eslint -c .eslintrc.json ./src --ext .ts,.tsx",
     "lint-errors-only": "eslint -c .eslintrc.json ./src --ext .ts,.tsx --quiet",
 
-    "clean": "rimraf ./dist",
-    "build-ts": "npm run clean && tsc -p ./tsconfig.dist.json",
+    "clean-ts-dist": "rimraf ./dist",
+    "build-ts-dist": "npm run clean-ts-dist && tsc -p ./tsconfig.dist.json",
 
-    "check": "npm rum lint-errors-only && npm run build-ts && npm run tests && echo Done!",
-
-    "start": "tsc -p ./src/tsconfig.json --watch",
+    "clean-ts": "rimraf ./build-ts",
+    "build-ts": "npm run clean-ts && tsc -p ./tsconfig.all.json",
 
     "clean-examples": "rimraf ./build-examples",
     "build-examples": "tsc -p ./tsconfig.examples.json",
@@ -44,7 +43,9 @@
     "article-api": "npm run clean-examples && npm run build-examples && npm run run-article-api",
     "real-db-test": "npm run clean-examples && npm run build-examples && npm run run-real-db-test",
 
-    "clean-all": "npm run clean-unit-tests && npm run clean-integration-tests && npm run clean && npm run clean-examples"
+    "clean": "npm run clean-unit-tests && npm run clean-integration-tests && npm run clean-ts && npm run clean-ts-dist && npm run clean-examples",
+
+    "check": "npm rum lint-errors-only && npm run build-ts && npm run tests && echo Done!"
   },
   "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",
