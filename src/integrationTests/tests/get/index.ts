@@ -8,6 +8,10 @@ export const getTests = testGroup(
   'get',
   basicTest,
   deepRelatedDataTest,
+)
+
+export const getPerformanceTests = testGroup(
+  'get (performance)',
   basicPerformanceTest,
   deepRelatedDataPerformanceTest,
 )

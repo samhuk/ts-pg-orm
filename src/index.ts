@@ -8,7 +8,10 @@ import { createProvisionStoresSql, createStores, createUnprovisionStoresSql, pro
 import { RelationOptionsList, Relation, Relations, RelationType } from './relations/types'
 import { VersionTransforms, VersionTransformsOptions } from './versioning/types'
 
-const setVersionTransforms = (tsPgOrm: TsPgOrm<DataFormats, Relations, {}>, options: VersionTransformsOptions) => {
+const setVersionTransforms = (
+  tsPgOrm: TsPgOrm<DataFormats, Relations, {}>,
+  options: VersionTransformsOptions,
+) => {
   delete tsPgOrm.setVersionTransforms
 
   const _tsPgOrm = tsPgOrm as unknown as TsPgOrm<DataFormats, Relations, VersionTransforms>
@@ -64,7 +67,10 @@ const connect = async (
   return _tsPgOrm
 }
 
-const setRelations = (tsPgOrm: TsPgOrm<DataFormats, {}, {}, false>, relationOptionsList: RelationOptionsList) => {
+const setRelations = (
+  tsPgOrm: TsPgOrm<DataFormats, {}, {}, false>,
+  relationOptionsList: RelationOptionsList,
+) => {
   const relations = {} as Relations
   const manyToManyRelationList: Relation<RelationType.MANY_TO_MANY>[] = []
   relationOptionsList.forEach(relationOptions => {

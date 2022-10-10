@@ -21,6 +21,7 @@ export const basicTest = test('basic', async (orm, assert) => {
     name: 'newUser',
     email: 'newUser@email.com',
     passwordHash: '123                                                             ',
+    profileImageId: null,
   })
 
   const userRecord = await orm.stores.user.get({

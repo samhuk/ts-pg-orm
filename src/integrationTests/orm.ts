@@ -22,6 +22,7 @@ const USER_DF = createDataFormat('user', {
   name: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 50 },
   email: { type: DataType.STR, subType: StrSubType.VAR_LENGTH, maxLen: 100 },
   passwordHash: { type: DataType.STR, subType: StrSubType.FIXED_LENGTH, len: 64 },
+  profileImageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
 })
 
 const ARTICLE_DF = createDataFormat('article', {
@@ -81,6 +82,11 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
       fieldRef2: USER_GROUP_DF.fieldRefs.id,
       includeDateCreated: true,
     },
+    {
+      type: RelationType.ONE_TO_MANY,
+      fromOneField: IMAGE_DF.fieldRefs.id,
+      toManyField: USER_DF.fieldRefs.profileImageId,
+    },
   ] as const)
   .setVersionTransforms({
     2: { sql: 'UPGRADE SQL TO VERSION 2' },
@@ -123,7 +129,7 @@ export const provisionOrm = async (): Promise<ConnectedOrm> => {
       ...createConsoleLogEventHandlers(),
       // This can cause a lot of console noise if enabled
       // onQuery: (q, m, sql, p) => console.log(m, p),
-      onQueryError: (q, m, sql, p) => console.log(m),
+      onQueryError: (q, m, sql, p) => console.log(m, '\nSQL:\n', sql, '\nPARAMETERS:\n', p),
     },
   })
 

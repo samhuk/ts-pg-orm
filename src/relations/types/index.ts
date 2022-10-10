@@ -1,8 +1,16 @@
 import { TypeDependantBaseIntersection } from '../../helpers/types'
-import { DataFormats } from '../../dataFormat/types'
+import { DataFormat, DataFormats } from '../../dataFormat/types'
 import { AvailableFieldRefsOfDataFormats, FieldRef } from '../../dataFormat/types/fieldRef'
 import { RelationOptionsToName } from './name'
 import { RelationSql } from './sql'
+import { Field } from '../../dataFormat/types/field'
+
+export type ResovledRelationInfo = {
+  leftDataFormat: DataFormat
+  rightDataFormat: DataFormat
+  leftField: Field
+  rightField: Field
+}
 
 export enum RelationType {
   /**
