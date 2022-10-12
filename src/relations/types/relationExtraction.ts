@@ -62,8 +62,7 @@ export type ExtractManyToManyRelations<TRelations extends Relations> =
   Extract<ValuesUnionFromDict<TRelations>, { type: RelationType.MANY_TO_MANY }>
 
 export type ExtractManyToManyRelationNames<TRelations extends Relations, TDataFormats extends DataFormats> =
-  // @ts-ignore This is ok
-  RelationToName<ExtractManyToManyRelations<TRelations>, TDataFormats>
+  RelationToName<Cast<ExtractManyToManyRelations<TRelations>, Relation>, TDataFormats>
 
 export type RelationToForeignFieldRef<
   TRelation extends Relation,
