@@ -249,5 +249,5 @@ export type JoinTableStoresDict<
   TRelations extends Relations = Relations,
 > = {
   [TRelationName in ExtractManyToManyRelationNames<TRelations, TDataFormats>]:
-    JoinTableStore<TDataFormats, Access<TRelations, TRelationName>>
+    JoinTableStore<TDataFormats, Cast<Access<TRelations, TRelationName>, Relation<RelationType.MANY_TO_MANY>>>
 }
