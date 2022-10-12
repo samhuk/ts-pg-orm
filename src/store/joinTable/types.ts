@@ -48,8 +48,8 @@ export type CreateJoinTableRecordOptions<
 > = _CreateJoinTableRecordOptions<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']]
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']]
 >
 
 type _CreateLinkFunction<
@@ -68,8 +68,8 @@ export type CreateLinkFunction<
 > = _CreateLinkFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']],
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']],
   TRelation
 >
 
@@ -88,8 +88,8 @@ export type CreateLinksFunction<
 > = _CreateLinksFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']]
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']]
 >
 
 export type DeleteLinkByIdFunctionOptions = {
@@ -128,8 +128,8 @@ export type DeleteLinkByIdFunction<
 > = _DeleteLinkByIdFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']]
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']]
 >
 
 export type _DeleteFunctionOptions<
@@ -165,8 +165,8 @@ export type DeleteFunctionOptions<
 > = _DeleteFunctionOptions<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']],
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']],
   TRelation
 >
 
@@ -194,8 +194,8 @@ export type DeleteFunctionResult<
 > = _DeleteFunctionResult<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']],
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']],
   TRelation
 >
 
@@ -215,8 +215,8 @@ export type DeleteFunction<
 > = _DeleteFunction<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']],
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']],
   TRelation
 >
 
@@ -239,8 +239,8 @@ export type JoinTableStore<
 > = _JoinTableStore<
   TDataFormats[TRelation['fieldRef1']['dataFormat']],
   TDataFormats[TRelation['fieldRef2']['dataFormat']],
-  TDataFormats[TRelation['fieldRef1']['field']]['fields'][TRelation['fieldRef1']['field']],
-  TDataFormats[TRelation['fieldRef2']['field']]['fields'][TRelation['fieldRef2']['field']],
+  TDataFormats[TRelation['fieldRef1']['dataFormat']]['fields'][TRelation['fieldRef1']['field']],
+  TDataFormats[TRelation['fieldRef2']['dataFormat']]['fields'][TRelation['fieldRef2']['field']],
   TRelation
 >
 
