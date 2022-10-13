@@ -51,8 +51,18 @@ export type GetFunctionOptions<
   {
     /**
      * The fields of the data format to include.
+     *
+     * Note that if `excludeFields` is `true`, these become the fields to *exclude*.
      */
     fields?: TLocalDataFormat['fieldNameList'][number][]
+    /**
+     * Determines whether the supplied `fields` are inclusionary or exclusionary.
+     *
+     * This can be useful if almost all fields should be included.
+     *
+     * @default false
+     */
+    excludeFields?: boolean
     /**
      * Child relations to include.
      */
@@ -77,16 +87,15 @@ export type GetFunctionOptions<
           Prev[D]
         >
     }
-  } & (
-    TIsPlural extends true
-      /**
-       * Query to use to select the records.
-       */
-      ? { query?: DataQueryRecord<ValuesUnionFromDict<TLocalDataFormat['fields']>['name']> }
-      /**
-       * Filter to use to select the record.
-       */
-      : { filter?: DataFilterNodeOrGroup<ValuesUnionFromDict<TLocalDataFormat['fields']>['name']> }
+  } & (TIsPlural extends true
+    /**
+     * Query to use to select the records.
+     */
+    ? { query?: DataQueryRecord<ValuesUnionFromDict<TLocalDataFormat['fields']>['name']> }
+    /**
+     * Filter to use to select the record.
+     */
+    : { filter?: DataFilterNodeOrGroup<ValuesUnionFromDict<TLocalDataFormat['fields']>['name']> }
   )
 )
 
@@ -98,6 +107,57 @@ export type AnyGetFunctionResult<TIsPlural extends boolean = boolean> = GetFunct
   GetFunctionOptions<DataFormats, Relations, DataFormat, TIsPlural>
 >
 
+type GetFunctionResultThisNodeInclusionary<
+  TDataFormats extends DataFormats = DataFormats,
+  TRelations extends Relations = Relations,
+  TLocalDataFormat extends DataFormat = DataFormat,
+  TIsPlural extends boolean = boolean,
+  TOptions extends GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural> =
+    GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
+> =
+  // If the fields property is present...
+  TOptions extends { fields: string[] }
+  // ...And if the fields[number] is any, then it's an empty array...
+  ? IsAny<TOptions['fields'][number]> extends true
+    ? { } // ...So infer that as them wanting no fields
+    // Else, it's a populated array (at least one field within)
+    : PickAny<ToRecord<TLocalDataFormat>, TOptions['fields'][number]>
+  // Else (fields property is not present), then default to the full record
+  : ToRecord<TLocalDataFormat>
+
+type GetFunctionResultThisNodeExclusionary<
+  TDataFormats extends DataFormats = DataFormats,
+  TRelations extends Relations = Relations,
+  TLocalDataFormat extends DataFormat = DataFormat,
+  TIsPlural extends boolean = boolean,
+  TOptions extends GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural> =
+    GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
+> =
+  // If the fields property is present...
+  TOptions extends { fields: string[] }
+  // ...And if the fields[number] is any, then it's an empty array...
+  ? IsAny<TOptions['fields'][number]> extends true
+    // ...So infer that as them wanting no fields excluded
+    ? ToRecord<TLocalDataFormat>
+    // Else, it's a populated array (at least one field within)
+    : Omit<ToRecord<TLocalDataFormat>, TOptions['fields'][number]>
+  // Else (fields property is not present), then default to the full record
+  : ToRecord<TLocalDataFormat>
+
+  type GetFunctionResultThisNode<
+  TDataFormats extends DataFormats = DataFormats,
+  TRelations extends Relations = Relations,
+  TLocalDataFormat extends DataFormat = DataFormat,
+  TIsPlural extends boolean = boolean,
+  TOptions extends GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural> =
+    GetFunctionOptions<TDataFormats, TRelations, TLocalDataFormat, TIsPlural>,
+> =
+  TOptions extends { excludeFields: boolean }
+    ? TOptions['excludeFields'] extends true
+      ? GetFunctionResultThisNodeExclusionary<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions>
+      : GetFunctionResultThisNodeInclusionary<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions>
+    : GetFunctionResultThisNodeInclusionary<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions>
+
 type _GetFunctionResult<
   TDataFormats extends DataFormats = DataFormats,
   TRelations extends Relations = Relations,
@@ -108,46 +168,35 @@ type _GetFunctionResult<
   D extends Prev[number] = MaxDepth
 > =
   ArrayTernary<
-    // this node
-    (
-      // If the fields property is present...
-      TOptions extends { fields: string[] }
-        // ...And if the fields[number] is any, then it's probably an empty array
-        ? IsAny<TOptions['fields'][number]> extends true
-          ? { } // So infer that as them wanting no fields of this node
-          // else, it's probably a populated array (at least one field within)
-          : PickAny<ToRecord<TLocalDataFormat>, TOptions['fields'][number]>
-        // Else (fields property is not present), then default to the full record
-        : ToRecord<TLocalDataFormat>
-    )
-    // child nodes
-    & (
-      TOptions extends { relations: any }
-        ? {
-          [TRelatedDataPropertyName in keyof TOptions['relations']]:
-            _GetFunctionResult<
-              TDataFormats,
-              TRelations,
+    // This node
+    GetFunctionResultThisNode<TDataFormats, TRelations, TLocalDataFormat, TIsPlural, TOptions>
+    // Child nodes
+    & (TOptions extends { relations: any }
+      ? {
+        [TRelatedDataPropertyName in keyof TOptions['relations']]:
+          _GetFunctionResult<
+            TDataFormats,
+            TRelations,
+            Cast<
+              Access<
+                RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
+              >,
+              DataFormat
+            >,
+            IsForeignFormatPluralFromRelation<
               Cast<
                 Access<
-                  RelatedDataPropertyNameToForeignDataFormatDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
+                  RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
                 >,
-                DataFormat
+                Relation
               >,
-              IsForeignFormatPluralFromRelation<
-                Cast<
-                  Access<
-                    RelatedDataPropertyNameToRelationDict<TDataFormats, TRelations, TLocalDataFormat['name']>, TRelatedDataPropertyName
-                  >,
-                  Relation
-                >,
-                TLocalDataFormat['name']
-              >,
-              TOptions['relations'][TRelatedDataPropertyName],
-              Prev[D]
-            >
-          }
-        : { }
+              TLocalDataFormat['name']
+            >,
+            TOptions['relations'][TRelatedDataPropertyName],
+            Prev[D]
+          >
+        }
+      : { }
     ),
     TIsPlural
   >
