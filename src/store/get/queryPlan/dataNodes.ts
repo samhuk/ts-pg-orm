@@ -3,9 +3,9 @@ import { toDict } from '../../../helpers/dict'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { FieldRef } from '../../../dataFormat/types/fieldRef'
 import { Relation, Relations, RelationType } from '../../../relations/types'
-import { AnyGetFunctionOptions, GetFunctionOptions } from '../types'
 import { RelatedDataInfoDict, UnresolvedDataNodes, DataNode, FieldsInfo, DataNodes, PluralDataNode, NonPluralDataNode } from './types'
 import { quote } from '../../../helpers/string'
+import { AnyGetFunctionOptions, GetFunctionOptions } from '../types/getFunctionOptions'
 
 /**
  * Determines all of the related data properties of the given `dataFormat`
@@ -148,7 +148,7 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
     // ...Then exclude fields from the Data Format
     ? dataNode.dataFormat.fieldNameList.filter(fName => dataNode.options.fields.indexOf(fName) === -1)
     // ...Else include fields defined by user
-    : dataNode.options.fields
+    : dataNode.options.fields as string[]
 
   // The fields to keep in the record are those that the user defines, or if not defined, those of the Data Format
   const fieldsToKeepInRecord = userDefinedFields ?? dataNode.dataFormat.fieldNameList

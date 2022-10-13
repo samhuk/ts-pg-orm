@@ -5,7 +5,8 @@ import { ValuesUnionFromDict } from '../../../helpers/types'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { FieldRef } from '../../../dataFormat/types/fieldRef'
 import { Relation, Relations } from '../../../relations/types'
-import { AnyGetFunctionOptions, GetFunctionOptions, GetFunctionResult } from '../types'
+import { AnyGetFunctionOptions, GetFunctionOptions } from '../types/getFunctionOptions'
+import { GetFunctionResult } from '../types/getFunctionResult'
 
 export type RelatedDataInfo<
   TIsPlural extends boolean = boolean,

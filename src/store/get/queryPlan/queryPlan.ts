@@ -4,10 +4,10 @@ import { removeDuplicates, removeNullishValues } from '../../../helpers/array'
 import { deepRemovePropsWithPrefix } from '../../../helpers/object'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { Relations, RelationType } from '../../../relations/types'
-import { GetFunctionOptions } from '../types'
 import { toDataNodes } from './dataNodes'
 import { toQueryNodes } from './queryNodes'
 import { QueryNode, QueryNodeSql, DataNode, QueryNodes, QueryPlan } from './types'
+import { GetFunctionOptions } from '../types/getFunctionOptions'
 
 const createQueryNodeSql = (
   queryNode: QueryNode,
