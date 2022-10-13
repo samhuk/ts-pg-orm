@@ -1,5 +1,8 @@
 /**
- * Creates a "$1, $2, $3" parameters sql string
+ * Creates a "$1, $2, $3" parameters sql string.
+ *
+ * @example
+ * createParametersString(3) -> '$1, $2, $3'
  */
 export const createParametersString = (numColumns: number): string => {
   const parametersStringItems: string[] = []
@@ -8,6 +11,17 @@ export const createParametersString = (numColumns: number): string => {
   return parametersStringItems.join(', ')
 }
 
+/**
+ * @example
+ * createInsertReturningSql('"user"', ['name', 'eamil'])
+ * /* with cte as (
+ *  *   insert into "user"
+ *  *   ("name", "email")
+ *  *   values ($1, $2)
+ *  *   returning *
+ *  * ) select * from cte
+ *  *\/
+ */
 export const createInsertReturningSql = (tableName: string, columnNames: string[]) => {
   const columnNamesSql = columnNames.join(', ')
   const parametersSql = createParametersString(columnNames.length)
