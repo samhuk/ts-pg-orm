@@ -8,6 +8,10 @@ export const getLastPathSegment = (path: string) => (
   path.substring(path.lastIndexOf('/') + 1)
 )
 
+/**
+ * @example
+ * quote('hello') '"hello"'
+ */
 export const quote = (s: string): string => `"${s}"`
 
 /**
@@ -51,12 +55,19 @@ export const objectPropsToSnakeCase = <TInput extends Dict, TOutput extends Dict
   return outputObject as TOutput
 }
 
+/**
+ * @example
+ * capitalize('hello') 'Hello'
+ */
 export const capitalize = <T extends string>(s: T): Capitalize<T> => (
   `${s.charAt(0).toUpperCase()}${s.slice(1)}` as Capitalize<T>
 )
 
 /**
  * Removes null, undefined, and empty strings from `arr`.
+ *
+ * @example
+ * filterForNotNullAndEmpty([1, null, 2, undefined, 3]) [1, 2, 3]
  */
 export const filterForNotNullAndEmpty = (arr: string[]) => (
   arr.filter(s => s != null && s.length > 0)
@@ -65,6 +76,12 @@ export const filterForNotNullAndEmpty = (arr: string[]) => (
 /**
  * Concatenates the list of strings - `arr`, if and only if `arr` is defined and has
  * at least one entry.
+ *
+ * @example
+ * joinIfhasEntries(null, ' and ') null
+ * joinIfhasEntries([], ' and ') null
+ * joinIfhasEntries(['hello'], ' and ') 'hello'
+ * joinIfhasEntries(['hello', 'bye'], ' and ') 'hello and bye'
  */
 export const joinIfhasEntries = (arr: string[], joinStr: string) => (
   arr != null && arr.length > 0 ? arr.join(joinStr) : null
@@ -72,6 +89,12 @@ export const joinIfhasEntries = (arr: string[], joinStr: string) => (
 
 /**
  * Concatenates `prefix` and `suffix` together if and only if both of them are defined.
+ *
+ * @example
+ * concatIfNotNullAndEmpty(null, null) null
+ * concatIfNotNullAndEmpty('a', null) null
+ * concatIfNotNullAndEmpty(null, 'b') null
+ * concatIfNotNullAndEmpty('a', 'b') 'ab'
  */
 export const concatIfNotNullAndEmpty = (prefix: string, suffix: string) => {
   if (prefix != null && suffix != null)
