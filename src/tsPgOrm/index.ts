@@ -95,6 +95,13 @@ const setRelations = (
   return _tsPgOrm
 }
 
+/**
+ * Creates an instance of `TsPgOrm` from the supplied list of Data Formats.
+ *
+ * @example
+ * createTsPgOrm([USER_DF, ARTICLE_DF])
+ *   .setRelations([{ ... }, { ... }])
+ */
 export const createTsPgOrm = <TDataFormatList extends DataFormatList>(
   dataFormatList: TDataFormatList,
   version: number = 1,
