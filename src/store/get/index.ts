@@ -5,7 +5,8 @@ import { objectPropsToCamelCase } from '../../helpers/string'
 import { DataFormat } from '../../dataFormat/types'
 import { TsPgOrm } from '../../tsPgOrm/types'
 import { createQueryPlan } from './queryPlan/queryPlan'
-import { AnyGetFunctionOptions, AnyGetFunctionResult } from './types'
+import { AnyGetFunctionOptions } from './types/getFunctionOptions'
+import { AnyGetFunctionResult } from './types/getFunctionResult'
 
 const createColumnsSqlForGetWithNoRelations = (
   options: AnyGetFunctionOptions<false>,

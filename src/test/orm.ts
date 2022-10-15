@@ -13,7 +13,15 @@ import {
   ToStores,
   TsPgOrm,
   CreateJoinTableRecordOptions,
+  JsonSubType,
 } from '..'
+
+type UserPreferences = {
+  darkMode: boolean
+  showHelp: boolean
+}
+
+type UserPreferencesArray = { a: number, b: number }[]
 
 const BASE_FIELDS = createCommonFields({
   id: { type: DataType.NUM, subType: NumSubType.SERIAL },
@@ -59,7 +67,14 @@ const USER_GROUP_DF = createDataFormat('userGroup', {
   imageId: { type: DataType.NUM, subType: NumSubType.INT, allowNull: true },
 })
 
-export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF] as const, 1)
+const USER_PREFERENCES = createDataFormat('userPreferences', {
+  ...BASE_FIELDS,
+  userId: { type: DataType.NUM, subType: NumSubType.INT },
+  preferences: { type: DataType.JSON, subType: JsonSubType.OBJECT, default: null as UserPreferences, allowNull: true },
+  array: { type: DataType.JSON, subType: JsonSubType.ARRAY, default: [] as UserPreferencesArray, allowNull: false },
+})
+
+export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF, USER_GROUP_DF, USER_PREFERENCES] as const, 1)
   .setRelations([
     {
       type: RelationType.ONE_TO_MANY,
@@ -91,6 +106,11 @@ export const ORM = createTsPgOrm([USER_DF, IMAGE_DF, ARTICLE_DF, USER_ADDRESS_DF
       type: RelationType.ONE_TO_MANY,
       fromOneField: IMAGE_DF.fieldRefs.id,
       toManyField: USER_DF.fieldRefs.profileImageId,
+    },
+    {
+      type: RelationType.ONE_TO_ONE,
+      fromOneField: USER_DF.fieldRefs.id,
+      toOneField: USER_PREFERENCES.fieldRefs.userId,
     },
   ] as const)
   .setVersionTransforms({

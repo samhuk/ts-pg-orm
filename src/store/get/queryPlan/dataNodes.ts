@@ -3,9 +3,9 @@ import { toDict } from '../../../helpers/dict'
 import { DataFormat, DataFormats } from '../../../dataFormat/types'
 import { FieldRef } from '../../../dataFormat/types/fieldRef'
 import { Relation, Relations, RelationType } from '../../../relations/types'
-import { AnyGetFunctionOptions, GetFunctionOptions } from '../types'
 import { RelatedDataInfoDict, UnresolvedDataNodes, DataNode, FieldsInfo, DataNodes, PluralDataNode, NonPluralDataNode } from './types'
 import { quote } from '../../../helpers/string'
+import { AnyGetFunctionOptions, GetFunctionOptions } from '../types/getFunctionOptions'
 
 /**
  * Determines all of the related data properties of the given `dataFormat`
@@ -141,7 +141,19 @@ const traverseOptionsToDataNodes = (
 }
 
 const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
-  const fieldsToKeepInRecord = dataNode.options.fields ?? dataNode.dataFormat.fieldNameList
+  const isExlusionary = dataNode.options.excludeFields ?? false
+  const areOptionsFieldsDefined = dataNode.options.fields != null
+  // If we are excluding fields and fields are defined...
+  const userDefinedFields = isExlusionary && areOptionsFieldsDefined
+    // ...Then exclude fields from the Data Format
+    ? dataNode.dataFormat.fieldNameList.filter(fName => dataNode.options.fields.indexOf(fName) === -1)
+    // ...Else include fields defined by user
+    : dataNode.options.fields as string[]
+
+  // The fields to keep in the record are those that the user defines, or if not defined, those of the Data Format
+  const fieldsToKeepInRecord = userDefinedFields ?? dataNode.dataFormat.fieldNameList
+
+  // These are fields that will be required for relations, for linked values between Query Nodes.
   const fieldsRequiredForRelations = Object.values(dataNode.children)
     .map(node => node.parentFieldRef.field)
     // If this node has a many-to-many relation to it, then it doesn't need to include it's
@@ -149,10 +161,24 @@ const createFieldsInfo = (dataNode: DataNode): FieldsInfo => {
     .concat(dataNode.relation?.type === RelationType.MANY_TO_MANY || dataNode.fieldRef == null
       ? []
       : [dataNode.fieldRef.field])
-  const fieldsToSelectFor = dataNode.options.fields != null
-    ? removeDuplicates(dataNode.options.fields.concat(fieldsRequiredForRelations))
+
+  /* These are the fields that will be required to be selected from the database.
+   * These will be the union of fields to keep in the record and fields required for relations.
+   * If no fields were defined by the user, then we can do a performance optimization and
+   * select for all fields of the Data Format.
+   */
+  const fieldsToSelectFor = areOptionsFieldsDefined != null
+    ? removeDuplicates(fieldsToKeepInRecord.concat(fieldsRequiredForRelations))
     : dataNode.dataFormat.fieldNameList
-  const fieldsOnlyUsedForRelations = dataNode.options.fields != null
+
+  /* These are the fields that are only being selected from the database because they are
+   * required by relations. This is essentially fields to select for minus fields to keep in record.
+   * If no fields were defined by the user, then we can do a performance optimization and
+   * assume no fields are only used for relations, since if the user doesn't define any fields,
+   * then we include all fields in the record by default, and therefore none will "only be used"
+   * for anything.
+   */
+  const fieldsOnlyUsedForRelations = areOptionsFieldsDefined != null
     ? fieldsToSelectFor.filter(fName => fieldsToKeepInRecord.indexOf(fName) === -1)
     : []
 

@@ -90,7 +90,8 @@ export type ExpandRecursively<T> = T extends object
   : T
 
 /**
- * Forces typescript to recursively expand the type definition of `T`.
+ * Forces typescript to recursively expand the type definition of `T`. however
+ * will stop the expansion if it reaches a node that extends `TAdditionalLeafNodes`.
  */
 export type ExpandRecursivelyWithAdditionalLeafNodes<T, TAdditionalLeafNodes> =
   T extends TAdditionalLeafNodes
@@ -128,14 +129,32 @@ export type OmitTyped<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
  */
 export type ValuesUnionFromDict<TDict> = TDict[keyof TDict]
 
+/**
+ * Returns `T[]` if `TIsArray` is `true`, else `T`.
+ */
 export type ArrayTernary<T, TIsArray extends boolean> = TIsArray extends false ? T : T[]
 
 type IfAny<T, Y, N> = 0 extends (1 & T) ? Y : N
 
+/**
+ * Determines if `T` is `any`. This uses a rather strange Typescript workaround, exploiting
+ * the strange nature of `any`.
+ */
 export type IsAny<T> = IfAny<T, true, false>
 
+/**
+ * Version of `keyof` that ensures they are all strings.
+ */
 export type StringKeysOf<T> = Extract<keyof T, string>
 
+/**
+ * Ensures that `T` extends `TCast`, otherwise will be `never`.
+ *
+ * This is useful when you know for sure that `T` is `TCast`, but tsc can't see it.
+ */
 export type Cast<T, TCast> = T extends TCast ? T : never
 
+/**
+ * Ensures that `TAccessor` is a key of `T` before using it to access `T`.
+ */
 export type Access<T, TAccessor> = TAccessor extends keyof T ? T[TAccessor] : never
