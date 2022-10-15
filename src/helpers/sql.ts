@@ -34,3 +34,8 @@ export const createInsertReturningSql = (tableName: string, columnNames: string[
 ) select * from cte`
   )
 }
+
+/**
+ * Workaround because the `pg` library doesn't correctly stringify arrays.
+ */
+export const createValueList = (values: any[]) => values.map(v => (Array.isArray(v) ? JSON.stringify(v) : v))

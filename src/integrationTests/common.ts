@@ -86,6 +86,7 @@ export const test = (
 
 export const deleteAllSampleData = async (stores: Stores) => {
   await stores.userIdToUserGroupId.delete()
+  await stores.userPreferences.delete()
   await stores.article.delete()
   await stores.image.delete()
   await stores.userAddress.delete()
