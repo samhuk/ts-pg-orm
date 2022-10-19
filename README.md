@@ -28,9 +28,9 @@
   </a>
 </p>
 
-## Introduction
+## Overview
 
-ts-pg-orm provides powerful PostgreSQL persistence for your Typescript application with less guess-work.
+ts-pg-orm provides PostgreSQL persistence for your Typescript application. Write expressive, zero guess-work, fully type-enforced typescript queries to perform CRUD operations on PostgreSQL database.
 
 Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started) guide.
 
@@ -44,7 +44,7 @@ Define data formats, relations, and database connectivity to create type-safe au
 import { createDataFormat, createTsPgOrm, ... } from 'ts-pg-orm'
 const userDF = createDataFormat(...)
 const ORM = createTsPgOrm([userDF, ...] as const).setRelations([...] as const)
-const orm = await ORM.initDbClient({ host: 'localhost', port: 5432, ... })
+const orm = await ORM.connect({ host: 'localhost', port: 5432, ... })
 await orm.provisionStores()
 ```
 
