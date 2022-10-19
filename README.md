@@ -30,7 +30,7 @@
 
 ## Overview
 
-ts-pg-orm provides PostgreSQL persistence for your Typescript application. Write expressive, zero guess-work, fully type-enforced typescript queries to perform CRUD operations on PostgreSQL database.
+ts-pg-orm provides PostgreSQL persistence for your Typescript application. Write expressive, zero guess-work, fully type-enforced typescript queries to perform CRUD operations on PostgreSQL databases.
 
 Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started) guide.
 
