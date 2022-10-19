@@ -34,6 +34,8 @@ ts-pg-orm provides powerful PostgreSQL persistence for your Typescript applicati
 
 Start by viewing the [Getting Started](https://github.com/samhuk/ts-pg-orm/wiki/Getting-Started) guide.
 
+[ts-pg-orm is available on npm](https://www.npmjs.com/package/ts-pg-orm).
+
 ## Usage Overview
 
 Define data formats, relations, and database connectivity to create type-safe auto-completing data stores:
