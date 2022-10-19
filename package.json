@@ -1,6 +1,6 @@
 {
   "name": "ts-pg-orm",
-  "version": "5.1.2",
+  "version": "5.1.3",
   "description": "Typescript PostgreSQL ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -47,6 +47,21 @@
 
     "check": "npm rum lint-errors-only && npm run build-ts && npm run tests && echo Done!"
   },
+  "funding": [
+    {
+      "type": "buymeacoffee",
+      "url": "https://www.buymeacoffee.com/samhuk"
+    },
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/samhuk"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/samhuk/ts-pg-orm/issues"
+  },
+  "keywords": ["orm", "typescript", "postgre", "postgresel", "storage", "persistence", "crud", "sql"],
+  "homepage": "https://github.com/samhuk/ts-pg-orm",
   "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",
   "license": "MIT",
