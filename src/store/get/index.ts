@@ -8,10 +8,24 @@ import { createQueryPlan } from './queryPlan/queryPlan'
 import { AnyGetFunctionOptions } from './types/getFunctionOptions'
 import { AnyGetFunctionResult } from './types/getFunctionResult'
 
+export const determineFieldsToSelectForWhenNoRelations = (
+  optionsFieldNames: string[],
+  dataFormatFieldNames: string[],
+  excludeFields?: boolean,
+) => ((excludeFields ?? false)
+  ? (optionsFieldNames == null || optionsFieldNames.length === 0)
+    ? dataFormatFieldNames
+    : dataFormatFieldNames.filter(fName => optionsFieldNames.indexOf(fName) === -1)
+  : optionsFieldNames ?? dataFormatFieldNames)
+
 const createColumnsSqlForGetWithNoRelations = (
   options: AnyGetFunctionOptions<false>,
   dataFormat: DataFormat,
-) => (options.fields ?? dataFormat.fieldNameList)
+) => determineFieldsToSelectForWhenNoRelations(
+  options.fields,
+  dataFormat.fieldNameList,
+  options.excludeFields,
+)
   .map(fName => dataFormat.sql.cols[fName])
   .filter(cName => cName != null)
   .join(', ')

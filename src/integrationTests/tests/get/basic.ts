@@ -59,3 +59,26 @@ export const basicExcludeFieldsTest = test('basic - excludeFields', async (orm, 
     },
   })
 })
+
+export const basicExcludeFieldsNoRelationsTest = test('basic - excludeFields - no relations', async (orm, assert) => {
+  const result = await orm.stores.user.get({
+    fields: ['name', 'email'],
+    excludeFields: true,
+    filter: {
+      field: 'name', op: Operator.EQUALS, val: 'User 1',
+    },
+  })
+
+  result.id = 1
+  result.dateCreated = null
+  result.uuid = '123'
+
+  assert(result, {
+    id: 1,
+    uuid: '123',
+    dateCreated: null,
+    dateDeleted: null,
+    profileImageId: null,
+    passwordHash: '123                                                             ',
+  })
+})
