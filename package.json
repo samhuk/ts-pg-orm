@@ -1,6 +1,6 @@
 {
   "name": "ts-pg-orm",
-  "version": "5.1.6",
+  "version": "5.1.7",
   "description": "Typescript PostgreSQL ORM",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -60,7 +60,7 @@
   "bugs": {
     "url": "https://github.com/samhuk/ts-pg-orm/issues"
   },
-  "keywords": ["orm", "typescript", "postgre", "postgresel", "storage", "persistence", "crud", "sql"],
+  "keywords": ["orm", "typescript", "postgre", "postgresql", "storage", "persistence", "crud", "sql"],
   "homepage": "https://github.com/samhuk/ts-pg-orm",
   "repository": "https://github.com/samhuk/ts-pg-orm",
   "author": "",
